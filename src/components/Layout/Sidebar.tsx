@@ -1,0 +1,72 @@
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { 
+  Building2, 
+  Users, 
+  Route, 
+  DollarSign, 
+  Filter, 
+  Settings,
+  Home,
+  ChevronDown,
+  ChevronRight
+} from 'lucide-react';
+
+const navigation = [
+  { name: 'Dashboard', href: '/', icon: Home },
+  { name: 'Companies', href: '/companies', icon: Building2 },
+  { name: 'Users', href: '/users', icon: Users },
+  { name: 'Inspection Journeys', href: '/journeys', icon: Route },
+  { name: 'Cost Matrices', href: '/cost-matrices', icon: DollarSign },
+  { name: 'Sorting Rules', href: '/sorting-rules', icon: Filter },
+  { name: 'Settings', href: '/settings', icon: Settings },
+];
+
+interface SidebarProps {
+  isCollapsed: boolean;
+  onToggle: () => void;
+}
+
+export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
+  const location = useLocation();
+
+  return (
+    <div className={`bg-gray-900 text-white transition-all duration-300 ${
+      isCollapsed ? 'w-16' : 'w-64'
+    } min-h-screen flex flex-col`}>
+      <div className="p-4 border-b border-gray-700">
+        <div className="flex items-center justify-between">
+          {!isCollapsed && (
+            <h1 className="text-xl font-bold">Admin Panel</h1>
+          )}
+          <button
+            onClick={onToggle}
+            className="p-1 rounded-lg hover:bg-gray-800 transition-colors"
+          >
+            {isCollapsed ? <ChevronRight size={20} /> : <ChevronDown size={20} />}
+          </button>
+        </div>
+      </div>
+
+      <nav className="flex-1 p-4 space-y-2">
+        {navigation.map((item) => {
+          const isActive = location.pathname === item.href;
+          return (
+            <Link
+              key={item.name}
+              to={item.href}
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                isActive 
+                  ? 'bg-blue-600 text-white' 
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+              }`}
+            >
+              <item.icon size={20} className="shrink-0" />
+              {!isCollapsed && <span>{item.name}</span>}
+            </Link>
+          );
+        })}
+      </nav>
+    </div>
+  );
+}
