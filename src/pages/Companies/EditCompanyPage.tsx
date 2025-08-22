@@ -300,7 +300,7 @@ export default function EditCompanyPage() {
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Global Inspection Journey Options</h3>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Input
-          label="NPS Delay (seconds)"
+          label="NPS Delay (secondsdddddddddddddd)"
           type="number"
           defaultValue="7"
           onChange={() => setHasUnsavedChanges(true)}
