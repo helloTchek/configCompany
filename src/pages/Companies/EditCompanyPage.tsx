@@ -336,6 +336,137 @@ export default function EditCompanyPage() {
     </div>
   );
 
+  const HierarchyContent = () => (
+    <div className="space-y-6">
+      {/* Parent Company Selection */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Company Hierarchy</h3>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Parent Company
+            </label>
+            <select 
+              className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              defaultValue={company.parentCompany || ''}
+              onChange={() => setHasUnsavedChanges(true)}
+            >
+              <option value="">No Parent Company</option>
+              {mockCompanies
+                .filter(c => c.id !== company.id)
+                .map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))
+              }
+            </select>
+            <p className="text-sm text-gray-500 mt-1">
+              Select a parent company to create a hierarchy relationship
+            </p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Children Count
+            </label>
+            <Input
+              value={company.childrenCount.toString()}
+              disabled
+              helperText="Number of child companies (read-only)"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Child Companies */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Child Companies</h3>
+        {company.childrenCount > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Company Name
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Company Code
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Contract Type
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {mockCompanies
+                  .filter(c => c.parentCompany === company.id)
+                  .map((childCompany) => (
+                    <tr key={childCompany.id}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {childCompany.name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {childCompany.companyCode}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          childCompany.contractType === 'Client' ? 'bg-green-100 text-green-800' :
+                          childCompany.contractType === 'Prospect' ? 'bg-blue-100 text-blue-800' :
+                          childCompany.contractType === 'Test' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {childCompany.contractType}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={() => navigate(`/companies/${childCompany.id}/edit`)}
+                            className="text-blue-600 hover:text-blue-900"
+                          >
+                            Edit
+                          </button>
+                          <button 
+                            onClick={() => {/* Handle remove from hierarchy */}}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                }
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            <p>This company has no child companies.</p>
+          </div>
+        )}
+      </div>
+
+      {/* Hierarchy Actions */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Hierarchy Actions</h3>
+        <div className="flex gap-4">
+          <Button variant="secondary">
+            Add Child Company
+          </Button>
+          <Button variant="secondary">
+            Change Parent Company
+          </Button>
+          {company.parentCompany && (
+            <Button variant="danger">
+              Remove from Hierarchy
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
   const SavedJourneysContent = () => {
     const companyJourneys = mockJourneys.filter(j => j.companyId === company.id);
     
@@ -400,6 +531,11 @@ export default function EditCompanyPage() {
       key: 'company-settings',
       label: 'Company Settings',
       content: <CompanySettingsContent />
+    },
+    {
+      key: 'hierarchy',
+      label: 'Hierarchy',
+      content: <HierarchyContent />
     },
     {
       key: 'journey-settings',
