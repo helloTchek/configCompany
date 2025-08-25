@@ -340,186 +340,231 @@ export default function EditCompanyPage() {
       {/* Events & Webhooks */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Events & Webhooks</h3>
+        <p className="text-sm text-gray-600 mb-6">Configure notification templates and recipients for different events</p>
         
-        {/* Event Configuration */}
-        <div className="space-y-6">
-          {[
-            { id: 'inspection_created', name: 'Inspection Created' },
-            { id: 'reminder_sent', name: 'Reminder Sent' },
-            { id: 'automatic_chase_ups', name: 'Automatic Chase Ups' }
-          ].map((event) => (
-            <div key={event.id} className="border border-gray-200 rounded-lg p-4">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Events List */}
+          <div className="lg:col-span-1">
+            <h4 className="text-sm font-medium text-gray-900 mb-3">Events</h4>
+            <div className="space-y-2">
+              {[
+                { id: 'self_inspection_creation', name: 'Self Inspection Creation', active: true },
+                { id: 'automated_chase_up', name: 'Automated Chase-up Message', active: false },
+                { id: 'manual_chase_up', name: 'Manual Chase-up Message', active: false },
+                { id: 'inspection_finished', name: 'Inspection Finished Message', active: false },
+                { id: 'damage_review_finished', name: 'Damage Review Finished Message', active: false },
+                { id: 'share_updated_report', name: 'Share Updated Report Message', active: false }
+              ].map((event) => (
+                <button
+                  key={event.id}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                    event.active 
+                      ? 'bg-blue-100 text-blue-800 border border-blue-200' 
+                      : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                  }`}
+                  onClick={() => setHasUnsavedChanges(true)}
+                >
+                  {event.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Configuration Panel */}
+          <div className="lg:col-span-3">
+            {/* Current Event Info */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-4 h-4 bg-blue-600 rounded"></div>
+                <span className="text-sm font-medium text-blue-900">Currently configuring messages for: Customer</span>
+              </div>
+              <p className="text-sm text-blue-700">The messages content below will be sent to customer recipients</p>
+            </div>
+
+            {/* Recipients */}
+            <div className="mb-6">
               <div className="flex items-center justify-between mb-4">
-                <h4 className="font-medium text-gray-900">{event.name}</h4>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    defaultChecked={true}
-                    onChange={() => setHasUnsavedChanges(true)}
-                    className="rounded border-gray-300 text-blue-600 shadow-sm"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Enabled</span>
-                </label>
+                <h4 className="text-sm font-medium text-gray-900">Recipients</h4>
+                <Button variant="secondary" size="sm" className="text-blue-600">
+                  + Add Recipient
+                </Button>
               </div>
               
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-                <Input
-                  label="Sender Name"
-                  placeholder="Company Name"
-                  onChange={() => setHasUnsavedChanges(true)}
-                />
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    defaultChecked={true}
-                    onChange={() => setHasUnsavedChanges(true)}
-                    className="rounded border-gray-300 text-blue-600 shadow-sm"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Create PDF Report</span>
-                </label>
-              </div>
-
-              {/* Recipients Configuration */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Recipients</label>
-                <div className="space-y-3">
-                  {[
-                    { id: 'customer', name: 'Customer' },
-                    { id: 'agent', name: 'Agent' },
-                    { id: 'company', name: 'Company' },
-                    { id: 'webhook', name: 'Webhook' }
-                  ].map((recipient) => (
-                    <div key={recipient.id} className="border border-gray-100 rounded p-3">
-                      <div className="flex items-center mb-2">
-                        <input
-                          type="checkbox"
-                          defaultChecked={recipient.id !== 'webhook'}
-                          onChange={() => setHasUnsavedChanges(true)}
-                          className="rounded border-gray-300 text-blue-600 shadow-sm"
-                        />
-                        <span className="ml-2 text-sm font-medium text-gray-700">{recipient.name}</span>
+              <div className="space-y-3">
+                {[
+                  { 
+                    id: 'customer_phone', 
+                    name: 'Customer Phone Number', 
+                    description: 'Automatically recovered from customer data',
+                    enabled: true 
+                  },
+                  { 
+                    id: 'company_email', 
+                    name: 'Company Email Address', 
+                    description: 'admin@company.com',
+                    enabled: true 
+                  },
+                  { 
+                    id: 'agent_email', 
+                    name: 'Agent Email Address', 
+                    description: 'Automatically recovered from agent data',
+                    enabled: true 
+                  },
+                  { 
+                    id: 'webhook', 
+                    name: 'Webhook URL', 
+                    description: 'https://api.company.com/webhook',
+                    enabled: false 
+                  }
+                ].map((recipient) => (
+                  <div key={recipient.id} className="bg-gray-50 rounded-lg p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 bg-gray-300 rounded flex items-center justify-center">
+                        <span className="text-xs text-gray-600">📧</span>
                       </div>
-                      
-                      {recipient.id === 'company' && (
-                        <Input
-                          placeholder="recipient@company.com"
-                          className="mb-2"
-                          onChange={() => setHasUnsavedChanges(true)}
-                        />
-                      )}
-                      
-                      {recipient.id === 'webhook' && (
-                        <Input
-                          placeholder="https://webhook.example.com/endpoint"
-                          className="mb-2"
-                          onChange={() => setHasUnsavedChanges(true)}
-                        />
-                      )}
-                      
-                      {/* Channels */}
-                      <div className="flex gap-4 mb-2">
-                        <label className="flex items-center">
-                          <input
-                            type="checkbox"
-                            defaultChecked={true}
-                            onChange={() => setHasUnsavedChanges(true)}
-                            className="rounded border-gray-300 text-blue-600 shadow-sm"
-                          />
-                          <span className="ml-1 text-xs text-gray-600">Email</span>
-                        </label>
-                        <label className="flex items-center">
-                          <input
-                            type="checkbox"
-                            defaultChecked={false}
-                            onChange={() => setHasUnsavedChanges(true)}
-                            className="rounded border-gray-300 text-blue-600 shadow-sm"
-                          />
-                          <span className="ml-1 text-xs text-gray-600">SMS</span>
-                        </label>
-                      </div>
-                      
-                      {/* Message Templates */}
-                      <div className="space-y-2">
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">
-                            Email Template (English)
-                          </label>
-                          <textarea
-                            rows={2}
-                            placeholder="Hello ##customerName##, your inspection for ##immat## is ready..."
-                            onChange={() => setHasUnsavedChanges(true)}
-                            className="block w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                          />
-                          <p className="text-xs text-gray-500 mt-1">
-                            Available variables: ##immat##, ##customerName##, ##inspectionId##, ##reportUrl##
-                          </p>
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">
-                            SMS Template (English)
-                          </label>
-                          <textarea
-                            rows={2}
-                            placeholder="##customerName##, inspection complete for ##immat##. View: ##reportUrl##"
-                            onChange={() => setHasUnsavedChanges(true)}
-                            className="block w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                          />
-                        </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{recipient.name}</p>
+                        <p className="text-xs text-gray-500">{recipient.description}</p>
                       </div>
                     </div>
-                  ))}
+                    <div className="flex items-center gap-2">
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          defaultChecked={recipient.enabled}
+                          onChange={() => setHasUnsavedChanges(true)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      </label>
+                      <button className="text-gray-400 hover:text-gray-600">
+                        <span className="text-sm">⚙️</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Message Content */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-sm font-medium text-gray-900">Customer - Message Content</h4>
+                <div className="flex items-center gap-2">
+                  <select className="text-sm border border-gray-300 rounded px-2 py-1">
+                    <option>🇺🇸 English</option>
+                    <option>🇫🇷 French</option>
+                    <option>🇪🇸 Spanish</option>
+                  </select>
+                  <Button variant="primary" size="sm">
+                    Save Changes
+                  </Button>
                 </div>
               </div>
 
-              {/* Automatic Chase-ups specific settings */}
-              {event.id === 'automatic_chase_ups' && (
-                <div className="border-t border-gray-200 pt-4 mt-4">
-                  <h5 className="font-medium text-gray-900 mb-3">Chase-up Configuration</h5>
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                    <Input
-                      label="1st Reminder Delay (days)"
-                      type="number"
-                      defaultValue="1"
-                      onChange={() => setHasUnsavedChanges(true)}
-                    />
-                    <Input
-                      label="2nd Reminder Delay (days)"
-                      type="number"
-                      defaultValue="3"
-                      onChange={() => setHasUnsavedChanges(true)}
-                    />
-                    <Input
-                      label="Max Sendings"
-                      type="number"
-                      defaultValue="3"
-                      onChange={() => setHasUnsavedChanges(true)}
-                    />
-                    <Input
-                      label="Activation Date"
-                      type="date"
-                      onChange={() => setHasUnsavedChanges(true)}
-                    />
-                    <Input
-                      label="Send Time (UTC Hour)"
-                      type="number"
-                      min="0"
-                      max="23"
-                      defaultValue="9"
-                      onChange={() => setHasUnsavedChanges(true)}
-                    />
-                    <Input
-                      label="Send Time (UTC Minute)"
-                      type="number"
-                      min="0"
-                      max="59"
-                      defaultValue="0"
-                      onChange={() => setHasUnsavedChanges(true)}
-                    />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Email */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-sm font-medium text-gray-900">📧 Email</span>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        defaultChecked={true}
+                        onChange={() => setHasUnsavedChanges(true)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Subject</label>
+                      <input
+                        type="text"
+                        defaultValue="Your Vehicle Inspection Has Been Created"
+                        onChange={() => setHasUnsavedChanges(true)}
+                        className="block w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">HTML Content</label>
+                      <textarea
+                        rows={8}
+                        defaultValue={`<p>Hello {{customer_name}},</p>
+
+<p>Your vehicle inspection has been successfully created. Inspection ID: {{inspection_id}}</p>
+
+<p>Vehicle: {{immat}}</p>
+<p>Tracking: <a href="{{tracking_url}}">{{tracking_url}}</a></p>
+
+<p>You can track the progress of your inspection using the link above.</p>
+
+<p>Best regards,<br>{{company_name}}</p>`}
+                        onChange={() => setHasUnsavedChanges(true)}
+                        className="block w-full px-3 py-2 text-xs font-mono border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
                   </div>
                 </div>
-              )}
+
+                {/* SMS */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-sm font-medium text-gray-900">📱 SMS</span>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        defaultChecked={true}
+                        onChange={() => setHasUnsavedChanges(true)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Text Content</label>
+                    <textarea
+                      rows={4}
+                      defaultValue="Hello {{customer_name}}, your vehicle inspection has been created. Inspection ID: {{inspection_id}}. Track progress: {{inspection_link}}"
+                      onChange={() => setHasUnsavedChanges(true)}
+                      className="block w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-xs text-gray-500">Character count: 156</span>
+                      <span className="text-xs text-gray-500">Page limit: 1</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Available Variables */}
+              <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                <h5 className="text-sm font-medium text-gray-900 mb-3">Available Variables</h5>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+                  {[
+                    '{{customer_name}}', '{{customer_email}}', '{{customer_phone}}', '{{inspection_id}}',
+                    '{{inspection_link}}', '{{vehicle_make}}', '{{vehicle_model}}', '{{license_plate}}',
+                    '{{company_name}}', '{{agent_name}}', '{{inspection_date}}', '{{tracking_url}}'
+                  ].map((variable) => (
+                    <button
+                      key={variable}
+                      onClick={() => setHasUnsavedChanges(true)}
+                      className="text-xs bg-white border border-gray-200 rounded px-2 py-1 hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                    >
+                      {variable}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  Click any variable to copy it to your clipboard
+                </p>
+              </div>
             </div>
-          ))}
+          </div>
         </div>
       </div>
 
