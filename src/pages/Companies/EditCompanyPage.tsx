@@ -283,6 +283,247 @@ export default function EditCompanyPage() {
       </div>
 
       {/* Save/Revert Buttons */}
+      {/* Validation */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Validation</h3>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              defaultChecked={true}
+              onChange={() => setHasUnsavedChanges(true)}
+              className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+            />
+            <span className="ml-2 text-sm text-gray-700">Human Validation Enabled</span>
+          </label>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Validation Priority (0-5)
+            </label>
+            <select 
+              className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              defaultValue="3"
+              onChange={() => setHasUnsavedChanges(true)}
+            >
+              <option value="0">0 - Lowest</option>
+              <option value="1">1 - Very Low</option>
+              <option value="2">2 - Low</option>
+              <option value="3">3 - Medium</option>
+              <option value="4">4 - High</option>
+              <option value="5">5 - Highest</option>
+            </select>
+          </div>
+          <Input
+            label="Max Validation Delay (minutes)"
+            type="number"
+            defaultValue="60"
+            onChange={() => setHasUnsavedChanges(true)}
+          />
+          <Input
+            label="Min Task Processing Duration (minutes)"
+            type="number"
+            defaultValue="5"
+            onChange={() => setHasUnsavedChanges(true)}
+          />
+          <label className="flex items-center lg:col-span-2">
+            <input
+              type="checkbox"
+              defaultChecked={false}
+              onChange={() => setHasUnsavedChanges(true)}
+              className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+            />
+            <span className="ml-2 text-sm text-gray-700">IA Validation (Joelle model)</span>
+          </label>
+        </div>
+      </div>
+
+      {/* Events & Webhooks */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Events & Webhooks</h3>
+        
+        {/* Event Configuration */}
+        <div className="space-y-6">
+          {[
+            { id: 'inspection_created', name: 'Inspection Created' },
+            { id: 'reminder_sent', name: 'Reminder Sent' },
+            { id: 'automatic_chase_ups', name: 'Automatic Chase Ups' }
+          ].map((event) => (
+            <div key={event.id} className="border border-gray-200 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="font-medium text-gray-900">{event.name}</h4>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    defaultChecked={true}
+                    onChange={() => setHasUnsavedChanges(true)}
+                    className="rounded border-gray-300 text-blue-600 shadow-sm"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Enabled</span>
+                </label>
+              </div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+                <Input
+                  label="Sender Name"
+                  placeholder="Company Name"
+                  onChange={() => setHasUnsavedChanges(true)}
+                />
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    defaultChecked={true}
+                    onChange={() => setHasUnsavedChanges(true)}
+                    className="rounded border-gray-300 text-blue-600 shadow-sm"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Create PDF Report</span>
+                </label>
+              </div>
+
+              {/* Recipients Configuration */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Recipients</label>
+                <div className="space-y-3">
+                  {[
+                    { id: 'customer', name: 'Customer' },
+                    { id: 'agent', name: 'Agent' },
+                    { id: 'company', name: 'Company' },
+                    { id: 'webhook', name: 'Webhook' }
+                  ].map((recipient) => (
+                    <div key={recipient.id} className="border border-gray-100 rounded p-3">
+                      <div className="flex items-center mb-2">
+                        <input
+                          type="checkbox"
+                          defaultChecked={recipient.id !== 'webhook'}
+                          onChange={() => setHasUnsavedChanges(true)}
+                          className="rounded border-gray-300 text-blue-600 shadow-sm"
+                        />
+                        <span className="ml-2 text-sm font-medium text-gray-700">{recipient.name}</span>
+                      </div>
+                      
+                      {recipient.id === 'company' && (
+                        <Input
+                          placeholder="recipient@company.com"
+                          className="mb-2"
+                          onChange={() => setHasUnsavedChanges(true)}
+                        />
+                      )}
+                      
+                      {recipient.id === 'webhook' && (
+                        <Input
+                          placeholder="https://webhook.example.com/endpoint"
+                          className="mb-2"
+                          onChange={() => setHasUnsavedChanges(true)}
+                        />
+                      )}
+                      
+                      {/* Channels */}
+                      <div className="flex gap-4 mb-2">
+                        <label className="flex items-center">
+                          <input
+                            type="checkbox"
+                            defaultChecked={true}
+                            onChange={() => setHasUnsavedChanges(true)}
+                            className="rounded border-gray-300 text-blue-600 shadow-sm"
+                          />
+                          <span className="ml-1 text-xs text-gray-600">Email</span>
+                        </label>
+                        <label className="flex items-center">
+                          <input
+                            type="checkbox"
+                            defaultChecked={false}
+                            onChange={() => setHasUnsavedChanges(true)}
+                            className="rounded border-gray-300 text-blue-600 shadow-sm"
+                          />
+                          <span className="ml-1 text-xs text-gray-600">SMS</span>
+                        </label>
+                      </div>
+                      
+                      {/* Message Templates */}
+                      <div className="space-y-2">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                            Email Template (English)
+                          </label>
+                          <textarea
+                            rows={2}
+                            placeholder="Hello ##customerName##, your inspection for ##immat## is ready..."
+                            onChange={() => setHasUnsavedChanges(true)}
+                            className="block w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">
+                            Available variables: ##immat##, ##customerName##, ##inspectionId##, ##reportUrl##
+                          </p>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                            SMS Template (English)
+                          </label>
+                          <textarea
+                            rows={2}
+                            placeholder="##customerName##, inspection complete for ##immat##. View: ##reportUrl##"
+                            onChange={() => setHasUnsavedChanges(true)}
+                            className="block w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Automatic Chase-ups specific settings */}
+              {event.id === 'automatic_chase_ups' && (
+                <div className="border-t border-gray-200 pt-4 mt-4">
+                  <h5 className="font-medium text-gray-900 mb-3">Chase-up Configuration</h5>
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <Input
+                      label="1st Reminder Delay (days)"
+                      type="number"
+                      defaultValue="1"
+                      onChange={() => setHasUnsavedChanges(true)}
+                    />
+                    <Input
+                      label="2nd Reminder Delay (days)"
+                      type="number"
+                      defaultValue="3"
+                      onChange={() => setHasUnsavedChanges(true)}
+                    />
+                    <Input
+                      label="Max Sendings"
+                      type="number"
+                      defaultValue="3"
+                      onChange={() => setHasUnsavedChanges(true)}
+                    />
+                    <Input
+                      label="Activation Date"
+                      type="date"
+                      onChange={() => setHasUnsavedChanges(true)}
+                    />
+                    <Input
+                      label="Send Time (UTC Hour)"
+                      type="number"
+                      min="0"
+                      max="23"
+                      defaultValue="9"
+                      onChange={() => setHasUnsavedChanges(true)}
+                    />
+                    <Input
+                      label="Send Time (UTC Minute)"
+                      type="number"
+                      min="0"
+                      max="59"
+                      defaultValue="0"
+                      onChange={() => setHasUnsavedChanges(true)}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Save/Revert Buttons */}
       <div className="flex gap-4 justify-end sticky bottom-0 bg-white py-4 border-t border-gray-200">
         <Button variant="secondary" onClick={() => setHasUnsavedChanges(false)}>
           Revert Changes
