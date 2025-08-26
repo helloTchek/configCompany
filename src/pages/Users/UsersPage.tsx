@@ -21,7 +21,6 @@ export default function UsersPage() {
   );
 
   const columns = [
-    { key: 'name', label: 'Name', sortable: true },
     { key: 'email', label: 'Email', sortable: true },
     { key: 'role', label: 'Role', sortable: true,
       render: (value: string) => (
@@ -77,7 +76,6 @@ export default function UsersPage() {
       size="md"
     >
       <div className="space-y-4">
-        <Input label="Full Name" placeholder="John Doe" />
         <Input label="Email" type="email" placeholder="john@example.com" />
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
