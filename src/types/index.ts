@@ -48,6 +48,58 @@ export interface JourneyBlock {
   order: number;
 }
 
+export interface ShootStep {
+  angle?: number;
+  quality: boolean;
+  optional: boolean;
+  typeImage: number;
+  typeExterior?: number;
+  typeInterior?: number;
+  typeAdditional?: number;
+  retry: number;
+  showHelp: boolean;
+  runDetection?: boolean;
+  urlThumb: string;
+  title: {
+    name: string;
+    localization: Array<{
+      locale: string;
+      title: string;
+    }>;
+  };
+  overlay?: {
+    url: string;
+    constraints: {
+      portrait: {
+        position: number;
+        scaleType: number;
+        marginStart: boolean;
+        marginEnd: boolean;
+      };
+      landscape: {
+        position: number;
+        scaleType: number;
+        marginStart: boolean;
+        marginEnd: boolean;
+      };
+    };
+  };
+  help: {
+    localization: Array<{
+      locale: string;
+      title: string | null;
+      content: string | null;
+    }>;
+  };
+}
+
+export interface ShootInspectionData {
+  id: string;
+  name: string;
+  description: string;
+  config: ShootStep[];
+}
+
 export interface SortingRule {
   id: string;
   company: string;

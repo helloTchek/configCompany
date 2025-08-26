@@ -4,6 +4,7 @@ import Header from '../../components/Layout/Header';
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
 import Modal from '../../components/UI/Modal';
+import ShootInspectionConfig from '../../components/Journey/ShootInspectionConfig';
 import { ArrowLeft, Plus, Upload, Download, GripVertical } from 'lucide-react';
 import { JourneyBlock } from '../../types';
 
@@ -24,9 +25,15 @@ export default function CreateJourneyPage() {
   const [journeyDescription, setJourneyDescription] = useState('');
   const [blocks, setBlocks] = useState<JourneyBlock[]>([]);
   const [blockModal, setBlockModal] = useState<{ open: boolean; type?: string }>({ open: false });
-  const [editingBlock, setEditingBlock] = useState<JourneyBlock | null>(null);
+  const [showShootInspectionConfig, setShowShootInspectionConfig] = useState(false);
 
   const addBlock = (blockType: string) => {
+    if (blockType === 'shootInspection') {
+      setShowShootInspectionConfig(true);
+      setBlockModal({ open: false });
+      return;
+    }
+
     const newBlock: JourneyBlock = {
       id: `block-${Date.now()}`,
       type: blockType as any,
@@ -41,6 +48,19 @@ export default function CreateJourneyPage() {
 
   const removeBlock = (blockId: string) => {
     setBlocks(blocks.filter(b => b.id !== blockId));
+  };
+
+  const handleShootInspectionSave = (config: any) => {
+    const newBlock: JourneyBlock = {
+      id: `block-${Date.now()}`,
+      type: 'shootInspection',
+      name: config.name,
+      description: config.description,
+      config: config,
+      order: blocks.length + 1
+    };
+    setBlocks([...blocks, newBlock]);
+    setShowShootInspectionConfig(false);
   };
 
   const BlockConfigModal = () => {
@@ -150,6 +170,20 @@ export default function CreateJourneyPage() {
       </Modal>
     );
   };
+
+  if (showShootInspectionConfig) {
+    return (
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header title="Configure Shoot Inspection Block" />
+        <div className="flex-1 overflow-y-auto p-6">
+          <ShootInspectionConfig
+            onSave={handleShootInspectionSave}
+            onCancel={() => setShowShootInspectionConfig(false)}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
