@@ -100,6 +100,9 @@ export interface ShootInspectionData {
   config: ShootStep[];
 }
 
+// Re-export for compatibility
+export type { ShootStep, ShootInspectionData };
+
 export interface SortingRule {
   id: string;
   company: string;

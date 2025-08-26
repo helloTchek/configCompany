@@ -54,8 +54,8 @@ export default function CreateJourneyPage() {
     const newBlock: JourneyBlock = {
       id: `block-${Date.now()}`,
       type: 'shootInspection',
-      name: config.name,
-      description: config.description,
+      name: config.name || 'Shoot Inspection Block',
+      description: config.description || '',
       config: config,
       order: blocks.length + 1
     };

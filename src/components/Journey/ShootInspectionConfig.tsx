@@ -128,11 +128,13 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
     };
     setEditingStep({ step: newStep, index: -1 });
     setShowStepModal(true);
+    setActiveTab('general');
   };
 
   const editStep = (step: ShootStep, index: number) => {
     setEditingStep({ step: { ...step }, index });
     setShowStepModal(true);
+    setActiveTab('general');
   };
 
   const saveStep = (step: ShootStep) => {
@@ -179,6 +181,8 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
       };
       reader.readAsText(file);
     }
+    // Reset the input value so the same file can be selected again
+    event.target.value = '';
   };
 
   const StepEditModal = () => {
@@ -220,7 +224,7 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
         });
       } else {
         const newLocalizations = step.help.localization.map(l =>
-          l.locale === locale ? { ...l, [field]: value } : l
+          l.locale === locale ? { ...l, [field]: value || null } : l
         );
         updateStep({
           help: { ...step.help, localization: newLocalizations }
@@ -231,14 +235,18 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
     const removeLocalization = (type: 'title' | 'help', locale: string) => {
       if (type === 'title') {
         const newLocalizations = step.title.localization.filter(l => l.locale !== locale);
-        updateStep({
-          title: { ...step.title, localization: newLocalizations }
-        });
+        if (newLocalizations.length > 0) {
+          updateStep({
+            title: { ...step.title, localization: newLocalizations }
+          });
+        }
       } else {
         const newLocalizations = step.help.localization.filter(l => l.locale !== locale);
-        updateStep({
-          help: { ...step.help, localization: newLocalizations }
-        });
+        if (newLocalizations.length > 0) {
+          updateStep({
+            help: { ...step.help, localization: newLocalizations }
+          });
+        }
       }
     };
 
@@ -246,7 +254,7 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
       <Modal
         isOpen={showStepModal}
         onClose={() => setShowStepModal(false)}
-        title="Create New Step"
+        title={editingStep.index === -1 ? "Create New Step" : "Edit Step"}
         size="xl"
       >
         <div className="space-y-6">
@@ -288,7 +296,7 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
                 label="Angle"
                 type="number"
                 value={step.angle?.toString() || ''}
-                onChange={(e) => updateStep({ angle: parseInt(e.target.value) || undefined })}
+                onChange={(e) => updateStep({ angle: e.target.value ? parseInt(e.target.value) : undefined })}
                 placeholder="Enter angle"
               />
               <Input
@@ -319,6 +327,35 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Step Type</label>
                 <select
+                  value={
+                    step.typeImage === 0 ? 'exterior' :
+                    step.typeImage === 3 ? 'interior' : 'additional'
+                  }
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === 'exterior') {
+                      updateStep({ 
+                        typeImage: 0,
+                        typeExterior: step.typeExterior || 0,
+                        typeInterior: undefined,
+                        typeAdditional: undefined
+                      });
+                    } else if (value === 'interior') {
+                      updateStep({ 
+                        typeImage: 3,
+                        typeInterior: step.typeInterior || 0,
+                        typeExterior: undefined,
+                        typeAdditional: undefined
+                      });
+                    } else {
+                      updateStep({ 
+                        typeImage: 1,
+                        typeAdditional: step.typeAdditional || 0,
+                        typeExterior: undefined,
+                        typeInterior: undefined
+                      });
+                    }
+                  }}
                   className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   {stepTypeOptions.map(option => (
@@ -354,6 +391,15 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
                   />
                   <span className="ml-2 text-sm text-gray-700">Show Help</span>
                 </label>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={step.runDetection || false}
+                    onChange={(e) => updateStep({ runDetection: e.target.checked })}
+                    className="rounded border-gray-300 text-blue-600 shadow-sm"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Run Detection</span>
+                </label>
               </div>
             </div>
           )}
@@ -387,7 +433,13 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
                     <div key={index} className="flex items-center gap-3">
                       <select
                         value={loc.locale}
-                        onChange={(e) => updateLocalization('title', loc.locale, 'locale', e.target.value)}
+                        onChange={(e) => {
+                          const newLocalizations = [...step.title.localization];
+                          newLocalizations[index] = { ...loc, locale: e.target.value };
+                          updateStep({
+                            title: { ...step.title, localization: newLocalizations }
+                          });
+                        }}
                         className="w-32 text-sm border border-gray-300 rounded px-2 py-1"
                       >
                         {languages.map(lang => (
@@ -401,12 +453,14 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
                         placeholder="Enter title"
                         className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       />
-                      <button
-                        onClick={() => removeLocalization('title', loc.locale)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        <X size={16} />
-                      </button>
+                      {step.title.localization.length > 1 && (
+                        <button
+                          onClick={() => removeLocalization('title', loc.locale)}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          <X size={16} />
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -439,7 +493,13 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
                       <div className="flex items-center gap-3 mb-3">
                         <select
                           value={loc.locale}
-                          onChange={(e) => updateLocalization('help', loc.locale, 'locale', e.target.value)}
+                          onChange={(e) => {
+                            const newLocalizations = [...step.help.localization];
+                            newLocalizations[index] = { ...loc, locale: e.target.value };
+                            updateStep({
+                              help: { ...step.help, localization: newLocalizations }
+                            });
+                          }}
                           className="w-32 text-sm border border-gray-300 rounded px-2 py-1"
                         >
                           {languages.map(lang => (
@@ -453,12 +513,14 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
                           placeholder="Enter help title"
                           className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
-                        <button
-                          onClick={() => removeLocalization('help', loc.locale)}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          <X size={16} />
-                        </button>
+                        {step.help.localization.length > 1 && (
+                          <button
+                            onClick={() => removeLocalization('help', loc.locale)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            <X size={16} />
+                          </button>
+                        )}
                       </div>
                       <textarea
                         rows={3}
@@ -482,7 +544,6 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
                 value={step.overlay?.url || ''}
                 onChange={(e) => updateStep({
                   overlay: {
-                    ...step.overlay,
                     url: e.target.value,
                     constraints: step.overlay?.constraints || {
                       portrait: { position: 0, scaleType: 0, marginStart: true, marginEnd: true },
@@ -492,6 +553,172 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
                 })}
                 placeholder="Enter overlay URL"
               />
+              
+              {step.overlay?.url && (
+                <div className="grid grid-cols-2 gap-6">
+                  {/* Portrait Constraints */}
+                  <div>
+                    <h5 className="text-sm font-medium text-gray-900 mb-3">Portrait Constraints</h5>
+                    <div className="space-y-3">
+                      <Input
+                        label="Position"
+                        type="number"
+                        value={step.overlay?.constraints.portrait.position.toString() || '0'}
+                        onChange={(e) => updateStep({
+                          overlay: {
+                            ...step.overlay!,
+                            constraints: {
+                              ...step.overlay!.constraints,
+                              portrait: {
+                                ...step.overlay!.constraints.portrait,
+                                position: parseInt(e.target.value) || 0
+                              }
+                            }
+                          }
+                        })}
+                      />
+                      <Input
+                        label="Scale Type"
+                        type="number"
+                        value={step.overlay?.constraints.portrait.scaleType.toString() || '0'}
+                        onChange={(e) => updateStep({
+                          overlay: {
+                            ...step.overlay!,
+                            constraints: {
+                              ...step.overlay!.constraints,
+                              portrait: {
+                                ...step.overlay!.constraints.portrait,
+                                scaleType: parseInt(e.target.value) || 0
+                              }
+                            }
+                          }
+                        })}
+                      />
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={step.overlay?.constraints.portrait.marginStart || false}
+                          onChange={(e) => updateStep({
+                            overlay: {
+                              ...step.overlay!,
+                              constraints: {
+                                ...step.overlay!.constraints,
+                                portrait: {
+                                  ...step.overlay!.constraints.portrait,
+                                  marginStart: e.target.checked
+                                }
+                              }
+                            }
+                          })}
+                          className="rounded border-gray-300 text-blue-600 shadow-sm"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">Margin Start</span>
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={step.overlay?.constraints.portrait.marginEnd || false}
+                          onChange={(e) => updateStep({
+                            overlay: {
+                              ...step.overlay!,
+                              constraints: {
+                                ...step.overlay!.constraints,
+                                portrait: {
+                                  ...step.overlay!.constraints.portrait,
+                                  marginEnd: e.target.checked
+                                }
+                              }
+                            }
+                          })}
+                          className="rounded border-gray-300 text-blue-600 shadow-sm"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">Margin End</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Landscape Constraints */}
+                  <div>
+                    <h5 className="text-sm font-medium text-gray-900 mb-3">Landscape Constraints</h5>
+                    <div className="space-y-3">
+                      <Input
+                        label="Position"
+                        type="number"
+                        value={step.overlay?.constraints.landscape.position.toString() || '0'}
+                        onChange={(e) => updateStep({
+                          overlay: {
+                            ...step.overlay!,
+                            constraints: {
+                              ...step.overlay!.constraints,
+                              landscape: {
+                                ...step.overlay!.constraints.landscape,
+                                position: parseInt(e.target.value) || 0
+                              }
+                            }
+                          }
+                        })}
+                      />
+                      <Input
+                        label="Scale Type"
+                        type="number"
+                        value={step.overlay?.constraints.landscape.scaleType.toString() || '0'}
+                        onChange={(e) => updateStep({
+                          overlay: {
+                            ...step.overlay!,
+                            constraints: {
+                              ...step.overlay!.constraints,
+                              landscape: {
+                                ...step.overlay!.constraints.landscape,
+                                scaleType: parseInt(e.target.value) || 0
+                              }
+                            }
+                          }
+                        })}
+                      />
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={step.overlay?.constraints.landscape.marginStart || false}
+                          onChange={(e) => updateStep({
+                            overlay: {
+                              ...step.overlay!,
+                              constraints: {
+                                ...step.overlay!.constraints,
+                                landscape: {
+                                  ...step.overlay!.constraints.landscape,
+                                  marginStart: e.target.checked
+                                }
+                              }
+                            }
+                          })}
+                          className="rounded border-gray-300 text-blue-600 shadow-sm"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">Margin Start</span>
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={step.overlay?.constraints.landscape.marginEnd || false}
+                          onChange={(e) => updateStep({
+                            overlay: {
+                              ...step.overlay!,
+                              constraints: {
+                                ...step.overlay!.constraints,
+                                landscape: {
+                                  ...step.overlay!.constraints.landscape,
+                                  marginEnd: e.target.checked
+                                }
+                              }
+                            }
+                          })}
+                          className="rounded border-gray-300 text-blue-600 shadow-sm"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">Margin End</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -546,7 +773,7 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
             Download JSON
           </Button>
           <label className="cursor-pointer">
-            <Button variant="secondary" className="flex items-center gap-2" as="span">
+            <Button variant="secondary" className="flex items-center gap-2" type="button">
               <Upload size={16} />
               Upload JSON
             </Button>
@@ -591,18 +818,25 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
                             <GripVertical size={16} className="text-gray-400" />
                           </div>
                           
-                          <div className="w-16 h-16 bg-gray-200 rounded-lg overflow-hidden">
-                            {step.urlThumb && (
+                          <div className="w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                            {step.urlThumb ? (
                               <img 
                                 src={step.urlThumb} 
                                 alt={step.title.name}
                                 className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display = 'none';
+                                }}
                               />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                                No Image
+                              </div>
                             )}
                           </div>
                           
                           <div className="flex-1">
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3 mb-1">
                               <span className="text-sm font-medium text-gray-900">Step {index + 1}</span>
                               <h4 className="font-medium text-gray-900">{step.title.name || 'Unnamed Step'}</h4>
                               <div className="flex gap-2">
@@ -616,12 +850,21 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
                                     Quality
                                   </span>
                                 )}
+                                {step.runDetection && (
+                                  <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+                                    Detection
+                                  </span>
+                                )}
                               </div>
                             </div>
-                            <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
+                            <div className="flex items-center gap-4 text-sm text-gray-500">
                               {step.angle && <span>Angle: {step.angle}</span>}
                               <span>Retry: {step.retry}</span>
-                              <span>Type: {step.typeImage}</span>
+                              <span>Type: {
+                                step.typeImage === 0 ? 'Standard' :
+                                step.typeImage === 3 ? 'Interior' : 'Additional'
+                              }</span>
+                              <span>Languages: {step.title.localization.length}</span>
                             </div>
                           </div>
                           
