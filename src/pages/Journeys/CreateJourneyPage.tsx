@@ -51,7 +51,6 @@ export default function CreateJourneyPage() {
     setBlocks(blocks.filter(b => b.id !== blockId));
   };
 
-  const handleShootInspectionSave = (config: any) => {
   const handleShootInspectionSave = (config: ShootInspectionData) => {
     const newBlock: JourneyBlock = {
       id: `block-${Date.now()}`,
