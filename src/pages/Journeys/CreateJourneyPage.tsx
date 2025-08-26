@@ -7,6 +7,7 @@ import Modal from '../../components/UI/Modal';
 import ShootInspectionConfig from '../../components/Journey/ShootInspectionConfig';
 import { ArrowLeft, Plus, Upload, Download, GripVertical } from 'lucide-react';
 import { JourneyBlock } from '../../types';
+import { ShootInspectionData } from '../../types';
 
 const blockTypes = [
   { type: 'form', name: 'Form Block', description: 'Custom form with JSON configuration' },
@@ -51,11 +52,12 @@ export default function CreateJourneyPage() {
   };
 
   const handleShootInspectionSave = (config: any) => {
+  const handleShootInspectionSave = (config: ShootInspectionData) => {
     const newBlock: JourneyBlock = {
       id: `block-${Date.now()}`,
       type: 'shootInspection',
-      name: config.name || 'Shoot Inspection Block',
-      description: config.description || '',
+      name: config.name,
+      description: config.description,
       config: config,
       order: blocks.length + 1
     };

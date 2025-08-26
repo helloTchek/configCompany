@@ -4,58 +4,7 @@ import Button from '../UI/Button';
 import Input from '../UI/Input';
 import Modal from '../UI/Modal';
 import { Upload, Download, Plus, Edit, Trash2, GripVertical, X } from 'lucide-react';
-
-interface ShootStep {
-  angle?: number;
-  quality: boolean;
-  optional: boolean;
-  typeImage: number;
-  typeExterior?: number;
-  typeInterior?: number;
-  typeAdditional?: number;
-  retry: number;
-  showHelp: boolean;
-  runDetection?: boolean;
-  urlThumb: string;
-  title: {
-    name: string;
-    localization: Array<{
-      locale: string;
-      title: string;
-    }>;
-  };
-  overlay?: {
-    url: string;
-    constraints: {
-      portrait: {
-        position: number;
-        scaleType: number;
-        marginStart: boolean;
-        marginEnd: boolean;
-      };
-      landscape: {
-        position: number;
-        scaleType: number;
-        marginStart: boolean;
-        marginEnd: boolean;
-      };
-    };
-  };
-  help: {
-    localization: Array<{
-      locale: string;
-      title: string | null;
-      content: string | null;
-    }>;
-  };
-}
-
-interface ShootInspectionData {
-  id: string;
-  name: string;
-  description: string;
-  config: ShootStep[];
-}
+import { ShootStep, ShootInspectionData } from '../../types';
 
 interface ShootInspectionConfigProps {
   onSave: (config: ShootInspectionData) => void;
@@ -181,7 +130,6 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
       };
       reader.readAsText(file);
     }
-    // Reset the input value so the same file can be selected again
     event.target.value = '';
   };
 
