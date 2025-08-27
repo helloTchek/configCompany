@@ -163,8 +163,15 @@ export default function CreateJourneyPage() {
             <Button variant="secondary" onClick={() => setBlockModal({ open: false })}>
               Cancel
             </Button>
-            <Button onClick={() => addBlock(blockModal.type!)}>
-              Add Block
+            <Button onClick={() => {
+              if (blockModal.type === 'shootInspection') {
+                setShowShootInspectionConfig(true);
+                setBlockModal({ open: false });
+              } else {
+                addBlock(blockModal.type!);
+              }
+            }}>
+              {blockModal.type === 'shootInspection' ? 'Configure Shoot Inspection' : 'Add Block'}
             </Button>
           </div>
         </div>
