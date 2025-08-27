@@ -36,12 +36,1500 @@ const stepTypeOptions = [
 ];
 
 export default function ShootInspectionConfig({ onSave, onCancel, initialData }: ShootInspectionConfigProps) {
+  // Default steps data from the provided JSON
+  const defaultSteps: ShootStep[] = [
+    {
+      "angle": 0,
+      "quality": true,
+      "optional": false,
+      "typeImage": 0,
+      "typeExterior": 0,
+      "retry": 2,
+      "showHelp": true,
+      "urlThumb": "https://webapp.tchek.fr/assets/images/shoot-sides/front@2x.png",
+      "title": {
+        "name": "front",
+        "localization": [
+          {
+            "locale": "fr",
+            "title": "Avant"
+          }
+        ]
+      },
+      "overlay": {
+        "url": "https://webapp.tchek.fr/assets/images/shoot-sides/overlay/front.svg",
+        "constraints": {
+          "portrait": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": true,
+            "marginEnd": true
+          },
+          "landscape": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": true,
+            "marginEnd": true
+          }
+        }
+      },
+      "help": {
+        "localization": [
+          {
+            "locale": "fr",
+            "title": null,
+            "content": "Photographiez l'avant de votre voiture"
+          },
+          {
+            "locale": "en",
+            "title": null,
+            "content": "Take a shot of the front of your car"
+          },
+          {
+            "locale": "de",
+            "title": null,
+            "content": "Fotografieren Sie die Vorderseite Ihres Autos."
+          },
+          {
+            "locale": "it",
+            "title": null,
+            "content": "Fotografa il muso dell'auto"
+          },
+          {
+            "locale": "nl",
+            "title": null,
+            "content": "Neem een foto van de voorkant van uw auto."
+          },
+          {
+            "locale": "es",
+            "title": null,
+            "content": "Tome una foto de la parte delantera de tu coche"
+          },
+          {
+            "locale": "sv",
+            "title": null,
+            "content": "Ta ett foto på bilens front"
+          }
+        ]
+      }
+    },
+    {
+      "angle": 2,
+      "quality": true,
+      "optional": false,
+      "typeImage": 0,
+      "typeExterior": 0,
+      "retry": 2,
+      "showHelp": true,
+      "urlThumb": "https://webapp.tchek.fr/assets/images/shoot-sides/frontT34Driver@2x.png",
+      "title": {
+        "name": "frontT34Driver",
+        "localization": [
+          {
+            "locale": "fr",
+            "title": "Avant Conducteur"
+          }
+        ]
+      },
+      "overlay": {
+        "url": "https://webapp.tchek.fr/assets/images/shoot-sides/overlay/frontT34Driver.svg",
+        "constraints": {
+          "portrait": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": true,
+            "marginEnd": true
+          },
+          "landscape": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": true,
+            "marginEnd": true
+          }
+        }
+      },
+      "help": {
+        "localization": [
+          {
+            "locale": "fr",
+            "title": null,
+            "content": "Photographiez votre voiture en entier depuis l'angle avant-gauche"
+          },
+          {
+            "locale": "en",
+            "title": null,
+            "content": "Take a shot of the whole car from a front-left 45-degree angle"
+          },
+          {
+            "locale": "de",
+            "title": null,
+            "content": "Fotografieren Sie Ihr gesamtes Auto von der vorderen linken Ecke"
+          },
+          {
+            "locale": "it",
+            "title": null,
+            "content": "Prendi una foto di tre quarti dal davanti (lato conduttore)"
+          },
+          {
+            "locale": "nl",
+            "title": null,
+            "content": "Neem een foto van uw hele wagen vanaf de linker voorzijde  "
+          },
+          {
+            "locale": "es",
+            "title": null,
+            "content": "Fotografía todo tu coche desde la esquina delantera izquierda"
+          },
+          {
+            "locale": "sv",
+            "title": null,
+            "content": "Ta ett foto på hela bilen från 45 graders vinkel framifrån vänster"
+          }
+        ]
+      }
+    },
+    {
+      "angle": 3,
+      "quality": true,
+      "optional": false,
+      "typeImage": 0,
+      "typeExterior": 0,
+      "retry": 2,
+      "showHelp": true,
+      "urlThumb": "https://webapp.tchek.fr/assets/images/shoot-sides/frontT34DriverInspect@2x.png",
+      "title": {
+        "name": "frontT34DriverInspect",
+        "localization": [
+          {
+            "locale": "fr",
+            "title": "Avant Conducteur"
+          }
+        ]
+      },
+      "overlay": {
+        "url": "https://webapp.tchek.fr/assets/images/shoot-sides/overlay/frontT34DriverInspectLandscape.svg",
+        "constraints": {
+          "portrait": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": true,
+            "marginEnd": false
+          },
+          "landscape": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": true,
+            "marginEnd": false
+          }
+        }
+      },
+      "help": {
+        "localization": [
+          {
+            "locale": "fr",
+            "title": null,
+            "content": "Photographiez de près l'angle avant-gauche"
+          },
+          {
+            "locale": "en",
+            "title": null,
+            "content": "Take a close up shot from a front-left 45-degree angle"
+          },
+          {
+            "locale": "de",
+            "title": null,
+            "content": "Machen Sie eine Nahaufnahme der vorderen linken Ecke"
+          },
+          {
+            "locale": "it",
+            "title": null,
+            "content": "Prendi una foto ravvicinata di tre quarti dal davanti (lato conduttore)"
+          },
+          {
+            "locale": "nl",
+            "title": null,
+            "content": "Neem een close-up foto vanaf  de linker voorzijde "
+          },
+          {
+            "locale": "es",
+            "title": null,
+            "content": "Toma un primer plano de la esquina delantera izquierda"
+          },
+          {
+            "locale": "sv",
+            "title": null,
+            "content": "Ta en närbild från 45 graders vinkel framifrån vänster"
+          }
+        ]
+      }
+    },
+    {
+      "angle": 4,
+      "quality": true,
+      "optional": false,
+      "typeImage": 0,
+      "typeExterior": 0,
+      "retry": 2,
+      "showHelp": true,
+      "urlThumb": "https://webapp.tchek.fr/assets/images/shoot-sides/sideDriver@2x.png",
+      "title": {
+        "name": "sideDriver",
+        "localization": [
+          {
+            "locale": "fr",
+            "title": "Côté Conducteur"
+          }
+        ]
+      },
+      "overlay": {
+        "url": "https://webapp.tchek.fr/assets/images/shoot-sides/overlay/sideDriver.svg",
+        "constraints": {
+          "portrait": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": true,
+            "marginEnd": true
+          },
+          "landscape": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": true,
+            "marginEnd": true
+          }
+        }
+      },
+      "help": {
+        "localization": [
+          {
+            "locale": "fr",
+            "title": null,
+            "content": "Photographiez votre voiture en entier depuis le côté conducteur"
+          },
+          {
+            "locale": "en",
+            "title": null,
+            "content": "Take a shot of the whole car from the driver side"
+          },
+          {
+            "locale": "de",
+            "title": null,
+            "content": "Fotografieren Sie Ihr gesamtes Auto von der Fahrerseite aus"
+          },
+          {
+            "locale": "it",
+            "title": null,
+            "content": "Fotografa tutto il lato conduttore dell'auto"
+          },
+          {
+            "locale": "nl",
+            "title": null,
+            "content": "Neem een foto van uw hele wagen aan de bestuurderszijde"
+          },
+          {
+            "locale": "es",
+            "title": null,
+            "content": "Fotografiar todo el coche desde el lado del conductor"
+          },
+          {
+            "locale": "sv",
+            "title": null,
+            "content": "Ta ett foto på hela bilen från förarsidan"
+          }
+        ]
+      }
+    },
+    {
+      "angle": 5,
+      "quality": true,
+      "optional": false,
+      "typeImage": 0,
+      "typeExterior": 0,
+      "retry": 2,
+      "showHelp": true,
+      "urlThumb": "https://webapp.tchek.fr/assets/images/shoot-sides/sideDriverFrontInspect@2x.png",
+      "title": {
+        "name": "sideDriverFrontInspect",
+        "localization": [
+          {
+            "locale": "fr",
+            "title": "Côté Conducteur"
+          }
+        ]
+      },
+      "overlay": {
+        "url": "https://webapp.tchek.fr/assets/images/shoot-sides/overlay/sideDriverFrontInspect.svg",
+        "constraints": {
+          "portrait": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": true,
+            "marginEnd": false
+          },
+          "landscape": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": true,
+            "marginEnd": false
+          }
+        }
+      },
+      "help": {
+        "localization": [
+          {
+            "locale": "fr",
+            "title": null,
+            "content": "Photographiez la partie avant de la voiture du côté conducteur"
+          },
+          {
+            "locale": "en",
+            "title": null,
+            "content": "Take a close up shot of the front of the car from the driver side"
+          },
+          {
+            "locale": "de",
+            "title": null,
+            "content": "Fotografieren Sie den vorderen Teil des Autos von der Fahrerseite"
+          },
+          {
+            "locale": "it",
+            "title": null,
+            "content": "Fotografa la parte anteriore del lato conduttore"
+          },
+          {
+            "locale": "nl",
+            "title": null,
+            "content": "Neem een foto van de voorkant van de wagen aan de bestuurderszijde"
+          },
+          {
+            "locale": "es",
+            "title": null,
+            "content": "Fotografía la parte delantera desde el lado del conductor"
+          },
+          {
+            "locale": "sv",
+            "title": null,
+            "content": "Ta en närbild på bilens front från förarsidan"
+          }
+        ]
+      }
+    },
+    {
+      "angle": 6,
+      "quality": true,
+      "optional": false,
+      "typeImage": 0,
+      "typeExterior": 0,
+      "retry": 2,
+      "showHelp": true,
+      "urlThumb": "https://webapp.tchek.fr/assets/images/shoot-sides/sideDriverBackInspect@2x.png",
+      "title": {
+        "name": "sideDriverBackInspect",
+        "localization": [
+          {
+            "locale": "fr",
+            "title": "Côté Conducteur"
+          }
+        ]
+      },
+      "overlay": {
+        "url": "https://webapp.tchek.fr/assets/images/shoot-sides/overlay/sideDriverBackInspect.svg",
+        "constraints": {
+          "portrait": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": false,
+            "marginEnd": true
+          },
+          "landscape": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": false,
+            "marginEnd": true
+          }
+        }
+      },
+      "help": {
+        "localization": [
+          {
+            "locale": "fr",
+            "title": null,
+            "content": "Photographiez la partie arrière de la voiture du côté conducteur"
+          },
+          {
+            "locale": "en",
+            "title": null,
+            "content": "Take a close up shot of the rear of the car from the driver side"
+          },
+          {
+            "locale": "de",
+            "title": null,
+            "content": "Fotografieren Sie den hinteren Teil des Autos von der Fahrerseite"
+          },
+          {
+            "locale": "it",
+            "title": null,
+            "content": "Fotografa la parte posteriore del lato conduttore"
+          },
+          {
+            "locale": "nl",
+            "title": null,
+            "content": "Neem een foto van de achterkant van de wagen aan de bestuurderszijde"
+          },
+          {
+            "locale": "es",
+            "title": null,
+            "content": "Fotografía la parte trasera desde el lado del conductor"
+          },
+          {
+            "locale": "sv",
+            "title": null,
+            "content": "Ta en närbild på bilens baksida från förarsidan"
+          }
+        ]
+      }
+    },
+    {
+      "angle": 7,
+      "quality": true,
+      "optional": false,
+      "typeImage": 0,
+      "typeExterior": 0,
+      "retry": 2,
+      "showHelp": true,
+      "urlThumb": "https://webapp.tchek.fr/assets/images/shoot-sides/backT34Driver@2x.png",
+      "title": {
+        "name": "backT34Driver",
+        "localization": [
+          {
+            "locale": "fr",
+            "title": "Arrière Conducteur"
+          }
+        ]
+      },
+      "overlay": {
+        "url": "https://webapp.tchek.fr/assets/images/shoot-sides/overlay/backT34Driver.svg",
+        "constraints": {
+          "portrait": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": true,
+            "marginEnd": true
+          },
+          "landscape": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": true,
+            "marginEnd": true
+          }
+        }
+      },
+      "help": {
+        "localization": [
+          {
+            "locale": "fr",
+            "title": null,
+            "content": "Photographiez votre voiture en entier depuis l'angle arrière-gauche"
+          },
+          {
+            "locale": "en",
+            "title": null,
+            "content": "Take a shot of the whole car from a rear-left 45-degree angle"
+          },
+          {
+            "locale": "de",
+            "title": null,
+            "content": "Fotografieren Sie Ihr gesamtes Auto von der hinteren linken Ecke"
+          },
+          {
+            "locale": "it",
+            "title": null,
+            "content": "Prendi una foto di tre quarti dal retro (lato conduttore)"
+          },
+          {
+            "locale": "nl",
+            "title": null,
+            "content": "Neem een foto van uw hele wagen van links achter"
+          },
+          {
+            "locale": "es",
+            "title": null,
+            "content": "Fotografía tu coche entero desde la esquina trasera izquierda"
+          },
+          {
+            "locale": "sv",
+            "title": null,
+            "content": "Ta ett foto på hela bilen från 45 graders vinkel bakifrån vänster"
+          }
+        ]
+      }
+    },
+    {
+      "angle": 8,
+      "quality": true,
+      "optional": false,
+      "typeImage": 0,
+      "typeExterior": 0,
+      "retry": 2,
+      "showHelp": true,
+      "urlThumb": "https://webapp.tchek.fr/assets/images/shoot-sides/backT34DriverInspect@2x.png",
+      "title": {
+        "name": "backT34DriverInspect",
+        "localization": [
+          {
+            "locale": "fr",
+            "title": "Arrière Conducteur"
+          }
+        ]
+      },
+      "overlay": {
+        "url": "https://webapp.tchek.fr/assets/images/shoot-sides/overlay/backT34DriverInspectLandscape.svg",
+        "constraints": {
+          "portrait": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": false,
+            "marginEnd": true
+          },
+          "landscape": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": false,
+            "marginEnd": true
+          }
+        }
+      },
+      "help": {
+        "localization": [
+          {
+            "locale": "fr",
+            "title": null,
+            "content": "Photographiez de près l'angle arrière-gauche"
+          },
+          {
+            "locale": "en",
+            "title": null,
+            "content": "Take a close up shot from a rear-left 45-degree angle"
+          },
+          {
+            "locale": "de",
+            "title": null,
+            "content": "Machen Sie eine Nahaufnahme der hinteren linken Ecke"
+          },
+          {
+            "locale": "it",
+            "title": null,
+            "content": "Prendi una foto ravvicinata di tre quarti dal retro (lato conduttore)"
+          },
+          {
+            "locale": "nl",
+            "title": null,
+            "content": "Neem een close-up foto van de linker achterzijde"
+          },
+          {
+            "locale": "es",
+            "title": null,
+            "content": "Toma un primer plano de la esquina trasera izquierda"
+          },
+          {
+            "locale": "sv",
+            "title": null,
+            "content": "Ta en närbild från 45 graders vinkel bakifrån vänster"
+          }
+        ]
+      }
+    },
+    {
+      "angle": 9,
+      "quality": true,
+      "optional": false,
+      "typeImage": 0,
+      "typeExterior": 0,
+      "retry": 2,
+      "showHelp": true,
+      "urlThumb": "https://webapp.tchek.fr/assets/images/shoot-sides/back@2x.png",
+      "title": {
+        "name": "back",
+        "localization": [
+          {
+            "locale": "fr",
+            "title": "Arrière"
+          }
+        ]
+      },
+      "overlay": {
+        "url": "https://webapp.tchek.fr/assets/images/shoot-sides/overlay/back.svg",
+        "constraints": {
+          "portrait": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": true,
+            "marginEnd": true
+          },
+          "landscape": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": true,
+            "marginEnd": true
+          }
+        }
+      },
+      "help": {
+        "localization": [
+          {
+            "locale": "fr",
+            "title": null,
+            "content": "Photographiez l'arrière de votre voiture"
+          },
+          {
+            "locale": "en",
+            "title": null,
+            "content": "Take a shot of the rear of your car"
+          },
+          {
+            "locale": "de",
+            "title": null,
+            "content": "Fotografieren Sie die Rückseite Ihres Autos."
+          },
+          {
+            "locale": "it",
+            "title": null,
+            "content": "Fotografa il retro dell'auto"
+          },
+          {
+            "locale": "nl",
+            "title": null,
+            "content": "Neem een foto van de achterkant van uw auto"
+          },
+          {
+            "locale": "es",
+            "title": null,
+            "content": "Tome una foto de la parte trasera de tu coche"
+          },
+          {
+            "locale": "sv",
+            "title": null,
+            "content": "Ta ett foto på bilens baksida"
+          }
+        ]
+      }
+    },
+    {
+      "angle": 11,
+      "quality": true,
+      "optional": false,
+      "typeImage": 0,
+      "typeExterior": 0,
+      "retry": 2,
+      "showHelp": true,
+      "urlThumb": "https://webapp.tchek.fr/assets/images/shoot-sides/backT34Passenger@2x.png",
+      "title": {
+        "name": "backT34Passenger",
+        "localization": [
+          {
+            "locale": "fr",
+            "title": "Arrière Passager"
+          }
+        ]
+      },
+      "overlay": {
+        "url": "https://webapp.tchek.fr/assets/images/shoot-sides/overlay/backT34Passenger.svg",
+        "constraints": {
+          "portrait": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": true,
+            "marginEnd": true
+          },
+          "landscape": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": true,
+            "marginEnd": true
+          }
+        }
+      },
+      "help": {
+        "localization": [
+          {
+            "locale": "fr",
+            "title": null,
+            "content": "Photographiez votre voiture en entier depuis l'angle arrière-droit"
+          },
+          {
+            "locale": "en",
+            "title": null,
+            "content": "Take a shot of the whole car from a rear-right 45-degree angle"
+          },
+          {
+            "locale": "de",
+            "title": null,
+            "content": "Fotografieren Sie Ihr gesamtes Auto von der hinteren rechten Ecke"
+          },
+          {
+            "locale": "it",
+            "title": null,
+            "content": "Prendi una foto di tre quarti dal retro (lato passeggero)"
+          },
+          {
+            "locale": "nl",
+            "title": null,
+            "content": "Neem een foto van uw hele wagen vanaf de rechter achterzijde"
+          },
+          {
+            "locale": "es",
+            "title": null,
+            "content": "Fotografía todo tu coche desde la esquina trasera derecha"
+          },
+          {
+            "locale": "sv",
+            "title": null,
+            "content": "Ta ett foto på hela bilen från 45 graders vinkel bakifrån höger"
+          }
+        ]
+      }
+    },
+    {
+      "angle": 12,
+      "quality": true,
+      "optional": false,
+      "typeImage": 0,
+      "typeExterior": 0,
+      "retry": 2,
+      "showHelp": true,
+      "urlThumb": "https://webapp.tchek.fr/assets/images/shoot-sides/backT34PassengerInspect@2x.png",
+      "title": {
+        "name": "backT34PassengerInspect",
+        "localization": [
+          {
+            "locale": "fr",
+            "title": "Arrière Passager"
+          }
+        ]
+      },
+      "overlay": {
+        "url": "https://webapp.tchek.fr/assets/images/shoot-sides/overlay/backT34PassengerInspectLandscape.svg",
+        "constraints": {
+          "portrait": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": true,
+            "marginEnd": false
+          },
+          "landscape": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": true,
+            "marginEnd": false
+          }
+        }
+      },
+      "help": {
+        "localization": [
+          {
+            "locale": "fr",
+            "title": null,
+            "content": "Photographiez de près l'angle arrière-droit"
+          },
+          {
+            "locale": "en",
+            "title": null,
+            "content": "Take a close up shot from a rear-right 45-degree angle"
+          },
+          {
+            "locale": "de",
+            "title": null,
+            "content": "Machen Sie eine Nahaufnahme der hinteren rechte Ecke"
+          },
+          {
+            "locale": "it",
+            "title": null,
+            "content": "Prendi una foto ravvicinata di tre quarti dal retro (lato passeggero)"
+          },
+          {
+            "locale": "nl",
+            "title": null,
+            "content": "Neem een close-up foto vanaf  de rechter achterzijde "
+          },
+          {
+            "locale": "es",
+            "title": null,
+            "content": "Toma un primer plano de la esquina trasera derecha"
+          },
+          {
+            "locale": "sv",
+            "title": null,
+            "content": "Ta en närbild från 45 graders vinkel bakifrån höger"
+          }
+        ]
+      }
+    },
+    {
+      "angle": 13,
+      "quality": true,
+      "optional": false,
+      "typeImage": 0,
+      "typeExterior": 0,
+      "retry": 2,
+      "showHelp": true,
+      "urlThumb": "https://webapp.tchek.fr/assets/images/shoot-sides/sidePassenger@2x.png",
+      "title": {
+        "name": "sidePassenger",
+        "localization": [
+          {
+            "locale": "fr",
+            "title": "Côté Passager"
+          }
+        ]
+      },
+      "overlay": {
+        "url": "https://webapp.tchek.fr/assets/images/shoot-sides/overlay/sidePassenger.svg",
+        "constraints": {
+          "portrait": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": true,
+            "marginEnd": true
+          },
+          "landscape": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": true,
+            "marginEnd": true
+          }
+        }
+      },
+      "help": {
+        "localization": [
+          {
+            "locale": "fr",
+            "title": null,
+            "content": "Photographiez votre voiture en entier depuis le côté passager"
+          },
+          {
+            "locale": "en",
+            "title": null,
+            "content": "Take a shot of the whole car from the passenger side"
+          },
+          {
+            "locale": "de",
+            "title": null,
+            "content": "Fotografieren Sie Ihr gesamtes Auto von der Beifahrerseite"
+          },
+          {
+            "locale": "it",
+            "title": null,
+            "content": "Fotografa tutto il lato passeggero dell'auto"
+          },
+          {
+            "locale": "nl",
+            "title": null,
+            "content": "Neem een foto van uw hele wagen aan de passagierszijde"
+          },
+          {
+            "locale": "es",
+            "title": null,
+            "content": "Fotografía tu coche entero desde el lado del pasajero"
+          },
+          {
+            "locale": "sv",
+            "title": null,
+            "content": "Ta ett foto på hela bilen från passagerarsidan"
+          }
+        ]
+      }
+    },
+    {
+      "angle": 14,
+      "quality": true,
+      "optional": false,
+      "typeImage": 0,
+      "typeExterior": 0,
+      "retry": 2,
+      "showHelp": true,
+      "urlThumb": "https://webapp.tchek.fr/assets/images/shoot-sides/sidePassengerBackInspect@2x.png",
+      "title": {
+        "name": "sidePassengerBackInspect",
+        "localization": [
+          {
+            "locale": "fr",
+            "title": "Côté Passager"
+          }
+        ]
+      },
+      "overlay": {
+        "url": "https://webapp.tchek.fr/assets/images/shoot-sides/overlay/sidePassengerBackInspect.svg",
+        "constraints": {
+          "portrait": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": true,
+            "marginEnd": false
+          },
+          "landscape": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": true,
+            "marginEnd": false
+          }
+        }
+      },
+      "help": {
+        "localization": [
+          {
+            "locale": "fr",
+            "title": null,
+            "content": "Photographiez la partie arrière de la voiture du côté passager"
+          },
+          {
+            "locale": "en",
+            "title": null,
+            "content": "Take a close up shot of the rear of the car from the passenger side"
+          },
+          {
+            "locale": "de",
+            "title": null,
+            "content": "Fotografieren Sie den hinteren Teil des Autos von der Beifahrerseite"
+          },
+          {
+            "locale": "it",
+            "title": null,
+            "content": "Fotografa la parte anteriore del lato passeggero"
+          },
+          {
+            "locale": "nl",
+            "title": null,
+            "content": "Neem een foto van de achterkant uw wagen aan de passagierszijde"
+          },
+          {
+            "locale": "es",
+            "title": null,
+            "content": "Fotografía la parte trasera desde el lado del acompañante"
+          },
+          {
+            "locale": "sv",
+            "title": null,
+            "content": "Ta en närbild på bilens baksida från passagerarsidan"
+          }
+        ]
+      }
+    },
+    {
+      "angle": 15,
+      "quality": true,
+      "optional": false,
+      "typeImage": 0,
+      "typeExterior": 0,
+      "retry": 2,
+      "showHelp": true,
+      "urlThumb": "https://webapp.tchek.fr/assets/images/shoot-sides/sidePassengerFrontInspect.png",
+      "title": {
+        "name": "sidePassengerFrontInspect",
+        "localization": [
+          {
+            "locale": "fr",
+            "title": "Côté Passager"
+          }
+        ]
+      },
+      "overlay": {
+        "url": "https://webapp.tchek.fr/assets/images/shoot-sides/overlay/sidePassengerFrontInspect.svg",
+        "constraints": {
+          "portrait": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": false,
+            "marginEnd": true
+          },
+          "landscape": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": false,
+            "marginEnd": true
+          }
+        }
+      },
+      "help": {
+        "localization": [
+          {
+            "locale": "fr",
+            "title": null,
+            "content": "Photographiez la partie avant de la voiture du côté passager"
+          },
+          {
+            "locale": "en",
+            "title": null,
+            "content": "Take a close up shot of the front of the car from the passenger side"
+          },
+          {
+            "locale": "de",
+            "title": null,
+            "content": "Fotografieren Sie den vorderen Teil des Autos von der Beifahrerseite"
+          },
+          {
+            "locale": "it",
+            "title": null,
+            "content": "Fotografa la parte posteriore del lato passeggero"
+          },
+          {
+            "locale": "nl",
+            "title": null,
+            "content": "Neem een foto van de voorkant van uw wagen aan de passagierszijde"
+          },
+          {
+            "locale": "es",
+            "title": null,
+            "content": "Fotografía la parte delantera desde el lado del acompañante"
+          },
+          {
+            "locale": "sv",
+            "title": null,
+            "content": "Ta en närbild på bilens front från passagerarsidan"
+          }
+        ]
+      }
+    },
+    {
+      "angle": 16,
+      "quality": true,
+      "optional": false,
+      "typeImage": 0,
+      "typeExterior": 0,
+      "retry": 2,
+      "showHelp": true,
+      "urlThumb": "https://webapp.tchek.fr/assets/images/shoot-sides/frontT34Passenger@2x.png",
+      "title": {
+        "name": "frontT34Passenger",
+        "localization": [
+          {
+            "locale": "fr",
+            "title": "Avant Passager"
+          }
+        ]
+      },
+      "overlay": {
+        "url": "https://webapp.tchek.fr/assets/images/shoot-sides/overlay/frontT34Passenger.svg",
+        "constraints": {
+          "portrait": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": true,
+            "marginEnd": true
+          },
+          "landscape": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": true,
+            "marginEnd": true
+          }
+        }
+      },
+      "help": {
+        "localization": [
+          {
+            "locale": "fr",
+            "title": null,
+            "content": "Photographiez votre voiture en entier depuis l'angle avant-droit"
+          },
+          {
+            "locale": "en",
+            "title": null,
+            "content": "Take a shot of the whole car from a front-right 45-degree angle"
+          },
+          {
+            "locale": "de",
+            "title": null,
+            "content": "Fotografieren Sie Ihr gesamtes Auto von der vorderen rechten Ecke"
+          },
+          {
+            "locale": "it",
+            "title": null,
+            "content": "Prendi una foto di tre quarti dal davanti (lato passeggero)"
+          },
+          {
+            "locale": "nl",
+            "title": null,
+            "content": "Neem een foto van uw hele wagen vanaf de rechter voorzijde  "
+          },
+          {
+            "locale": "es",
+            "title": null,
+            "content": "Fotografía tu coche entero desde la esquina delantera derecha"
+          },
+          {
+            "locale": "sv",
+            "title": null,
+            "content": "Ta ett foto på hela bilen från 45 graders vinkel framifrån höger"
+          }
+        ]
+      }
+    },
+    {
+      "angle": 17,
+      "quality": true,
+      "optional": false,
+      "typeImage": 0,
+      "typeExterior": 0,
+      "retry": 2,
+      "showHelp": true,
+      "urlThumb": "https://webapp.tchek.fr/assets/images/shoot-sides/frontT34PassengerInspect@2x.png",
+      "title": {
+        "name": "frontT34PassengerInspect",
+        "localization": [
+          {
+            "locale": "fr",
+            "title": "Avant Passager"
+          }
+        ]
+      },
+      "overlay": {
+        "url": "https://webapp.tchek.fr/assets/images/shoot-sides/overlay/frontT34PassengerInspectLandscape.svg",
+        "constraints": {
+          "portrait": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": false,
+            "marginEnd": true
+          },
+          "landscape": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": false,
+            "marginEnd": true
+          }
+        }
+      },
+      "help": {
+        "localization": [
+          {
+            "locale": "fr",
+            "title": null,
+            "content": "Photographiez de près l'angle avant-droit"
+          },
+          {
+            "locale": "en",
+            "title": null,
+            "content": "Take a close up shot from a front-right 45-degree angle"
+          },
+          {
+            "locale": "de",
+            "title": null,
+            "content": "Machen Sie eine Nahaufnahme der vorderen rechten Ecke"
+          },
+          {
+            "locale": "it",
+            "title": null,
+            "content": "Prendi una foto ravvicinata di tre quarti dal davanti (lato passeggero)"
+          },
+          {
+            "locale": "nl",
+            "title": null,
+            "content": "Neem een close-up foto vanaf  de rechter voorzijde "
+          },
+          {
+            "locale": "es",
+            "title": null,
+            "content": "Toma un primer plano de la esquina delantera derecha"
+          },
+          {
+            "locale": "sv",
+            "title": null,
+            "content": "Ta en närbild från 45 graders vinkel framifrån höger"
+          }
+        ]
+      }
+    },
+    {
+      "quality": false,
+      "optional": false,
+      "typeImage": 3,
+      "typeInterior": 0,
+      "retry": 0,
+      "showHelp": true,
+      "urlThumb": "https://webapp.tchek.fr/assets/images/shoot-sides/backSeatDriver.png",
+      "title": {
+        "name": "backSeatDriver",
+        "localization": [
+          {
+            "locale": "fr",
+            "title": "Sièges arrière"
+          }
+        ]
+      },
+      "overlay": {
+        "url": "https://webapp.tchek.fr/assets/images/shoot-sides/overlay/backSeatDriver.svg",
+        "constraints": {
+          "portrait": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": true,
+            "marginEnd": true
+          },
+          "landscape": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": true,
+            "marginEnd": true
+          }
+        }
+      },
+      "help": {
+        "localization": [
+          {
+            "locale": "fr",
+            "title": "Sièges arrière",
+            "content": null
+          },
+          {
+            "locale": "en",
+            "title": "Back seats",
+            "content": null
+          },
+          {
+            "locale": "de",
+            "title": "Rücksitze",
+            "content": null
+          },
+          {
+            "locale": "it",
+            "title": "Sedili posteriori",
+            "content": null
+          },
+          {
+            "locale": "nl",
+            "title": "Achterbank",
+            "content": null
+          },
+          {
+            "locale": "es",
+            "title": "Asientos traseros",
+            "content": null
+          },
+          {
+            "locale": "sv",
+            "title": "Baksäten",
+            "content": null
+          }
+        ]
+      }
+    },
+    {
+      "quality": false,
+      "optional": false,
+      "typeImage": 3,
+      "typeInterior": 2,
+      "retry": 0,
+      "showHelp": true,
+      "urlThumb": "https://webapp.tchek.fr/assets/images/shoot-sides/roofLining.png",
+      "title": {
+        "name": "panoramicRoof",
+        "localization": [
+          {
+            "locale": "fr",
+            "title": "Toit panoramique"
+          }
+        ]
+      },
+      "overlay": {
+        "url": "https://webapp.tchek.fr/assets/images/shoot-sides/overlay/roofLining.svg",
+        "constraints": {
+          "portrait": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": true,
+            "marginEnd": true
+          },
+          "landscape": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": true,
+            "marginEnd": true
+          }
+        }
+      },
+      "help": {
+        "localization": [
+          {
+            "locale": "fr",
+            "title": "Toit panoramique",
+            "content": "Assurez-vous que la vitre panoramique est visible."
+          },
+          {
+            "locale": "en",
+            "title": "Panoramic Roof",
+            "content": "Please ensure the panoramic roof is visible."
+          },
+          {
+            "locale": "de",
+            "title": "Panoramadach",
+            "content": "Stelle sicher, dass die gesamte Panorama-Verglasung sichtbar ist."
+          },
+          {
+            "locale": "it",
+            "title": "Tetto panoramico",
+            "content": "Assicurarsi che il vetro panoramico sia visibile."
+          },
+          {
+            "locale": "nl",
+            "title": "Panoramadak",
+            "content": "Zorg ervoor dat het panoramisch glas zichtbaar is."
+          },
+          {
+            "locale": "es",
+            "title": "Techo panorámico",
+            "content": "Asegúrate que todo el vidrio del techo panorámico este visible"
+          },
+          {
+            "locale": "no",
+            "title": "Takforing",
+            "content": "Ta bildet av taklisten."
+          },
+          {
+            "locale": "sv",
+            "title": "Panoramatak",
+            "content": "Säkerställ att panormaglaset är synligt."
+          }
+        ]
+      }
+    },
+    {
+      "quality": false,
+      "optional": false,
+      "typeImage": 3,
+      "typeInterior": 0,
+      "retry": 0,
+      "showHelp": true,
+      "urlThumb": "https://webapp.tchek.fr/assets/images/shoot-sides/frontSeatDriver.png",
+      "title": {
+        "name": "frontSeatDriver",
+        "localization": [
+          {
+            "locale": "fr",
+            "title": "Sièges avant"
+          }
+        ]
+      },
+      "overlay": {
+        "url": "https://webapp.tchek.fr/assets/images/shoot-sides/overlay/frontSeatDriver.svg",
+        "constraints": {
+          "portrait": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": true,
+            "marginEnd": true
+          },
+          "landscape": {
+            "position": 0,
+            "scaleType": 0,
+            "marginStart": true,
+            "marginEnd": true
+          }
+        }
+      },
+      "help": {
+        "localization": [
+          {
+            "locale": "fr",
+            "title": "Sièges avant",
+            "content": null
+          },
+          {
+            "locale": "en",
+            "title": "Front seats",
+            "content": null
+          },
+          {
+            "locale": "de",
+            "title": "Vordersitze",
+            "content": null
+          },
+          {
+            "locale": "it",
+            "title": "Sedili anteriori",
+            "content": null
+          },
+          {
+            "locale": "nl",
+            "title": "Voorzetels",
+            "content": null
+          },
+          {
+            "locale": "es",
+            "title": "Asientos delanteros",
+            "content": null
+          },
+          {
+            "locale": "sv",
+            "title": "Framsäten",
+            "content": null
+          }
+        ]
+      }
+    },
+    {
+      "quality": false,
+      "optional": false,
+      "typeImage": 3,
+      "typeAdditional": 2,
+      "retry": 0,
+      "showHelp": true,
+      "urlThumb": "https://webapp.tchek.fr/assets/images/shoot-sides/speedometer.png",
+      "title": {
+        "name": "speedometer",
+        "localization": [
+          {
+            "locale": "fr",
+            "title": "Odomètre"
+          }
+        ]
+      },
+      "help": {
+        "localization": [
+          {
+            "locale": "fr",
+            "title": "Kilométrage",
+            "content": "Démarrer le moteur et prendre la photo du compteur."
+          },
+          {
+            "locale": "en",
+            "title": "Mileage",
+            "content": "Start the engine and shoot the odometer."
+          },
+          {
+            "locale": "de",
+            "title": "Kilometerstand",
+            "content": "Starten Sie den Motor und machen Sie ein Foto vom Kilometerzähler"
+          },
+          {
+            "locale": "it",
+            "title": "Chilometraggio",
+            "content": "Metti in marcia e fotografa il contachilometri."
+          },
+          {
+            "locale": "nl",
+            "title": "Kilometerteller ",
+            "content": "Start de motor en neem de kilometerstand op."
+          },
+          {
+            "locale": "es",
+            "title": "Kilometraje",
+            "content": "Arranca el motor y haz una foto del cuentakilómetros."
+          },
+          {
+            "locale": "sv",
+            "title": "Körsträcka",
+            "content": "Start the engine and shoot the odometer."
+          }
+        ]
+      }
+    }
+  ];
+
   const [shootData, setShootData] = useState<ShootInspectionData>(
     initialData || {
       id: '',
       name: '',
       description: '',
-      config: []
+      config: defaultSteps
     }
   );
 
