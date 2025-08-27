@@ -164,14 +164,9 @@ export default function CreateJourneyPage() {
               Cancel
             </Button>
             <Button onClick={() => {
-              if (blockModal.type === 'shootInspection') {
-                setShowShootInspectionConfig(true);
-                setBlockModal({ open: false });
-              } else {
-                addBlock(blockModal.type!);
-              }
+              addBlock(blockModal.type!);
             }}>
-              {blockModal.type === 'shootInspection' ? 'Configure Shoot Inspection' : 'Add Block'}
+              Add Block
             </Button>
           </div>
         </div>
@@ -333,7 +328,14 @@ export default function CreateJourneyPage() {
           {blockTypes.map((blockType) => (
             <button
               key={blockType.type}
-              onClick={() => setBlockModal({ open: true, type: blockType.type })}
+              onClick={() => {
+                if (blockType.type === 'shootInspection') {
+                  setShowShootInspectionConfig(true);
+                  setBlockModal({ open: false });
+                } else {
+                  setBlockModal({ open: true, type: blockType.type });
+                }
+              }}
               className="text-left p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
             >
               <h4 className="font-medium text-gray-900 mb-1">{blockType.name}</h4>
