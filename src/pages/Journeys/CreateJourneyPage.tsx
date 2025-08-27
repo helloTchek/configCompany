@@ -8,6 +8,7 @@ import ShootInspectionConfig from '../../components/Journey/ShootInspectionConfi
 import { ArrowLeft, Plus, Upload, Download, GripVertical } from 'lucide-react';
 import { JourneyBlock } from '../../types';
 import { ShootInspectionData } from '../../types';
+import onboardingData from '../../data/onboarding.json';
 
 const blockTypes = [
   { type: 'form', name: 'Form Block', description: 'Custom form with JSON configuration' },
@@ -156,6 +157,30 @@ export default function CreateJourneyPage() {
                   </label>
                 ))}
               </div>
+            </div>
+          )}
+
+          {blockModal.type === 'onboarding' && (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">Screens JSON Configuration</label>
+                <div className="flex gap-2">
+                  <Button variant="secondary" size="sm" className="flex items-center gap-1">
+                    <Download size={14} />
+                    Download JSON
+                  </Button>
+                  <Button variant="secondary" size="sm" className="flex items-center gap-1">
+                    <Upload size={14} />
+                    Upload JSON
+                  </Button>
+                </div>
+              </div>
+              <textarea
+                rows={12}
+                defaultValue={JSON.stringify(onboardingData.screens, null, 2)}
+                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+                placeholder="Screens JSON configuration..."
+              />
             </div>
           )}
 
