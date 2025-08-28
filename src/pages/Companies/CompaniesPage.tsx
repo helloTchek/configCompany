@@ -14,6 +14,7 @@ export default function CompaniesPage() {
   const [sortKey, setSortKey] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [deleteModal, setDeleteModal] = useState<{ open: boolean; company?: Company }>({ open: false });
+  const [duplicateModal, setDuplicateModal] = useState<{ open: boolean; company?: Company }>({ open: false });
 
   const handleSort = (key: string) => {
     if (sortKey === key) {
@@ -33,6 +34,31 @@ export default function CompaniesPage() {
     setDeleteModal({ open: false });
   };
 
+  const handleDuplicate = (company: Company) => {
+    setDuplicateModal({ open: true, company });
+  };
+
+  const confirmDuplicate = () => {
+    if (duplicateModal.company) {
+      // Create a new company object with duplicated data
+      const duplicatedCompany: Company = {
+        ...duplicateModal.company,
+        id: `${duplicateModal.company.id}-copy-${Date.now()}`,
+        name: `${duplicateModal.company.name} (Copy)`,
+        identifier: `${duplicateModal.company.identifier}-copy`,
+        apiToken: `${duplicateModal.company.apiToken.split('_')[0]}_copy_${Date.now()}`,
+        companyCode: `${duplicateModal.company.companyCode}_COPY`,
+        currentApiRequests: 0, // Reset API usage for new company
+      };
+      
+      // In a real app, this would make an API call to create the company
+      console.log('Duplicating company:', duplicatedCompany);
+      
+      // Navigate to edit the new company
+      navigate(`/companies/${duplicatedCompany.id}/edit`);
+    }
+    setDuplicateModal({ open: false });
+  };
   const columns = [
     { key: 'name', label: 'Company Name', sortable: true },
     { key: 'identifier', label: 'Identifier', sortable: true },
@@ -63,7 +89,7 @@ export default function CompaniesPage() {
             <Edit size={16} />
           </button>
           <button
-            onClick={() => {/* Handle duplicate */}}
+            onClick={() => handleDuplicate(row)}
             className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
           >
             <Copy size={16} />
@@ -132,6 +158,51 @@ export default function CompaniesPage() {
               onClick={confirmDelete}
             >
               Delete Company
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={duplicateModal.open}
+        onClose={() => setDuplicateModal({ open: false })}
+        title="Duplicate Company"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <p className="text-gray-600">
+            Are you sure you want to duplicate <strong>{duplicateModal.company?.name}</strong>? 
+            A new company will be created with "(Copy)" appended to the name.
+          </p>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <h4 className="text-sm font-medium text-blue-900 mb-2">What will be duplicated:</h4>
+            <ul className="text-sm text-blue-800 space-y-1">
+              <li>• All company settings and configurations</li>
+              <li>• Styles, report settings, and config modules</li>
+              <li>• Business sector and contract type</li>
+              <li>• Validation and hub settings</li>
+            </ul>
+          </div>
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+            <h4 className="text-sm font-medium text-yellow-900 mb-2">What will be reset:</h4>
+            <ul className="text-sm text-yellow-800 space-y-1">
+              <li>• New API token will be generated</li>
+              <li>• API request count will be reset to 0</li>
+              <li>• Company identifier will have "-copy" suffix</li>
+            </ul>
+          </div>
+          <div className="flex gap-3 justify-end">
+            <Button
+              variant="secondary"
+              onClick={() => setDuplicateModal({ open: false })}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="success"
+              onClick={confirmDuplicate}
+            >
+              Duplicate Company
             </Button>
           </div>
         </div>
