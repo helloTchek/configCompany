@@ -375,9 +375,27 @@ export default function CreateJourneyPage() {
 
           {/* Save Buttons */}
           <div className="flex gap-4 justify-end">
-            <Button variant="secondary">Cancel</Button>
-            <Button variant="secondary">Save and Add Another</Button>
+            <Button 
+              variant="secondary"
+              onClick={() => navigate('/journeys')}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="secondary"
+              onClick={() => {
+                handleSave();
+                // Reset form for new journey
+                setJourneyName('');
+                setJourneyDescription('');
+                setBlocks([]);
+              }}
+              disabled={!journeyName || blocks.length === 0}
+            >
+              Save and Add Another
+            </Button>
             <Button disabled={!journeyName || blocks.length === 0}>
+              onClick={handleSave}
               Save Journey
             </Button>
           </div>
