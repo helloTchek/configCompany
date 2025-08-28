@@ -245,20 +245,6 @@ export default function CreateJourneyPage() {
     );
   };
 
-  if (showShootInspectionConfig) {
-    return (
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header title="Configure Shoot Inspection Block" />
-        <div className="flex-1 overflow-y-auto p-6">
-          <ShootInspectionConfig
-            onSave={handleShootInspectionSave}
-            onCancel={() => setShowShootInspectionConfig(false)}
-          />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <Header title="Create Inspection Journey" />
@@ -470,6 +456,19 @@ export default function CreateJourneyPage() {
       </Modal>
 
       <BlockConfigModal />
+
+      {/* Shoot Inspection Config Modal */}
+      <Modal
+        isOpen={showShootInspectionConfig}
+        onClose={() => setShowShootInspectionConfig(false)}
+        title="Configure Shoot Inspection Block"
+        size="xl"
+      >
+        <ShootInspectionConfig
+          onSave={handleShootInspectionSave}
+          onCancel={() => setShowShootInspectionConfig(false)}
+        />
+      </Modal>
     </div>
   );
 }
