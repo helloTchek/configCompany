@@ -58,6 +58,8 @@ export default function CreateJourneyPage() {
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
 
+    if (result.destination.index === result.source.index) return;
+
     const items = Array.from(blocks);
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
@@ -318,7 +320,7 @@ export default function CreateJourneyPage() {
               </div>
             ) : (
               <DragDropContext onDragEnd={handleDragEnd}>
-                <Droppable droppableId="steps">
+                <Droppable droppableId="journey-blocks">
                   {(provided) => (
                     <div
                       {...provided.droppableProps}
@@ -326,7 +328,11 @@ export default function CreateJourneyPage() {
                       className="space-y-3"
                     >
                       {blocks.map((block, index) => (
-                        <Draggable key={block.id} draggableId={block.id} index={index}>
+                        <Draggable 
+                          key={`${block.id}-${index}`} 
+                          draggableId={`${block.id}-${index}`} 
+                          index={index}
+                        >
                           {(provided, snapshot) => (
                             <div
                               ref={provided.innerRef}
@@ -336,7 +342,10 @@ export default function CreateJourneyPage() {
                               }`}
                             >
                               <div {...provided.dragHandleProps}>
-                                <GripVertical size={16} className="text-gray-400 cursor-grab" />
+                                <GripVertical 
+                                  size={16} 
+                                  className="text-gray-400 cursor-grab hover:text-gray-600" 
+                                />
                               </div>
                               <div className="flex-1">
                                 <div className="flex items-center gap-3">
