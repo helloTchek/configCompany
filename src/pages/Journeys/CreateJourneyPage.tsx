@@ -27,6 +27,34 @@ export default function CreateJourneyPage() {
   const [blockModal, setBlockModal] = useState<{ open: boolean; type?: string }>({ open: false });
   const [showShootInspectionConfig, setShowShootInspectionConfig] = useState(false);
 
+  const handleSave = () => {
+    if (!journeyName.trim()) {
+      alert('Please enter a journey name');
+      return;
+    }
+
+    if (blocks.length === 0) {
+      alert('Please add at least one block to the journey');
+      return;
+    }
+
+    // Create the journey object
+    const newJourney = {
+      id: `journey-${Date.now()}`,
+      name: journeyName,
+      description: journeyDescription,
+      blocks: blocks,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    // In a real app, this would save to a backend
+    console.log('Saving journey:', newJourney);
+    
+    // Navigate back to journeys list
+    navigate('/journeys');
+  };
+
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
 
@@ -394,8 +422,10 @@ export default function CreateJourneyPage() {
             >
               Save and Add Another
             </Button>
-            <Button disabled={!journeyName || blocks.length === 0}>
+            <Button 
               onClick={handleSave}
+              disabled={!journeyName || blocks.length === 0}
+            >
               Save Journey
             </Button>
           </div>
