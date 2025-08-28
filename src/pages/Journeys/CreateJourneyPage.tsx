@@ -15,10 +15,7 @@ const blockTypes = [
   { type: 'shootInspection', name: 'Shoot Inspection Block', description: 'Photo capture workflow' },
   { type: 'fastTrack', name: 'Fast Track Block', description: 'Quick inspection process' },
   { type: 'addDamage', name: 'Add Damage Block', description: 'Manual damage reporting' },
-  { type: 'onboarding', name: 'Onboarding Block', description: 'Customer onboarding screen' },
-  { type: 'offboarding', name: 'Offboarding Block', description: 'Process completion screen' },
-  { type: 'sortingRules', name: 'Sorting Rules Block', description: 'Automated filtering rules' },
-  { type: 'decisionTree', name: 'Decision Tree Block', description: 'Conditional logic workflow' }
+  { type: 'static', name: 'Static Screen Block', description: 'Static content screens (onboarding/offboarding)' }
 ];
 
 export default function CreateJourneyPage() {
@@ -38,10 +35,12 @@ export default function CreateJourneyPage() {
 
     const newBlock: JourneyBlock = {
       id: `block-${Date.now()}`,
-      type: blockType as any,
+      type: blockType === 'shootInspection' ? 'shootInspect' : blockType as any,
       name: blockTypes.find(bt => bt.type === blockType)?.name || 'Unnamed Block',
       description: '',
-      config: {},
+      configId: blockType === 'static' ? `${blockType}-${blocks.length + 1}` : 
+                blockType === 'form' ? `${blockType}-${blocks.length + 1}` :
+                blockType === 'shootInspection' ? `${blockType}-${blocks.length + 1}` : undefined,
       order: blocks.length + 1
     };
     setBlocks([...blocks, newBlock]);
@@ -55,10 +54,10 @@ export default function CreateJourneyPage() {
   const handleShootInspectionSave = (config: ShootInspectionData) => {
     const newBlock: JourneyBlock = {
       id: `block-${Date.now()}`,
-      type: 'shootInspection',
+      type: 'shootInspect',
       name: config.name,
       description: config.description,
-      config: config,
+      configId: `shoot-inspect-${blocks.length + 1}`,
       order: blocks.length + 1
     };
     setBlocks([...blocks, newBlock]);
@@ -160,10 +159,10 @@ export default function CreateJourneyPage() {
             </div>
           )}
 
-          {blockModal.type === 'onboarding' && (
+          {blockModal.type === 'static' && (
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700">Screens JSON Configuration</label>
+                <label className="block text-sm font-medium text-gray-700">Static Screens JSON Configuration</label>
                 <div className="flex gap-2">
                   <Button variant="secondary" size="sm" className="flex items-center gap-1">
                     <Download size={14} />
@@ -179,7 +178,7 @@ export default function CreateJourneyPage() {
                 rows={12}
                 defaultValue={JSON.stringify(onboardingData.screens, null, 2)}
                 className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
-                placeholder="Screens JSON configuration..."
+                placeholder="Static screens JSON configuration (onboarding/offboarding)..."
               />
             </div>
           )}
@@ -322,11 +321,14 @@ export default function CreateJourneyPage() {
               rows={8}
               placeholder="Journey JSON configuration will appear here..."
               className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
-              value={JSON.stringify({ 
-                name: journeyName, 
-                description: journeyDescription, 
-                blocks: blocks 
-              }, null, 2)}
+              value={JSON.stringify([{
+                id: `workflow-${Date.now()}`,
+                steps: blocks.map((block, index) => ({
+                  id: `${block.type}-${index + 1}`,
+                  type: block.type,
+                  ...(block.configId && { configId: block.configId })
+                }))
+              }], null, 2)}
               readOnly
             />
           </div>

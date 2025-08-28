@@ -41,10 +41,10 @@ export interface InspectionJourney {
 
 export interface JourneyBlock {
   id: string;
-  type: 'form' | 'shootInspection' | 'fastTrack' | 'addDamage' | 'onboarding' | 'offboarding' | 'sortingRules' | 'decisionTree';
+  type: 'form' | 'shootInspect' | 'fastTrack' | 'addDamage' | 'static';
   name: string;
   description?: string;
-  config: any;
+  configId?: string;
   order: number;
 }
 
