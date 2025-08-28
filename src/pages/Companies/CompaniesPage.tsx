@@ -167,43 +167,181 @@ export default function CompaniesPage() {
         isOpen={duplicateModal.open}
         onClose={() => setDuplicateModal({ open: false })}
         title="Duplicate Company"
-        size="sm"
+        size="xl"
       >
-        <div className="space-y-4">
-          <p className="text-gray-600">
-            Are you sure you want to duplicate <strong>{duplicateModal.company?.name}</strong>? 
-            A new company will be created with "(Copy)\" appended to the name.
-          </p>
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <h4 className="text-sm font-medium text-blue-900 mb-2">What will be duplicated:</h4>
-            <ul className="text-sm text-blue-800 space-y-1">
-              <li>• All company settings and configurations</li>
-              <li>• Styles, report settings, and config modules</li>
-              <li>• Business sector and contract type</li>
-              <li>• Validation and hub settings</li>
-            </ul>
+        <div className="space-y-6 max-h-96 overflow-y-auto">
+          {/* Report Settings */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Report Settings</label>
+            <div className="relative">
+              <textarea
+                rows={4}
+                defaultValue={duplicateModal.company?.reportSettings || ''}
+                className="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+                placeholder="Report settings JSON configuration..."
+              />
+              <button className="absolute top-2 right-2 p-1 text-gray-400 hover:text-gray-600">
+                <Upload size={16} />
+              </button>
+            </div>
           </div>
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-            <h4 className="text-sm font-medium text-yellow-900 mb-2">What will be reset:</h4>
-            <ul className="text-sm text-yellow-800 space-y-1">
-              <li>• New API token will be generated</li>
-              <li>• API request count will be reset to 0</li>
-              <li>• Company identifier will have "-copy" suffix</li>
-            </ul>
+
+          {/* Config Modules Settings */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Config Modules Settings</label>
+            <div className="relative">
+              <textarea
+                rows={4}
+                defaultValue={duplicateModal.company?.configModules || ''}
+                className="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+                placeholder="Config modules JSON configuration..."
+              />
+              <button className="absolute top-2 right-2 p-1 text-gray-400 hover:text-gray-600">
+                <Upload size={16} />
+              </button>
+            </div>
           </div>
-          <div className="flex gap-3 justify-end">
-            <Button
-              variant="secondary"
-              onClick={() => setDuplicateModal({ open: false })}
-            >
-              Cancel
+
+          {/* Hierarchy */}
+          <div>
+            <button className="flex items-center justify-between w-full text-left text-sm font-medium text-gray-700 mb-3">
+              <span>Hierarchy</span>
+              <span className="text-gray-400">▼</span>
+            </button>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Parent Company (optional)</label>
+                <select className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  <option value="">None</option>
+                  {mockCompanies
+                    .filter(c => c.id !== duplicateModal.company?.id)
+                    .map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))
+                  }
+                </select>
+              </div>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+                />
+                <span className="ml-2 text-sm text-gray-700">Duplicate Children Companies</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Inheritance Options */}
+          <div>
+            <button className="flex items-center justify-between w-full text-left text-sm font-medium text-gray-700 mb-3">
+              <span>Inheritance Options</span>
+              <span className="text-gray-400">▼</span>
+            </button>
+            <div className="space-y-3">
+              <p className="text-sm text-gray-600">Choose what should be copied from the source company:</p>
+              <div className="space-y-2">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    defaultChecked={true}
+                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Duplicate Inspection Journeys</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    defaultChecked={true}
+                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Duplicate Modules</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    defaultChecked={true}
+                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Duplicate Sorting Rules</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    defaultChecked={true}
+                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Duplicate Webhook & Events Configuration</span>
+                </label>
+              </div>
+              
+              {/* Edit Fields */}
+              <div className="mt-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Edit Fields</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Sender Name (for all events)</label>
+                    <input
+                      type="text"
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      placeholder="Enter sender name"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Webhook URL</label>
+                    <input
+                      type="url"
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      placeholder="https://example.com/webhook"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Warning Message */}
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-4">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <span className="text-yellow-600">⚠️</span>
+                  </div>
+                  <div className="ml-2">
+                    <p className="text-sm text-yellow-800">
+                      <strong>Remember:</strong> You will need to create users for the new company after duplication.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Detection, API & Validation Settings */}
+          <div>
+            <button className="flex items-center justify-between w-full text-left text-sm font-medium text-gray-700 mb-3">
+              <span>Detection, API & Validation Settings</span>
+              <span className="text-gray-400">▶</span>
+            </button>
+          </div>
+
+          {/* Import Config JSON */}
+          <div className="border-t pt-4">
+            <Button variant="secondary" className="flex items-center gap-2">
+              <Upload size={16} />
+              Import Config JSON
             </Button>
-            <Button
-              variant="success"
-              onClick={confirmDuplicate}
-            >
-              Duplicate Company
-            </Button>
+          </div>
+        </div>
+
+        {/* Footer Buttons */}
+        <div className="flex gap-3 justify-end pt-6 border-t border-gray-200 mt-6">
+          <Button
+            variant="secondary"
+            onClick={() => setDuplicateModal({ open: false })}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={confirmDuplicate}
+          >
+            Create Company
           </div>
         </div>
       </Modal>
