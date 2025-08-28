@@ -4,6 +4,7 @@ import Sidebar from './components/Layout/Sidebar';
 import Dashboard from './pages/Dashboard';
 import CompaniesPage from './pages/Companies/CompaniesPage';
 import EditCompanyPage from './pages/Companies/EditCompanyPage';
+import CreateCompanyPage from './pages/Companies/CreateCompanyPage';
 import UsersPage from './pages/Users/UsersPage';
 import JourneysPage from './pages/Journeys/JourneysPage';
 import CreateJourneyPage from './pages/Journeys/CreateJourneyPage';
@@ -25,6 +26,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/companies" element={<CompaniesPage />} />
+            <Route path="/companies/new" element={<CreateCompanyPage />} />
             <Route path="/companies/:id/edit" element={<EditCompanyPage />} />
             <Route path="/users" element={<UsersPage />} />
             <Route path="/journeys" element={<JourneysPage />} />
