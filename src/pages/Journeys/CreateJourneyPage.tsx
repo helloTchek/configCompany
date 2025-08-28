@@ -300,20 +300,20 @@ export default function CreateJourneyPage() {
               </div>
             </div>
 
-            {blocks.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <p>No blocks added yet. Click "Add Block" to start building your journey.</p>
-              </div>
-            ) : (
-              <DragDropContext onDragEnd={handleDragEnd}>
-                <Droppable droppableId="journey-blocks">
-                  {(provided) => (
-                    <div
-                      {...provided.droppableProps}
-                      ref={provided.innerRef}
-                      className="space-y-3"
-                    >
-                      {blocks.map((block, index) => (
+            <DragDropContext onDragEnd={handleDragEnd}>
+              <Droppable droppableId="journey-blocks">
+                {(provided) => (
+                  <div
+                    {...provided.droppableProps}
+                    ref={provided.innerRef}
+                    className="space-y-3"
+                  >
+                    {blocks.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">
+                        <p>No blocks added yet. Click "Add Block" to start building your journey.</p>
+                      </div>
+                    ) : (
+                      blocks.map((block, index) => (
                         <Draggable 
                           key={`${block.id}-${index}`} 
                           draggableId={`${block.id}-${index}`} 
@@ -358,13 +358,13 @@ export default function CreateJourneyPage() {
                             </div>
                           )}
                         </Draggable>
-                      ))}
-                      {provided.placeholder}
-                    </div>
-                  )}
-                </Droppable>
-              </DragDropContext>
-            )}
+                      ))
+                    )}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </DragDropContext>
           </div>
 
           {/* JSON Import/Export */}
