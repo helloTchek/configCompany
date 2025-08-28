@@ -6,7 +6,7 @@ import Button from '../../components/UI/Button';
 import Modal from '../../components/UI/Modal';
 import { mockCompanies } from '../../data/mockData';
 import { Company } from '../../types';
-import { Edit, Trash2, Copy, Plus } from 'lucide-react';
+import { Edit, Trash2, Copy, Plus, Upload } from 'lucide-react';
 
 export default function CompaniesPage() {
   const navigate = useNavigate();
