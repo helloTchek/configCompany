@@ -170,6 +170,17 @@ export default function CompaniesPage() {
         size="xl"
       >
         <div className="space-y-6 max-h-96 overflow-y-auto">
+          {/* New Company Name */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">New Company Name</label>
+            <input
+              type="text"
+              defaultValue={duplicateModal.company ? `${duplicateModal.company.name} (Copy)` : ''}
+              className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter new company name"
+            />
+          </div>
+
           {/* Report Settings */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Report Settings</label>
@@ -251,10 +262,10 @@ export default function CompaniesPage() {
                 <label className="flex items-center">
                   <input
                     type="checkbox"
-                    defaultChecked={true}
+                    defaultChecked={false}
                     className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
                   />
-                  <span className="ml-2 text-sm text-gray-700">Duplicate Modules</span>
+                  <span className="ml-2 text-sm text-gray-700">Duplicate Cost Settings</span>
                 </label>
                 <label className="flex items-center">
                   <input
@@ -314,11 +325,51 @@ export default function CompaniesPage() {
           </div>
 
           {/* Detection, API & Validation Settings */}
-          <div>
-            <button className="flex items-center justify-between w-full text-left text-sm font-medium text-gray-700 mb-3">
+          <div className="border border-gray-200 rounded-lg">
+            <button 
+              className="flex items-center justify-between w-full text-left text-sm font-medium text-gray-700 p-3 hover:bg-gray-50 rounded-lg"
+              onClick={(e) => {
+                e.preventDefault();
+                const content = e.currentTarget.nextElementSibling as HTMLElement;
+                const icon = e.currentTarget.querySelector('.expand-icon') as HTMLElement;
+                if (content && icon) {
+                  const isHidden = content.style.display === 'none' || !content.style.display;
+                  content.style.display = isHidden ? 'block' : 'none';
+                  icon.textContent = isHidden ? '▼' : '▶';
+                }
+              }}
+            >
               <span>Detection, API & Validation Settings</span>
-              <span className="text-gray-400">▶</span>
+              <span className="text-gray-400 expand-icon">▶</span>
             </button>
+            <div style={{ display: 'none' }} className="p-3 border-t border-gray-200 bg-gray-50">
+              <div className="space-y-3">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    defaultChecked={true}
+                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Duplicate Detection Model Configuration</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    defaultChecked={true}
+                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Duplicate API Settings</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    defaultChecked={true}
+                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Duplicate Validation Settings</span>
+                </label>
+              </div>
+            </div>
           </div>
 
           {/* Import Config JSON */}
