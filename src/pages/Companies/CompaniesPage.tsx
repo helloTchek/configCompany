@@ -342,6 +342,7 @@ export default function CompaniesPage() {
             onClick={confirmDuplicate}
           >
             Create Company
+          </Button>
           </div>
         </div>
       </Modal>
