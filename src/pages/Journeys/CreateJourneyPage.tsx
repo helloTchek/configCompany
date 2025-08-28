@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import Header from '../../components/Layout/Header';
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
@@ -25,6 +26,22 @@ export default function CreateJourneyPage() {
   const [blocks, setBlocks] = useState<JourneyBlock[]>([]);
   const [blockModal, setBlockModal] = useState<{ open: boolean; type?: string }>({ open: false });
   const [showShootInspectionConfig, setShowShootInspectionConfig] = useState(false);
+
+  const handleDragEnd = (result: DropResult) => {
+    if (!result.destination) return;
+
+    const items = Array.from(blocks);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    // Update order property
+    const updatedItems = items.map((item, index) => ({
+      ...item,
+      order: index + 1
+    }));
+
+    setBlocks(updatedItems);
+  };
 
   const addBlock = (blockType: string) => {
     if (blockType === 'shootInspection') {
@@ -272,35 +289,58 @@ export default function CreateJourneyPage() {
                 <p>No blocks added yet. Click "Add Block" to start building your journey.</p>
               </div>
             ) : (
-              <div className="space-y-3">
-                {blocks.map((block, index) => (
-                  <div key={block.id} className="bg-gray-50 rounded-lg p-4 flex items-center gap-4">
-                    <GripVertical size={16} className="text-gray-400" />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <span className="text-sm font-medium text-gray-900">{index + 1}.</span>
-                        <h4 className="font-medium text-gray-900">{block.name}</h4>
-                        <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
-                          {block.type}
-                        </span>
-                      </div>
-                      {block.description && (
-                        <p className="text-sm text-gray-600 mt-1">{block.description}</p>
-                      )}
+              <DragDropContext onDragEnd={handleDragEnd}>
+                <Droppable droppableId="steps">
+                  {(provided) => (
+                    <div
+                      {...provided.droppableProps}
+                      ref={provided.innerRef}
+                      className="space-y-3"
+                    >
+                      {blocks.map((block, index) => (
+                        <Draggable key={block.id} draggableId={block.id} index={index}>
+                          {(provided, snapshot) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              className={`bg-gray-50 rounded-lg p-4 flex items-center gap-4 ${
+                                snapshot.isDragging ? 'shadow-lg' : ''
+                              }`}
+                            >
+                              <div {...provided.dragHandleProps}>
+                                <GripVertical size={16} className="text-gray-400 cursor-grab" />
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3">
+                                  <span className="text-sm font-medium text-gray-900">{index + 1}.</span>
+                                  <h4 className="font-medium text-gray-900">{block.name}</h4>
+                                  <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+                                    {block.type}
+                                  </span>
+                                </div>
+                                {block.description && (
+                                  <p className="text-sm text-gray-600 mt-1">{block.description}</p>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Button variant="secondary" size="sm">Edit</Button>
+                                <Button 
+                                  variant="danger" 
+                                  size="sm"
+                                  onClick={() => removeBlock(block.id)}
+                                >
+                                  Remove
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Button variant="secondary" size="sm">Edit</Button>
-                      <Button 
-                        variant="danger" 
-                        size="sm"
-                        onClick={() => removeBlock(block.id)}
-                      >
-                        Remove
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  )}
+                </Droppable>
+              </DragDropContext>
             )}
           </div>
 
