@@ -40,10 +40,10 @@ export default function CompaniesPage() {
 
   const confirmDuplicate = () => {
     if (duplicateModal.company) {
-      // Create a new company object with duplicated data
+      const newCompanyId = `company-${Date.now()}`;
       const duplicatedCompany: Company = {
         ...duplicateModal.company,
-        id: `${duplicateModal.company.id}-copy-${Date.now()}`,
+        id: newCompanyId,
         name: `${duplicateModal.company.name} (Copy)`,
         identifier: `${duplicateModal.company.identifier}-copy`,
         apiToken: `${duplicateModal.company.apiToken.split('_')[0]}_copy_${Date.now()}`,
@@ -52,10 +52,14 @@ export default function CompaniesPage() {
       };
       
       // In a real app, this would make an API call to create the company
+      // For now, we'll add it to the mock data and navigate to companies list
       console.log('Duplicating company:', duplicatedCompany);
       
-      // Navigate to edit the new company
-      navigate(`/companies/${duplicatedCompany.id}/edit`);
+      // Add to mock companies array (in real app this would be handled by API)
+      mockCompanies.push(duplicatedCompany);
+      
+      // Navigate back to companies list to see the new company
+      navigate('/companies');
     }
     setDuplicateModal({ open: false });
   };
