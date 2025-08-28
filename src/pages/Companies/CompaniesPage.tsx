@@ -343,7 +343,6 @@ export default function CompaniesPage() {
           >
             Create Company
           </Button>
-          </div>
         </div>
       </Modal>
     </div>
