@@ -17,7 +17,7 @@ export const mockCompanies: Company[] = [
     logoUrl: 'https://images.pexels.com/photos/164686/pexels-photo-164686.jpeg?auto=compress&cs=tinysrgb&w=100',
     retentionPeriod: 24,
     disableFastTrack: false,
-    styles: '{"primaryColor": "#3B82F6", "secondaryColor": "#14B8A6"}',
+    styles: '{"report":{"backgroundColor":"#252387","costsBackgroundColor":"#6A68D4","costsTextColor":"#000000","costsInfoColor":"#252387","topRightHorizontalBarColor":"#252387","borderColor":"#6a68d4"},"shootInspect":{"overlayColor":"#1adf6c"},"globalTheme":{"primaryColor":"#323276","primaryTextColor":"#ffffff","accentColor":"#1adf6c","accentTextColor":"ffffff","dominantColor":"#151841","dominantTextColor":"#ffffff","isDarkTheme":true}}',
     reportSettings: '{"includeImages": true, "format": "PDF"}',
     configModules: '{"damageDetection": true, "vinScanning": true}',
     costSettings: ['bodywork', 'interior', 'mechanical']
