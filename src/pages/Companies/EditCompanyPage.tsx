@@ -569,6 +569,238 @@ export default function EditCompanyPage() {
       </div>
 
       {/* Save/Revert Buttons */}
+      {/* Events & Webhooks */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Events & Webhooks</h3>
+        <p className="text-sm text-gray-600 mb-6">Configure notification templates and recipients for different events</p>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Events List */}
+          <div className="lg:col-span-1">
+            <h4 className="text-sm font-medium text-gray-900 mb-3">Events</h4>
+            <div className="space-y-2">
+              {[
+                { id: 'self_inspection_creation', name: 'Self Inspection Creation', active: true },
+                { id: 'automated_chase_up', name: 'Automated Chase-up Message', active: false },
+                { id: 'manual_chase_up', name: 'Manual Chase-up Message', active: false },
+                { id: 'inspection_finished', name: 'Inspection Finished Message', active: false },
+                { id: 'damage_review_finished', name: 'Damage Review Finished Message', active: false },
+                { id: 'share_updated_report', name: 'Share Updated Report Message', active: false }
+              ].map((event) => (
+                <button
+                  key={event.id}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                    event.active 
+                      ? 'bg-blue-100 text-blue-800 border border-blue-200' 
+                      : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                  }`}
+                  onClick={() => setHasUnsavedChanges(true)}
+                >
+                  {event.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Configuration Panel */}
+          <div className="lg:col-span-3">
+            {/* Current Event Info */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-4 h-4 bg-blue-600 rounded"></div>
+                <span className="text-sm font-medium text-blue-900">Currently configuring messages for: Customer</span>
+              </div>
+              <p className="text-sm text-blue-700">The messages content below will be sent to customer recipients</p>
+            </div>
+
+            {/* Recipients */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-sm font-medium text-gray-900">Recipients</h4>
+                <Button variant="secondary" size="sm" className="text-blue-600">
+                  + Add Recipient
+                </Button>
+              </div>
+              
+              <div className="space-y-3">
+                {[
+                  { 
+                    id: 'customer_phone', 
+                    name: 'Customer Phone Number', 
+                    description: 'Automatically recovered from customer data',
+                    enabled: true 
+                  },
+                  { 
+                    id: 'company_email', 
+                    name: 'Company Email Address', 
+                    description: 'admin@company.com',
+                    enabled: true 
+                  },
+                  { 
+                    id: 'agent_email', 
+                    name: 'Agent Email Address', 
+                    description: 'Automatically recovered from agent data',
+                    enabled: true 
+                  },
+                  { 
+                    id: 'webhook', 
+                    name: 'Webhook URL', 
+                    description: 'https://api.company.com/webhook',
+                    enabled: false 
+                  }
+                ].map((recipient) => (
+                  <div key={recipient.id} className="bg-gray-50 rounded-lg p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 bg-gray-300 rounded flex items-center justify-center">
+                        <span className="text-xs text-gray-600">📧</span>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{recipient.name}</p>
+                        <p className="text-xs text-gray-500">{recipient.description}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          defaultChecked={recipient.enabled}
+                          onChange={() => setHasUnsavedChanges(true)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                      </label>
+                      <button className="text-gray-400 hover:text-gray-600">
+                        <span className="text-sm">⚙️</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Message Content */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-sm font-medium text-gray-900">Customer - Message Content</h4>
+                <div className="flex items-center gap-2">
+                  <select className="text-sm border border-gray-300 rounded px-2 py-1">
+                    <option>🇺🇸 English</option>
+                    <option>🇫🇷 French</option>
+                    <option>🇪🇸 Spanish</option>
+                  </select>
+                  <Button variant="primary" size="sm">
+                    Save Changes
+                  </Button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Email */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-sm font-medium text-gray-900">📧 Email</span>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        defaultChecked={true}
+                        onChange={() => setHasUnsavedChanges(true)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Subject</label>
+                      <input
+                        type="text"
+                        defaultValue="Your Vehicle Inspection Has Been Created"
+                        onChange={() => setHasUnsavedChanges(true)}
+                        className="block w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">HTML Content</label>
+                      <textarea
+                        rows={8}
+                        defaultValue={`<p>Hello {{customer_name}},</p>
+
+<p>Your vehicle inspection has been successfully created. Inspection ID: {{inspection_id}}</p>
+
+<p>Vehicle: {{immat}}</p>
+<p>Tracking: <a href="{{tracking_url}}">{{tracking_url}}</a></p>
+
+<p>You can track the progress of your inspection using the link above.</p>
+
+<p>Best regards,<br>{{company_name}}</p>`}
+                        onChange={() => setHasUnsavedChanges(true)}
+                        className="block w-full px-3 py-2 text-xs font-mono border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* SMS */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-sm font-medium text-gray-900">📱 SMS</span>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        defaultChecked={true}
+                        onChange={() => setHasUnsavedChanges(true)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Text Content</label>
+                    <textarea
+                      rows={4}
+                      defaultValue="Hello {{customer_name}}, your vehicle inspection has been created. Inspection ID: {{inspection_id}}. Track progress: {{inspection_link}}"
+                      onChange={() => setHasUnsavedChanges(true)}
+                      className="block w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-xs text-gray-500">Character count: 156</span>
+                      <span className="text-xs text-gray-500">Page limit: 1</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Available Variables */}
+              <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                <h5 className="text-sm font-medium text-gray-900 mb-3">Available Variables</h5>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+                  {[
+                    '{{customer_name}}', '{{customer_email}}', '{{customer_phone}}', '{{inspection_id}}',
+                    '{{inspection_link}}', '{{vehicle_make}}', '{{vehicle_model}}', '{{license_plate}}',
+                    '{{company_name}}', '{{agent_name}}', '{{inspection_date}}', '{{tracking_url}}'
+                  ].map((variable) => (
+                    <button
+                      key={variable}
+                      onClick={() => setHasUnsavedChanges(true)}
+                      className="text-xs bg-white border border-gray-200 rounded px-2 py-1 hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                    >
+                      {variable}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  Click any variable to copy it to your clipboard
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Save/Revert Buttons */}
       <div className="flex gap-4 justify-end sticky bottom-0 bg-white py-4 border-t border-gray-200">
         <Button variant="secondary" onClick={() => setHasUnsavedChanges(false)}>
           Revert Changes
