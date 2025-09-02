@@ -84,3 +84,11 @@ function App() {
                 </div>
               </div>
             </ProtectedRoute>
+          } />
+        </Routes>
+      </Suspense>
+    </Router>
+  );
+}
+
+export default App;
