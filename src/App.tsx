@@ -92,11 +92,3 @@ function App() {
 }
 
 export default App;
-
-        </div>
-      </div>
-    </Router>
-  );
-}
-
-export default App;
