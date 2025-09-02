@@ -39,11 +39,8 @@ export default function UnauthorizedPage() {
             <Home size={16} />
             {t('common:navigation.dashboard', 'Dashboard')}
           </button>
-         </div>
-       </div>
--    </Router>
+        </div>
+      </div>
     </div>
-   );
- }
--
--export default App;
+  );
+}
