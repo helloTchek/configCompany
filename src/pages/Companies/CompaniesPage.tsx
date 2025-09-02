@@ -6,7 +6,7 @@ import Button from '../../components/UI/Button';
 import Modal from '../../components/UI/Modal';
 import { mockCompanies } from '../../data/mockData';
 import { Company } from '../../types';
-import { Edit, Trash2, Copy, Plus } from 'lucide-react';
+import { Edit, Trash2, Copy, Plus, Upload } from 'lucide-react';
 
 export default function CompaniesPage() {
   const navigate = useNavigate();
@@ -14,6 +14,7 @@ export default function CompaniesPage() {
   const [sortKey, setSortKey] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [deleteModal, setDeleteModal] = useState<{ open: boolean; company?: Company }>({ open: false });
+  const [duplicateModal, setDuplicateModal] = useState<{ open: boolean; company?: Company }>({ open: false });
 
   const handleSort = (key: string) => {
     if (sortKey === key) {
@@ -33,6 +34,35 @@ export default function CompaniesPage() {
     setDeleteModal({ open: false });
   };
 
+  const handleDuplicate = (company: Company) => {
+    setDuplicateModal({ open: true, company });
+  };
+
+  const confirmDuplicate = () => {
+    if (duplicateModal.company) {
+      const newCompanyId = `company-${Date.now()}`;
+      const duplicatedCompany: Company = {
+        ...duplicateModal.company,
+        id: newCompanyId,
+        name: `${duplicateModal.company.name} (Copy)`,
+        identifier: `${duplicateModal.company.identifier}-copy`,
+        apiToken: `${duplicateModal.company.apiToken.split('_')[0]}_copy_${Date.now()}`,
+        companyCode: `${duplicateModal.company.companyCode}_COPY`,
+        currentApiRequests: 0, // Reset API usage for new company
+      };
+      
+      // In a real app, this would make an API call to create the company
+      // For now, we'll add it to the mock data and navigate to companies list
+      console.log('Duplicating company:', duplicatedCompany);
+      
+      // Add to mock companies array (in real app this would be handled by API)
+      mockCompanies.push(duplicatedCompany);
+      
+      // Navigate back to companies list to see the new company
+      navigate('/companies');
+    }
+    setDuplicateModal({ open: false });
+  };
   const columns = [
     { key: 'name', label: 'Company Name', sortable: true },
     { key: 'identifier', label: 'Identifier', sortable: true },
@@ -63,7 +93,7 @@ export default function CompaniesPage() {
             <Edit size={16} />
           </button>
           <button
-            onClick={() => {/* Handle duplicate */}}
+            onClick={() => handleDuplicate(row)}
             className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
           >
             <Copy size={16} />
@@ -134,6 +164,240 @@ export default function CompaniesPage() {
               Delete Company
             </Button>
           </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={duplicateModal.open}
+        onClose={() => setDuplicateModal({ open: false })}
+        title="Duplicate Company"
+        size="xl"
+      >
+        <div className="space-y-6 max-h-96 overflow-y-auto">
+          {/* New Company Name */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">New Company Name</label>
+            <input
+              type="text"
+              defaultValue={duplicateModal.company ? `${duplicateModal.company.name} (Copy)` : ''}
+              className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter new company name"
+            />
+          </div>
+
+          {/* Report Settings */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Report Settings</label>
+            <div className="relative">
+              <textarea
+                rows={4}
+                defaultValue={duplicateModal.company?.reportSettings || ''}
+                className="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+                placeholder="Report settings JSON configuration..."
+              />
+              <button className="absolute top-2 right-2 p-1 text-gray-400 hover:text-gray-600">
+                <Upload size={16} />
+              </button>
+            </div>
+          </div>
+
+          {/* Config Modules Settings */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Config Modules Settings</label>
+            <div className="relative">
+              <textarea
+                rows={4}
+                defaultValue={duplicateModal.company?.configModules || ''}
+                className="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+                placeholder="Config modules JSON configuration..."
+              />
+              <button className="absolute top-2 right-2 p-1 text-gray-400 hover:text-gray-600">
+                <Upload size={16} />
+              </button>
+            </div>
+          </div>
+
+          {/* Hierarchy */}
+          <div>
+            <button className="flex items-center justify-between w-full text-left text-sm font-medium text-gray-700 mb-3">
+              <span>Hierarchy</span>
+              <span className="text-gray-400">▼</span>
+            </button>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Parent Company (optional)</label>
+                <select className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  <option value="">None</option>
+                  {mockCompanies
+                    .filter(c => c.id !== duplicateModal.company?.id)
+                    .map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))
+                  }
+                </select>
+              </div>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+                />
+                <span className="ml-2 text-sm text-gray-700">Duplicate Children Companies</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Inheritance Options */}
+          <div>
+            <button className="flex items-center justify-between w-full text-left text-sm font-medium text-gray-700 mb-3">
+              <span>Inheritance Options</span>
+              <span className="text-gray-400">▼</span>
+            </button>
+            <div className="space-y-3">
+              <p className="text-sm text-gray-600">Choose what should be copied from the source company:</p>
+              <div className="space-y-2">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    defaultChecked={true}
+                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Duplicate Inspection Journeys</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    defaultChecked={false}
+                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Duplicate Cost Settings</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    defaultChecked={true}
+                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Duplicate Sorting Rules</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    defaultChecked={true}
+                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Duplicate Webhook & Events Configuration</span>
+                </label>
+              </div>
+              
+              {/* Edit Fields */}
+              <div className="mt-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Edit Fields</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Sender Name (for all events)</label>
+                    <input
+                      type="text"
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      placeholder="Enter sender name"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Webhook URL</label>
+                    <input
+                      type="url"
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      placeholder="https://example.com/webhook"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Warning Message */}
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-4">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <span className="text-yellow-600">⚠️</span>
+                  </div>
+                  <div className="ml-2">
+                    <p className="text-sm text-yellow-800">
+                      <strong>Remember:</strong> You will need to create users for the new company after duplication.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Detection, API & Validation Settings */}
+          <div className="border border-gray-200 rounded-lg">
+            <button 
+              className="flex items-center justify-between w-full text-left text-sm font-medium text-gray-700 p-3 hover:bg-gray-50 rounded-lg"
+              onClick={(e) => {
+                e.preventDefault();
+                const content = e.currentTarget.nextElementSibling as HTMLElement;
+                const icon = e.currentTarget.querySelector('.expand-icon') as HTMLElement;
+                if (content && icon) {
+                  const isHidden = content.style.display === 'none' || !content.style.display;
+                  content.style.display = isHidden ? 'block' : 'none';
+                  icon.textContent = isHidden ? '▼' : '▶';
+                }
+              }}
+            >
+              <span>Detection, API & Validation Settings</span>
+              <span className="text-gray-400 expand-icon">▶</span>
+            </button>
+            <div style={{ display: 'none' }} className="p-3 border-t border-gray-200 bg-gray-50">
+              <div className="space-y-3">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    defaultChecked={true}
+                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Duplicate Detection Model Configuration</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    defaultChecked={true}
+                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Duplicate API Settings</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    defaultChecked={true}
+                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Duplicate Validation Settings</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {/* Import Config JSON */}
+          <div className="border-t pt-4">
+            <Button variant="secondary" className="flex items-center gap-2">
+              <Upload size={16} />
+              Import Config JSON
+            </Button>
+          </div>
+        </div>
+
+        {/* Footer Buttons */}
+        <div className="flex gap-3 justify-end pt-6 border-t border-gray-200 mt-6">
+          <Button
+            variant="secondary"
+            onClick={() => setDuplicateModal({ open: false })}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={confirmDuplicate}
+          >
+            Create Company
+          </Button>
         </div>
       </Modal>
     </div>

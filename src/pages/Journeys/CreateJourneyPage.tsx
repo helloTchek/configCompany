@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import Header from '../../components/Layout/Header';
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
@@ -15,10 +16,7 @@ const blockTypes = [
   { type: 'shootInspection', name: 'Shoot Inspection Block', description: 'Photo capture workflow' },
   { type: 'fastTrack', name: 'Fast Track Block', description: 'Quick inspection process' },
   { type: 'addDamage', name: 'Add Damage Block', description: 'Manual damage reporting' },
-  { type: 'onboarding', name: 'Onboarding Block', description: 'Customer onboarding screen' },
-  { type: 'offboarding', name: 'Offboarding Block', description: 'Process completion screen' },
-  { type: 'sortingRules', name: 'Sorting Rules Block', description: 'Automated filtering rules' },
-  { type: 'decisionTree', name: 'Decision Tree Block', description: 'Conditional logic workflow' }
+  { type: 'static', name: 'Static Screen Block', description: 'Static content screens (onboarding/offboarding)' }
 ];
 
 export default function CreateJourneyPage() {
@@ -29,6 +27,52 @@ export default function CreateJourneyPage() {
   const [blockModal, setBlockModal] = useState<{ open: boolean; type?: string }>({ open: false });
   const [showShootInspectionConfig, setShowShootInspectionConfig] = useState(false);
 
+  const handleSave = () => {
+    if (!journeyName.trim()) {
+      alert('Please enter a journey name');
+      return;
+    }
+
+    if (blocks.length === 0) {
+      alert('Please add at least one block to the journey');
+      return;
+    }
+
+    // Create the journey object
+    const newJourney = {
+      id: `journey-${Date.now()}`,
+      name: journeyName,
+      description: journeyDescription,
+      blocks: blocks,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    // In a real app, this would save to a backend
+    console.log('Saving journey:', newJourney);
+    
+    // Navigate back to journeys list
+    navigate('/journeys');
+  };
+
+  const handleDragEnd = (result: DropResult) => {
+    if (!result.destination) return;
+
+    if (result.destination.index === result.source.index) return;
+
+    const items = Array.from(blocks);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    // Update order property
+    const updatedItems = items.map((item, index) => ({
+      ...item,
+      order: index + 1
+    }));
+
+    setBlocks(updatedItems);
+  };
+
   const addBlock = (blockType: string) => {
     if (blockType === 'shootInspection') {
       setShowShootInspectionConfig(true);
@@ -38,10 +82,12 @@ export default function CreateJourneyPage() {
 
     const newBlock: JourneyBlock = {
       id: `block-${Date.now()}`,
-      type: blockType as any,
+      type: blockType === 'shootInspection' ? 'shootInspect' : blockType as any,
       name: blockTypes.find(bt => bt.type === blockType)?.name || 'Unnamed Block',
       description: '',
-      config: {},
+      configId: blockType === 'static' ? `${blockType}-${blocks.length + 1}` : 
+                blockType === 'form' ? `${blockType}-${blocks.length + 1}` :
+                blockType === 'shootInspection' ? `${blockType}-${blocks.length + 1}` : undefined,
       order: blocks.length + 1
     };
     setBlocks([...blocks, newBlock]);
@@ -55,10 +101,10 @@ export default function CreateJourneyPage() {
   const handleShootInspectionSave = (config: ShootInspectionData) => {
     const newBlock: JourneyBlock = {
       id: `block-${Date.now()}`,
-      type: 'shootInspection',
+      type: 'shootInspect',
       name: config.name,
       description: config.description,
-      config: config,
+      configId: `shoot-inspect-${blocks.length + 1}`,
       order: blocks.length + 1
     };
     setBlocks([...blocks, newBlock]);
@@ -160,10 +206,10 @@ export default function CreateJourneyPage() {
             </div>
           )}
 
-          {blockModal.type === 'onboarding' && (
+          {blockModal.type === 'static' && (
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700">Screens JSON Configuration</label>
+                <label className="block text-sm font-medium text-gray-700">Static Screens JSON Configuration</label>
                 <div className="flex gap-2">
                   <Button variant="secondary" size="sm" className="flex items-center gap-1">
                     <Download size={14} />
@@ -179,7 +225,7 @@ export default function CreateJourneyPage() {
                 rows={12}
                 defaultValue={JSON.stringify(onboardingData.screens, null, 2)}
                 className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
-                placeholder="Screens JSON configuration..."
+                placeholder="Static screens JSON configuration (onboarding/offboarding)..."
               />
             </div>
           )}
@@ -198,20 +244,6 @@ export default function CreateJourneyPage() {
       </Modal>
     );
   };
-
-  if (showShootInspectionConfig) {
-    return (
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header title="Configure Shoot Inspection Block" />
-        <div className="flex-1 overflow-y-auto p-6">
-          <ShootInspectionConfig
-            onSave={handleShootInspectionSave}
-            onCancel={() => setShowShootInspectionConfig(false)}
-          />
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
@@ -268,41 +300,71 @@ export default function CreateJourneyPage() {
               </div>
             </div>
 
-            {blocks.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <p>No blocks added yet. Click "Add Block" to start building your journey.</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {blocks.map((block, index) => (
-                  <div key={block.id} className="bg-gray-50 rounded-lg p-4 flex items-center gap-4">
-                    <GripVertical size={16} className="text-gray-400" />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <span className="text-sm font-medium text-gray-900">{index + 1}.</span>
-                        <h4 className="font-medium text-gray-900">{block.name}</h4>
-                        <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
-                          {block.type}
-                        </span>
+            <DragDropContext onDragEnd={handleDragEnd}>
+              <Droppable droppableId="journey-blocks">
+                {(provided) => (
+                  <div
+                    {...provided.droppableProps}
+                    ref={provided.innerRef}
+                    className="space-y-3"
+                  >
+                    {blocks.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">
+                        <p>No blocks added yet. Click "Add Block" to start building your journey.</p>
                       </div>
-                      {block.description && (
-                        <p className="text-sm text-gray-600 mt-1">{block.description}</p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button variant="secondary" size="sm">Edit</Button>
-                      <Button 
-                        variant="danger" 
-                        size="sm"
-                        onClick={() => removeBlock(block.id)}
-                      >
-                        Remove
-                      </Button>
-                    </div>
+                    ) : (
+                      blocks.map((block, index) => (
+                        <Draggable 
+                          key={`${block.id}-${index}`} 
+                          draggableId={`${block.id}-${index}`} 
+                          index={index}
+                        >
+                          {(provided, snapshot) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              className={`bg-gray-50 rounded-lg p-4 flex items-center gap-4 ${
+                                snapshot.isDragging ? 'shadow-lg' : ''
+                              }`}
+                            >
+                              <div {...provided.dragHandleProps}>
+                                <GripVertical 
+                                  size={16} 
+                                  className="text-gray-400 cursor-grab hover:text-gray-600" 
+                                />
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3">
+                                  <span className="text-sm font-medium text-gray-900">{index + 1}.</span>
+                                  <h4 className="font-medium text-gray-900">{block.name}</h4>
+                                  <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+                                    {block.type}
+                                  </span>
+                                </div>
+                                {block.description && (
+                                  <p className="text-sm text-gray-600 mt-1">{block.description}</p>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Button variant="secondary" size="sm">Edit</Button>
+                                <Button 
+                                  variant="danger" 
+                                  size="sm"
+                                  onClick={() => removeBlock(block.id)}
+                                >
+                                  Remove
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                        </Draggable>
+                      ))
+                    )}
+                    {provided.placeholder}
                   </div>
-                ))}
-              </div>
-            )}
+                )}
+              </Droppable>
+            </DragDropContext>
           </div>
 
           {/* JSON Import/Export */}
@@ -322,20 +384,43 @@ export default function CreateJourneyPage() {
               rows={8}
               placeholder="Journey JSON configuration will appear here..."
               className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
-              value={JSON.stringify({ 
-                name: journeyName, 
-                description: journeyDescription, 
-                blocks: blocks 
-              }, null, 2)}
+              value={JSON.stringify([{
+                id: `workflow-${Date.now()}`,
+                steps: blocks.map((block, index) => ({
+                  id: `${block.type}-${index + 1}`,
+                  type: block.type,
+                  ...(block.configId && { configId: block.configId })
+                }))
+              }], null, 2)}
               readOnly
             />
           </div>
 
           {/* Save Buttons */}
           <div className="flex gap-4 justify-end">
-            <Button variant="secondary">Cancel</Button>
-            <Button variant="secondary">Save and Add Another</Button>
-            <Button disabled={!journeyName || blocks.length === 0}>
+            <Button 
+              variant="secondary"
+              onClick={() => navigate('/journeys')}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="secondary"
+              onClick={() => {
+                handleSave();
+                // Reset form for new journey
+                setJourneyName('');
+                setJourneyDescription('');
+                setBlocks([]);
+              }}
+              disabled={!journeyName || blocks.length === 0}
+            >
+              Save and Add Another
+            </Button>
+            <Button 
+              onClick={handleSave}
+              disabled={!journeyName || blocks.length === 0}
+            >
               Save Journey
             </Button>
           </div>
@@ -371,6 +456,19 @@ export default function CreateJourneyPage() {
       </Modal>
 
       <BlockConfigModal />
+
+      {/* Shoot Inspection Config Modal */}
+      <Modal
+        isOpen={showShootInspectionConfig}
+        onClose={() => setShowShootInspectionConfig(false)}
+        title="Configure Shoot Inspection Block"
+        size="xl"
+      >
+        <ShootInspectionConfig
+          onSave={handleShootInspectionSave}
+          onCancel={() => setShowShootInspectionConfig(false)}
+        />
+      </Modal>
     </div>
   );
 }
