@@ -42,7 +42,7 @@ export default function UnauthorizedPage() {
          </div>
        </div>
 -    </Router>
-+    </div>
+    </div>
    );
  }
 -
