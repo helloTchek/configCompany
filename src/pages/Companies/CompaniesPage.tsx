@@ -297,6 +297,7 @@ export default function CompaniesPage() {
                     <label className="block text-xs font-medium text-gray-600 mb-1">Sender Name (for all events)</label>
                     <input
                       type="text"
+                     required
                       className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                       placeholder="Enter sender name"
                     />
@@ -305,6 +306,7 @@ export default function CompaniesPage() {
                     <label className="block text-xs font-medium text-gray-600 mb-1">Webhook URL</label>
                     <input
                       type="url"
+                     required
                       className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                       placeholder="https://example.com/webhook"
                     />
@@ -374,14 +376,6 @@ export default function CompaniesPage() {
                 </label>
               </div>
             </div>
-          </div>
-
-          {/* Import Config JSON */}
-          <div className="border-t pt-4">
-            <Button variant="secondary" className="flex items-center gap-2">
-              <Upload size={16} />
-              Import Config JSON
-            </Button>
           </div>
         </div>
 
