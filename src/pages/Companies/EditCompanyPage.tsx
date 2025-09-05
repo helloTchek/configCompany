@@ -290,7 +290,7 @@ export default function EditCompanyPage() {
           <label className="flex items-center">
             <input
               type="checkbox"
-              defaultChecked={true}
+              defaultChecked={false}
               onChange={() => setHasUnsavedChanges(true)}
               className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
             />
