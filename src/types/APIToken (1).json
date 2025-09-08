@@ -1,0 +1,125 @@
+{
+  "className": "APIToken",
+  "fields": {
+    "objectId": {
+      "type": "String"
+    },
+    "createdAt": {
+      "type": "Date"
+    },
+    "updatedAt": {
+      "type": "Date"
+    },
+    "ACL": {
+      "type": "ACL"
+    },
+    "numberRequest": {
+      "type": "Number"
+    },
+    "expiration": {
+      "type": "Date"
+    },
+    "companyPtr": {
+      "type": "Pointer",
+      "targetClass": "Company"
+    },
+    "token": {
+      "type": "String"
+    },
+    "privateKey": {
+      "type": "String"
+    },
+    "maxRequestAPI": {
+      "type": "Number"
+    },
+    "useMasterKey": {
+      "type": "Boolean"
+    },
+    "canDetection": {
+      "type": "Boolean",
+      "required": false
+    },
+    "canClassification": {
+      "type": "Boolean",
+      "required": false
+    },
+    "canImageprocessing": {
+      "type": "Boolean",
+      "required": false
+    },
+    "canCostCalculation": {
+      "type": "Boolean"
+    },
+    "unlimited": {
+      "type": "Boolean"
+    },
+    "superAdmin": {
+      "type": "Boolean"
+    },
+    "locale": {
+      "type": "String"
+    },
+    "isDeleted": {
+      "type": "Boolean"
+    },
+    "description": {
+      "type": "String"
+    },
+    "decisonTree": {
+      "type": "Object"
+    },
+    "removeBg": {
+      "type": "Boolean"
+    },
+    "creator": {
+      "type": "Pointer",
+      "targetClass": "_User"
+    },
+    "hubspotId": {
+      "type": "String"
+    },
+    "canMobile": {
+      "type": "Boolean",
+      "required": false
+    }
+  },
+  "classLevelPermissions": {
+    "find": {
+      "requiresAuthentication": true,
+      "*": true
+    },
+    "count": {
+      "requiresAuthentication": true,
+      "*": true
+    },
+    "get": {
+      "requiresAuthentication": true,
+      "*": true
+    },
+    "create": {
+      "requiresAuthentication": true,
+      "*": true
+    },
+    "update": {
+      "requiresAuthentication": true,
+      "*": true
+    },
+    "delete": {
+      "requiresAuthentication": true,
+      "*": true
+    },
+    "addField": {
+      "*": true,
+      "requiresAuthentication": true
+    },
+    "protectedFields": {}
+  },
+  "indexes": {
+    "_id_": {
+      "_id": 1
+    },
+    "$**_text": {
+      "$**": "text"
+    }
+  }
+}

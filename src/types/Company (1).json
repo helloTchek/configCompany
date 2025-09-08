@@ -1,0 +1,161 @@
+{
+  "className": "Company",
+  "fields": {
+    "objectId": {
+      "type": "String"
+    },
+    "createdAt": {
+      "type": "Date"
+    },
+    "updatedAt": {
+      "type": "Date"
+    },
+    "ACL": {
+      "type": "ACL"
+    },
+    "name": {
+      "type": "String"
+    },
+    "identifier": {
+      "type": "String"
+    },
+    "address": {
+      "type": "String"
+    },
+    "logo": {
+      "type": "File"
+    },
+    "iamPtr": {
+      "type": "Pointer",
+      "targetClass": "IAMUsers"
+
+    },
+    "settingsPtr": {
+      "type": "Pointer",
+      "targetClass": "Settings"
+    },
+    "costSettingsList": {
+      "type": "Array",
+      "required": false
+    },
+    "eventManagerPtr": {
+      "type": "Pointer",
+      "targetClass": "EventManager",
+      "required": false
+    },
+    "configShootInspect": {
+      "type": "Array",
+      "required": false
+    },
+    "iaValidation": {
+      "type": "Boolean",
+      "required": false
+    },
+    "webApiVersion": {
+      "type": "String",
+      "required": false
+    },
+    "configOnBoarding": {
+      "type": "Object",
+      "required": false
+    },
+    "configOffBoarding": {
+      "type": "Object",
+      "required": false
+    },
+    "configFormOnBoard": {
+      "type": "Object",
+      "required": false
+    },
+    "configFormOffBoard": {
+      "type": "Object",
+      "required": false
+    },
+    "validationEnabled": {
+      "type": "Boolean",
+      "required": false
+    },
+    "validationParams": {
+      "type": "Object",
+      "required": false
+    },
+    "isFastTrackDisabled": {
+      "type": "Boolean",
+      "required": false
+    },
+    "canCreateInspection": {
+      "type": "Boolean"
+    },
+    "retentionPeriod": {
+      "type": "Number"
+    },
+    "blurEnabled": {
+      "type": "Boolean",
+      "required": false
+    },
+    "processingParams": {
+      "type": "Object",
+      "required": false
+    },
+    "configNps": {
+      "type": "Object",
+      "required": false
+    },
+    "workflows": {
+      "type": "Array",
+      "required": false
+    },
+    "staticScreenConfigs": {
+      "type": "Array",
+      "required": false
+    },
+    "shootInspectScreenConfigs": {
+      "type": "Array",
+      "required": false
+    },
+    "formScreenConfigs": {
+      "type": "Array",
+      "required": false
+    }
+  },
+  "classLevelPermissions": {
+    "find": {
+      "*": true,
+      "requiresAuthentication": true
+    },
+    "count": {
+      "*": true,
+      "requiresAuthentication": true
+    },
+    "get": {
+      "*": true,
+      "requiresAuthentication": true
+    },
+    "create": {
+      "*": true,
+      "requiresAuthentication": true
+    },
+    "update": {
+      "*": true,
+      "requiresAuthentication": true
+    },
+    "delete": {
+      "*": true,
+      "requiresAuthentication": true
+    },
+    "addField": {
+      "*": true
+    },
+    "protectedFields": {
+      "*": []
+    }
+  },
+  "indexes": {
+    "_id_": {
+      "_id": 1
+    },
+    "$**_text": {
+      "$**": "text"
+    }
+  }
+}

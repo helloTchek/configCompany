@@ -1,0 +1,61 @@
+{
+  "className": "CostSettings",
+  "fields": {
+    "objectId": {
+      "type": "String"
+    },
+    "createdAt": {
+      "type": "Date"
+    },
+    "updatedAt": {
+      "type": "Date"
+    },
+    "ACL": {
+      "type": "ACL"
+    },
+    "cost": {
+      "type": "Object",
+      "required": false
+    },
+    "currency": {
+      "type": "String",
+      "required": false
+    },
+    "tax": {
+      "type": "Number",
+      "required": false
+    },
+    "name": {
+      "type": "String",
+      "required": false
+    },
+    "companyPtr": {
+      "type": "Pointer",
+      "targetClass": "Company",
+      "required": false
+    }
+  },
+  "classLevelPermissions": {
+    "find": {
+      "*": true
+    },
+    "count": {
+      "*": true
+    },
+    "get": {
+      "*": true
+    },
+    "create": {},
+    "update": {},
+    "delete": {},
+    "addField": {},
+    "protectedFields": {
+      "*": []
+    }
+  },
+  "indexes": {
+    "_id_": {
+      "_id": 1
+    }
+  }
+}

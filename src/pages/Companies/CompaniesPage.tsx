@@ -15,6 +15,16 @@ export default function CompaniesPage() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [deleteModal, setDeleteModal] = useState<{ open: boolean; company?: Company }>({ open: false });
   const [duplicateModal, setDuplicateModal] = useState<{ open: boolean; company?: Company }>({ open: false });
+  const [duplicateForm, setDuplicateForm] = useState({
+    companyName: '',
+    senderName: '',
+    webhookUrl: '',
+    errors: {
+      companyName: '',
+      senderName: '',
+      webhookUrl: ''
+    }
+  });
 
   const handleSort = (key: string) => {
     if (sortKey === key) {
@@ -35,16 +45,65 @@ export default function CompaniesPage() {
   };
 
   const handleDuplicate = (company: Company) => {
+    setDuplicateForm({
+      companyName: `${company.name} (Copy)`,
+      senderName: '',
+      webhookUrl: '',
+      errors: {
+        companyName: '',
+        senderName: '',
+        webhookUrl: ''
+      }
+    });
     setDuplicateModal({ open: true, company });
   };
 
+  const validateDuplicateForm = () => {
+    const errors = {
+      companyName: '',
+      senderName: '',
+      webhookUrl: ''
+    };
+
+    if (!duplicateForm.companyName.trim()) {
+      errors.companyName = 'Company name is required';
+    }
+
+    if (!duplicateForm.senderName.trim()) {
+      errors.senderName = 'Sender name is required';
+    }
+
+    if (!duplicateForm.webhookUrl.trim()) {
+      errors.webhookUrl = 'Webhook URL is required';
+    } else if (!/^https?:\/\/.+/.test(duplicateForm.webhookUrl)) {
+      errors.webhookUrl = 'Please enter a valid URL';
+    }
+
+    setDuplicateForm(prev => ({ ...prev, errors }));
+    return !errors.companyName && !errors.senderName && !errors.webhookUrl;
+  };
+
+  const handleDuplicateFormChange = (field: string, value: string) => {
+    setDuplicateForm(prev => ({
+      ...prev,
+      [field]: value,
+      errors: {
+        ...prev.errors,
+        [field]: ''
+      }
+    }));
+  };
   const confirmDuplicate = () => {
+    if (!validateDuplicateForm()) {
+      return;
+    }
+
     if (duplicateModal.company) {
       const newCompanyId = `company-${Date.now()}`;
       const duplicatedCompany: Company = {
         ...duplicateModal.company,
         id: newCompanyId,
-        name: `${duplicateModal.company.name} (Copy)`,
+        name: duplicateForm.companyName,
         identifier: `${duplicateModal.company.identifier}-copy`,
         apiToken: `${duplicateModal.company.apiToken.split('_')[0]}_copy_${Date.now()}`,
         companyCode: `${duplicateModal.company.companyCode}_COPY`,
@@ -62,6 +121,16 @@ export default function CompaniesPage() {
       navigate('/companies');
     }
     setDuplicateModal({ open: false });
+    setDuplicateForm({
+      companyName: '',
+      senderName: '',
+      webhookUrl: '',
+      errors: {
+        companyName: '',
+        senderName: '',
+        webhookUrl: ''
+      }
+    });
   };
   const columns = [
     { key: 'name', label: 'Company Name', sortable: true },
@@ -179,10 +248,16 @@ export default function CompaniesPage() {
             <label className="block text-sm font-medium text-gray-700 mb-2">New Company Name</label>
             <input
               type="text"
-              defaultValue={duplicateModal.company ? `${duplicateModal.company.name} (Copy)` : ''}
-              className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              value={duplicateForm.companyName}
+              onChange={(e) => handleDuplicateFormChange('companyName', e.target.value)}
+              className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                duplicateForm.errors.companyName ? 'border-red-500' : 'border-gray-300'
+              }`}
               placeholder="Enter new company name"
             />
+            {duplicateForm.errors.companyName && (
+              <p className="text-sm text-red-600 mt-1">{duplicateForm.errors.companyName}</p>
+            )}
           </div>
 
           {/* Report Settings */}
@@ -297,17 +372,31 @@ export default function CompaniesPage() {
                     <label className="block text-xs font-medium text-gray-600 mb-1">Sender Name (for all events)</label>
                     <input
                       type="text"
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      value={duplicateForm.senderName}
+                      onChange={(e) => handleDuplicateFormChange('senderName', e.target.value)}
+                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
+                        duplicateForm.errors.senderName ? 'border-red-500' : 'border-gray-300'
+                      }`}
                       placeholder="Enter sender name"
                     />
+                    {duplicateForm.errors.senderName && (
+                      <p className="text-xs text-red-600 mt-1">{duplicateForm.errors.senderName}</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Webhook URL</label>
                     <input
                       type="url"
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      value={duplicateForm.webhookUrl}
+                      onChange={(e) => handleDuplicateFormChange('webhookUrl', e.target.value)}
+                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
+                        duplicateForm.errors.webhookUrl ? 'border-red-500' : 'border-gray-300'
+                      }`}
                       placeholder="https://example.com/webhook"
                     />
+                    {duplicateForm.errors.webhookUrl && (
+                      <p className="text-xs text-red-600 mt-1">{duplicateForm.errors.webhookUrl}</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -375,21 +464,25 @@ export default function CompaniesPage() {
               </div>
             </div>
           </div>
-
-          {/* Import Config JSON */}
-          <div className="border-t pt-4">
-            <Button variant="secondary" className="flex items-center gap-2">
-              <Upload size={16} />
-              Import Config JSON
-            </Button>
-          </div>
         </div>
 
         {/* Footer Buttons */}
         <div className="flex gap-3 justify-end pt-6 border-t border-gray-200 mt-6">
           <Button
             variant="secondary"
-            onClick={() => setDuplicateModal({ open: false })}
+            onClick={() => {
+              setDuplicateModal({ open: false });
+              setDuplicateForm({
+                companyName: '',
+                senderName: '',
+                webhookUrl: '',
+                errors: {
+                  companyName: '',
+                  senderName: '',
+                  webhookUrl: ''
+                }
+              });
+            }}
           >
             Cancel
           </Button>

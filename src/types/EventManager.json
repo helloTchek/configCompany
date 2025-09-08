@@ -1,0 +1,137 @@
+{
+  "className": "EventManager",
+  "fields": {
+    "objectId": {
+      "type": "String"
+    },
+    "createdAt": {
+      "type": "Date"
+    },
+    "updatedAt": {
+      "type": "Date"
+    },
+    "ACL": {
+      "type": "ACL"
+    },
+    "companyPtr": {
+      "type": "Pointer",
+      "targetClass": "Company",
+      "required": false
+    },
+    "webhookUrl": {
+      "type": "String",
+      "required": false
+    },
+    "webhookHeaderKey": {
+      "type": "String",
+      "required": false
+    },
+    "newTchekConfig": {
+      "type": "Object",
+      "required": false
+    },
+    "detectionFinishedConfig": {
+      "type": "Object",
+      "required": false
+    },
+    "createReportConfig": {
+      "type": "Object",
+      "required": false
+    },
+    "newTchekTemplates": {
+      "type": "Object",
+      "required": false
+    },
+    "detectionFinishedTemplates": {
+      "type": "Object",
+      "required": false
+    },
+    "createReportTemplates": {
+      "type": "Object",
+      "required": false
+    },
+    "deleteTchekTemplates": {
+      "type": "Object",
+      "required": false
+    },
+    "newDamageTemplates": {
+      "type": "Object",
+      "required": false
+    },
+    "tradeinVehicleConfig": {
+      "type": "Object",
+      "required": false
+    },
+    "tradeinVehicleTemplates": {
+      "type": "Object",
+      "required": false
+    },
+    "configSmtp": {
+      "type": "Object",
+      "required": false
+    },
+    "chaseUpVehicleConfig": {
+      "type": "Object",
+      "required": false
+    },
+    "chaseUpVehicleTemplates": {
+      "type": "Object",
+      "required": false
+    },
+    "webhookUrlV2": {
+      "type": "String",
+      "required": false
+    },
+    "shareUpdatedReportTemplates": {
+      "type": "Object",
+      "required": false
+    },
+    "shareUpdatedReportConfig": {
+      "type": "Object",
+      "required": false
+    },
+    "carBodyPicturesReadyConfig": {
+      "type": "Object",
+      "required": false
+    },
+    "carBodyPicturesReadyTemplates": {
+      "type": "Object",
+      "required": false
+    },
+    "customWebDomainUrl": {
+      "type": "String",
+      "required": false
+    }
+  },
+  "classLevelPermissions": {
+    "find": {
+      "*": true
+    },
+    "count": {
+      "*": true
+    },
+    "get": {
+      "*": true
+    },
+    "create": {
+      "*": true
+    },
+    "update": {
+      "*": true
+    },
+    "delete": {
+      "*": true
+    },
+    "addField": {
+      "*": true
+    },
+    "protectedFields": {
+      "*": []
+    }
+  },
+  "indexes": {
+    "_id_": {
+      "_id": 1
+    }
+  }
+}
