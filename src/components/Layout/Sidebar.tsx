@@ -1,7 +1,5 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { useAuth } from '@/auth/AuthContext';
 import { 
   Building2, 
   Users, 
@@ -13,7 +11,16 @@ import {
   ChevronDown,
   ChevronRight
 } from 'lucide-react';
-import { PERMISSIONS } from '@/types/auth';
+
+const navigation = [
+  { name: 'Dashboard', href: '/', icon: Home },
+  { name: 'Companies', href: '/companies', icon: Building2 },
+  { name: 'Users', href: '/users', icon: Users },
+  { name: 'Inspection Journeys', href: '/journeys', icon: Route },
+  { name: 'Cost Matrices', href: '/cost-matrices', icon: DollarSign },
+  { name: 'Sorting Rules', href: '/sorting-rules', icon: Filter },
+  { name: 'Settings', href: '/settings', icon: Settings },
+];
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -21,52 +28,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
-  const { t } = useTranslation();
-  const { hasPermission } = useAuth();
   const location = useLocation();
-
-  const navigation = [
-    { 
-      name: t('common:navigation.dashboard'), 
-      href: '/', 
-      icon: Home 
-    },
-    { 
-      name: t('common:navigation.companies'), 
-      href: '/companies', 
-      icon: Building2,
-      permission: PERMISSIONS.COMPANIES.VIEW
-    },
-    { 
-      name: t('common:navigation.users'), 
-      href: '/users', 
-      icon: Users,
-      permission: PERMISSIONS.USERS.VIEW
-    },
-    { 
-      name: t('common:navigation.workflows'), 
-      href: '/journeys', 
-      icon: Route,
-      permission: PERMISSIONS.WORKFLOWS.VIEW
-    },
-    { 
-      name: t('common:navigation.costs'), 
-      href: '/cost-matrices', 
-      icon: DollarSign,
-      permission: PERMISSIONS.COSTS.VIEW
-    },
-    { 
-      name: 'Sorting Rules', 
-      href: '/sorting-rules', 
-      icon: Filter 
-    },
-    { 
-      name: t('common:navigation.settings'), 
-      href: '/settings', 
-      icon: Settings,
-      permission: PERMISSIONS.SETTINGS.VIEW
-    },
-  ].filter(item => !item.permission || hasPermission(item.permission));
 
   return (
     <div className={`bg-gray-900 text-white transition-all duration-300 ${
@@ -75,7 +37,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       <div className="p-4 border-b border-gray-700">
         <div className="flex items-center justify-between">
           {!isCollapsed && (
-            <h1 className="text-xl font-bold">{t('common:navigation.adminPanel', 'Admin Panel')}</h1>
+            <h1 className="text-xl font-bold">Admin Panel</h1>
           )}
           <button
             onClick={onToggle}
