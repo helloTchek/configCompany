@@ -19,6 +19,8 @@ import SortingRulesPage from './pages/SortingRules/SortingRulesPage';
 import CostMatricesPage from './pages/CostMatrices/CostMatricesPage';
 import CreateCostMatrixPage from './pages/CostMatrices/CreateCostMatrixPage';
 import EditCostMatrixPage from './pages/CostMatrices/EditCostMatrixPage';
+import CreateSortingRulePage from './pages/SortingRules/CreateSortingRulePage';
+import EditSortingRulePage from './pages/SortingRules/EditSortingRulePage';
 import { PERMISSIONS } from '@/types/auth';
 
 function App() {
@@ -83,6 +85,8 @@ function App() {
                       </ProtectedRoute>
                     } />
                     <Route path="/sorting-rules" element={<SortingRulesPage />} />
+                    <Route path="/sorting-rules/new" element={<CreateSortingRulePage />} />
+                    <Route path="/sorting-rules/:id/edit" element={<EditSortingRulePage />} />
                     <Route path="/cost-matrices" element={
                       <ProtectedRoute requiredPermission={PERMISSIONS.COSTS.VIEW}>
                         <CostMatricesPage />
