@@ -528,7 +528,7 @@ export default function EditCompanyPage() {
     logoUrl: 'https://images.pexels.com/photos/164686/pexels-photo-164686.jpeg?auto=compress&cs=tinysrgb&w=100',
     retentionPeriod: 24,
     maxApiRequests: 5000,
-    expirationDate: '2024-12-31',
+    expirationDate: '2025-12-31',
     disableFastTrack: false,
     enableMileageCapture: true,
     enableBlurDetection: true,
