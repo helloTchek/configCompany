@@ -211,10 +211,6 @@ export default function JourneysPage() {
                     <option value="inactive">Inactive</option>
                   </select>
                 </div>
-        <div className="bg-white rounded-lg border border-gray-200">
-          <Table columns={columns} data={journeys} />
-        </div>
-      </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
@@ -229,6 +225,37 @@ export default function JourneysPage() {
                   </select>
                 </div>
               </div>
+
+              {hasActiveFilters && (
+                <div className="mt-4 flex justify-between items-center">
+                  <span className="text-sm text-gray-600">
+                    Showing {filteredJourneys.length} of {journeys.length} journeys
+                  </span>
+                  <Button variant="secondary" size="sm" onClick={clearFilters}>
+                    Clear All Filters
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="bg-white rounded-lg border border-gray-200">
+          <Table columns={columns} data={filteredJourneys} />
+          
+          {filteredJourneys.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              <p>No journeys found matching your criteria.</p>
+              {hasActiveFilters && (
+                <Button variant="secondary" onClick={clearFilters} className="mt-2">
+                  Clear Filters
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Duplicate Modal */}
       <Modal
         isOpen={duplicateModal.open}
@@ -260,33 +287,9 @@ export default function JourneysPage() {
               onClick={confirmDuplicate}
               disabled={!duplicateName.trim()}
             >
-              {hasActiveFilters && (
-                <div className="mt-4 flex justify-between items-center">
-                  <span className="text-sm text-gray-600">
-                    Showing {filteredJourneys.length} of {journeys.length} journeys
-                  </span>
-                  <Button variant="secondary" size="sm" onClick={clearFilters}>
-                    Clear All Filters
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
               Duplicate Journey
             </Button>
-          <Table columns={columns} data={filteredJourneys} />
-          
-          {filteredJourneys.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              <p>No journeys found matching your criteria.</p>
-              {hasActiveFilters && (
-                <Button variant="secondary" onClick={clearFilters} className="mt-2">
-                  Clear Filters
-                </Button>
-              )}
-            </div>
-          )}
+          </div>
         </div>
       </Modal>
     </div>

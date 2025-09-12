@@ -139,6 +139,9 @@ export default function CostMatricesPage() {
                 <span className="bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                   {Object.values(filters).filter(f => f !== '').length + (searchTerm ? 1 : 0)}
                 </span>
+              )}
+            </Button>
+          </div>
           {/* Filters Panel */}
           {showFilters && (
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
@@ -156,7 +159,6 @@ export default function CostMatricesPage() {
                     <option value="GBP">GBP</option>
                   </select>
                 </div>
-              )}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
                   <select
@@ -170,7 +172,6 @@ export default function CostMatricesPage() {
                   </select>
                 </div>
               </div>
-            </Button>
               {hasActiveFilters && (
                 <div className="mt-4 flex justify-between items-center">
                   <span className="text-sm text-gray-600">
@@ -184,7 +185,7 @@ export default function CostMatricesPage() {
             </div>
           )}
         </div>
-          </div>
+
         <div className="bg-white rounded-lg border border-gray-200">
           <Table columns={columns} data={filteredMatrices} />
           
