@@ -171,8 +171,6 @@ export default function SortingRulesPage() {
                   >
                     <option value="">All Types</option>
                     <option value="detectionPhase">Detection Phase</option>
-                    <option value="validationPhase">Validation Phase</option>
-                    <option value="reportGeneration">Report Generation</option>
                   </select>
                 </div>
           </div>
@@ -186,7 +184,6 @@ export default function SortingRulesPage() {
                     className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="">All Companies</option>
-                    <option value="AutoCorp Insurance">AutoCorp Insurance</option>
                     <option value="FleetMax Leasing">FleetMax Leasing</option>
                   </select>
                 </div>
@@ -201,7 +198,6 @@ export default function SortingRulesPage() {
                     <option value="">All Priorities</option>
                     <option value="high">High Priority (1-2)</option>
                     <option value="medium">Medium Priority (3-4)</option>
-                    <option value="low">Low Priority (5+)</option>
                   </select>
                 </div>
               </div>
