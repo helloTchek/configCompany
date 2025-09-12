@@ -1,0 +1,545 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
+import Header from '../../components/Layout/Header';
+import Button from '../../components/UI/Button';
+import Input from '../../components/UI/Input';
+import Modal from '../../components/UI/Modal';
+import ShootInspectionConfig from '../../components/Journey/ShootInspectionConfig';
+import { ArrowLeft, Plus, Upload, Download, GripVertical, Save } from 'lucide-react';
+import { JourneyBlock, InspectionJourney } from '../../types';
+import { ShootInspectionData } from '../../types';
+import { mockJourneys } from '../../data/mockData';
+import onboardingData from '../../data/onboarding.json';
+
+const blockTypes = [
+  { type: 'form', name: 'Form Block', description: 'Custom form with JSON configuration' },
+  { type: 'shootInspection', name: 'Shoot Inspection Block', description: 'Photo capture workflow' },
+  { type: 'fastTrack', name: 'Fast Track Block', description: 'Quick inspection process' },
+  { type: 'addDamage', name: 'Add Damage Block', description: 'Manual damage reporting' },
+  { type: 'static', name: 'Static Screen Block', description: 'Static content screens (onboarding/offboarding)' }
+];
+
+export default function EditJourneyPage() {
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const [journey, setJourney] = useState<InspectionJourney | null>(null);
+  const [journeyName, setJourneyName] = useState('');
+  const [journeyDescription, setJourneyDescription] = useState('');
+  const [blocks, setBlocks] = useState<JourneyBlock[]>([]);
+  const [blockModal, setBlockModal] = useState<{ open: boolean; type?: string }>({ open: false });
+  const [showShootInspectionConfig, setShowShootInspectionConfig] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Load journey data on component mount
+  useEffect(() => {
+    const loadJourney = () => {
+      // In a real app, this would be an API call
+      const foundJourney = mockJourneys.find(j => j.id === id);
+      
+      if (foundJourney) {
+        setJourney(foundJourney);
+        setJourneyName(foundJourney.name);
+        setJourneyDescription(foundJourney.description || '');
+        setBlocks(foundJourney.blocks);
+      } else {
+        // Journey not found, redirect to journeys list
+        navigate('/journeys');
+        return;
+      }
+      
+      setLoading(false);
+    };
+
+    if (id) {
+      loadJourney();
+    } else {
+      navigate('/journeys');
+    }
+  }, [id, navigate]);
+
+  const handleInputChange = () => {
+    setHasUnsavedChanges(true);
+  };
+
+  const handleSave = () => {
+    if (!journeyName.trim()) {
+      alert('Please enter a journey name');
+      return;
+    }
+
+    if (blocks.length === 0) {
+      alert('Please add at least one block to the journey');
+      return;
+    }
+
+    // Update the journey object
+    const updatedJourney = {
+      ...journey!,
+      name: journeyName,
+      description: journeyDescription,
+      blocks: blocks,
+      updatedAt: new Date().toISOString()
+    };
+
+    // In a real app, this would save to a backend
+    console.log('Updating journey:', updatedJourney);
+    
+    setHasUnsavedChanges(false);
+    // Navigate back to journeys list
+    navigate('/journeys');
+  };
+
+  const handleDragEnd = (result: DropResult) => {
+    if (!result.destination) return;
+
+    if (result.destination.index === result.source.index) return;
+
+    const items = Array.from(blocks);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    // Update order property
+    const updatedItems = items.map((item, index) => ({
+      ...item,
+      order: index + 1
+    }));
+
+    setBlocks(updatedItems);
+    setHasUnsavedChanges(true);
+  };
+
+  const addBlock = (blockType: string) => {
+    if (blockType === 'shootInspection') {
+      setShowShootInspectionConfig(true);
+      setBlockModal({ open: false });
+      return;
+    }
+
+    const newBlock: JourneyBlock = {
+      id: `block-${Date.now()}`,
+      type: blockType === 'shootInspection' ? 'shootInspect' : blockType as any,
+      name: blockTypes.find(bt => bt.type === blockType)?.name || 'Unnamed Block',
+      description: '',
+      configId: blockType === 'static' ? `${blockType}-${blocks.length + 1}` : 
+                blockType === 'form' ? `${blockType}-${blocks.length + 1}` :
+                blockType === 'shootInspection' ? `${blockType}-${blocks.length + 1}` : undefined,
+      order: blocks.length + 1
+    };
+    setBlocks([...blocks, newBlock]);
+    setBlockModal({ open: false });
+    setHasUnsavedChanges(true);
+  };
+
+  const removeBlock = (blockId: string) => {
+    setBlocks(blocks.filter(b => b.id !== blockId));
+    setHasUnsavedChanges(true);
+  };
+
+  const handleShootInspectionSave = (config: ShootInspectionData) => {
+    const newBlock: JourneyBlock = {
+      id: `block-${Date.now()}`,
+      type: 'shootInspect',
+      name: config.name,
+      description: config.description,
+      configId: `shoot-inspect-${blocks.length + 1}`,
+      order: blocks.length + 1
+    };
+    setBlocks([...blocks, newBlock]);
+    setShowShootInspectionConfig(false);
+    setHasUnsavedChanges(true);
+  };
+
+  const BlockConfigModal = () => {
+    if (!blockModal.type) return null;
+
+    const blockTypeInfo = blockTypes.find(bt => bt.type === blockModal.type);
+
+    return (
+      <Modal
+        isOpen={blockModal.open}
+        onClose={() => setBlockModal({ open: false })}
+        title={`Configure ${blockTypeInfo?.name}`}
+        size="lg"
+      >
+        <div className="space-y-4">
+          <Input 
+            label="Block Name" 
+            defaultValue={blockTypeInfo?.name}
+            placeholder="Enter block name"
+            onChange={handleInputChange}
+          />
+          <Input 
+            label="Description" 
+            placeholder="Enter block description"
+            onChange={handleInputChange}
+          />
+
+          {blockModal.type === 'form' && (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">JSON Configuration</label>
+                <div className="flex gap-2">
+                  <Button variant="secondary" size="sm" className="flex items-center gap-1">
+                    <Download size={14} />
+                    Download JSON
+                  </Button>
+                  <Button variant="secondary" size="sm" className="flex items-center gap-1">
+                    <Upload size={14} />
+                    Upload JSON
+                  </Button>
+                </div>
+              </div>
+              <textarea
+                rows={6}
+                placeholder='{"fields": [{"type": "text", "name": "customerName", "label": "Customer Name", "required": true}]}'
+                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+                onChange={handleInputChange}
+              />
+            </div>
+          )}
+
+          {blockModal.type === 'shootInspection' && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <Input label="Max Retries" type="number" defaultValue="3" onChange={handleInputChange} />
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    defaultChecked={true}
+                    className="rounded border-gray-300 text-blue-600 shadow-sm"
+                    onChange={handleInputChange}
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Quality Check Enabled</span>
+                </label>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Photo Angles</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {['Front', 'Back', 'Left Side', 'Right Side', 'Interior', 'Dashboard'].map((angle) => (
+                    <label key={angle} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        defaultChecked={['Front', 'Back', 'Left Side', 'Right Side'].includes(angle)}
+                        className="rounded border-gray-300 text-blue-600 shadow-sm"
+                        onChange={handleInputChange}
+                      />
+                      <span className="ml-2 text-sm text-gray-700">{angle}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {blockModal.type === 'addDamage' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Allowed Damage Types</label>
+              <div className="grid grid-cols-2 gap-2">
+                {['Car Body', 'Interior', 'Glazings', 'Dashboard', 'Declaration', 'Documents'].map((type) => (
+                  <label key={type} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      defaultChecked={true}
+                      className="rounded border-gray-300 text-blue-600 shadow-sm"
+                      onChange={handleInputChange}
+                    />
+                    <span className="ml-2 text-sm text-gray-700">{type}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {blockModal.type === 'static' && (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">Static Screens JSON Configuration</label>
+                <div className="flex gap-2">
+                  <Button variant="secondary" size="sm" className="flex items-center gap-1">
+                    <Download size={14} />
+                    Download JSON
+                  </Button>
+                  <Button variant="secondary" size="sm" className="flex items-center gap-1">
+                    <Upload size={14} />
+                    Upload JSON
+                  </Button>
+                </div>
+              </div>
+              <textarea
+                rows={12}
+                defaultValue={JSON.stringify(onboardingData.screens, null, 2)}
+                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+                placeholder="Static screens JSON configuration (onboarding/offboarding)..."
+                onChange={handleInputChange}
+              />
+            </div>
+          )}
+
+          <div className="flex gap-3 justify-end pt-4">
+            <Button variant="secondary" onClick={() => setBlockModal({ open: false })}>
+              Cancel
+            </Button>
+            <Button onClick={() => {
+              addBlock(blockModal.type!);
+            }}>
+              Add Block
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header title="Loading..." />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading journey...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!journey) {
+    return (
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header title="Journey Not Found" />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-gray-600 mb-4">The requested journey could not be found.</p>
+            <Button onClick={() => navigate('/journeys')}>
+              Back to Journeys
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <Header title={`Edit Journey: ${journey.name}`} />
+      
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="mb-6">
+          <Button
+            variant="secondary"
+            onClick={() => navigate('/journeys')}
+            className="flex items-center gap-2 mb-4"
+          >
+            <ArrowLeft size={16} />
+            Back to Journeys
+          </Button>
+        </div>
+
+        <div className="max-w-4xl mx-auto space-y-6">
+          {/* Journey Details */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Journey Details</h3>
+            <div className="grid grid-cols-1 gap-4">
+              <Input
+                label="Journey Name"
+                value={journeyName}
+                onChange={(e) => {
+                  setJourneyName(e.target.value);
+                  setHasUnsavedChanges(true);
+                }}
+                placeholder="Enter journey name"
+              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea
+                  rows={3}
+                  value={journeyDescription}
+                  onChange={(e) => {
+                    setJourneyDescription(e.target.value);
+                    setHasUnsavedChanges(true);
+                  }}
+                  placeholder="Enter journey description"
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Journey Blocks */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Journey Blocks</h3>
+              <div className="relative">
+                <Button
+                  onClick={() => setBlockModal({ open: true })}
+                  className="flex items-center gap-2"
+                >
+                  <Plus size={16} />
+                  Add Block
+                </Button>
+              </div>
+            </div>
+
+            <DragDropContext onDragEnd={handleDragEnd}>
+              <Droppable droppableId="journey-blocks">
+                {(provided) => (
+                  <div
+                    {...provided.droppableProps}
+                    ref={provided.innerRef}
+                    className="space-y-3"
+                  >
+                    {blocks.length === 0 && (
+                      <div className="text-center py-8 text-gray-500">
+                        <p>No blocks added yet. Click "Add Block" to start building your journey.</p>
+                      </div>
+                    )}
+                    {blocks.map((block, index) => (
+                      <Draggable 
+                        key={block.id} 
+                        draggableId={block.id} 
+                        index={index}
+                      >
+                        {(provided, snapshot) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            className={`bg-gray-50 rounded-lg p-4 flex items-center gap-4 ${
+                              snapshot.isDragging ? 'shadow-lg' : ''
+                            }`}
+                          >
+                            <div {...provided.dragHandleProps}>
+                              <GripVertical 
+                                size={16} 
+                                className="text-gray-400 cursor-grab hover:text-gray-600" 
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3">
+                                <span className="text-sm font-medium text-gray-900">{index + 1}.</span>
+                                <h4 className="font-medium text-gray-900">{block.name}</h4>
+                                <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+                                  {block.type}
+                                </span>
+                              </div>
+                              {block.description && (
+                                <p className="text-sm text-gray-600 mt-1">{block.description}</p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button variant="secondary" size="sm">Edit</Button>
+                              <Button 
+                                variant="danger" 
+                                size="sm"
+                                onClick={() => removeBlock(block.id)}
+                              >
+                                Remove
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </DragDropContext>
+          </div>
+
+          {/* JSON Import/Export */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Journey Configuration</h3>
+            <div className="flex gap-4 mb-4">
+              <Button variant="secondary" className="flex items-center gap-2">
+                <Upload size={16} />
+                Import JSON
+              </Button>
+              <Button variant="secondary" className="flex items-center gap-2">
+                <Download size={16} />
+                Export JSON
+              </Button>
+            </div>
+            <textarea
+              rows={8}
+              placeholder="Journey JSON configuration will appear here..."
+              className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+              value={JSON.stringify([{
+                id: journey.id,
+                steps: blocks.map((block, index) => ({
+                  id: `${block.type}-${index + 1}`,
+                  type: block.type,
+                  ...(block.configId && { configId: block.configId })
+                }))
+              }], null, 2)}
+              readOnly
+            />
+          </div>
+
+          {/* Save Buttons */}
+          <div className="flex gap-4 justify-end sticky bottom-0 bg-white py-4 border-t border-gray-200">
+            <Button 
+              variant="secondary"
+              onClick={() => navigate('/journeys')}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSave}
+              disabled={!journeyName || blocks.length === 0}
+              className="flex items-center gap-2"
+            >
+              <Save size={16} />
+              Save Changes
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Block Selection Modal */}
+      <Modal
+        isOpen={blockModal.open && !blockModal.type}
+        onClose={() => setBlockModal({ open: false })}
+        title="Select Block Type"
+        size="lg"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {blockTypes.map((blockType) => (
+            <button
+              key={blockType.type}
+              onClick={() => {
+                if (blockType.type === 'shootInspection') {
+                  setShowShootInspectionConfig(true);
+                  setBlockModal({ open: false });
+                } else {
+                  setBlockModal({ open: true, type: blockType.type });
+                }
+              }}
+              className="text-left p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+            >
+              <h4 className="font-medium text-gray-900 mb-1">{blockType.name}</h4>
+              <p className="text-sm text-gray-600">{blockType.description}</p>
+            </button>
+          ))}
+        </div>
+      </Modal>
+
+      <BlockConfigModal />
+
+      {/* Shoot Inspection Config Modal */}
+      <Modal
+        isOpen={showShootInspectionConfig}
+        onClose={() => setShowShootInspectionConfig(false)}
+        title="Configure Shoot Inspection Block"
+        size="xl"
+      >
+        <ShootInspectionConfig
+          onSave={handleShootInspectionSave}
+          onCancel={() => setShowShootInspectionConfig(false)}
+        />
+      </Modal>
+    </div>
+  );
+}
