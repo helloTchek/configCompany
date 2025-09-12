@@ -11,13 +11,57 @@ export default function CreateCompanyPage() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
   const [selectedLanguage, setSelectedLanguage] = useState('en');
+  const [formData, setFormData] = useState({
+    companyName: '',
+    logoUrl: '',
+    maxApiRequests: 30,
+    expirationDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // Today + 30 days
+  });
+  const [errors, setErrors] = useState({
+    companyName: '',
+    logoUrl: '',
+    maxApiRequests: ''
+  });
 
   const handleInputChange = () => {
     setHasUnsavedChanges(true);
   };
 
+  const handleFieldChange = (field: string, value: string | number) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    setErrors(prev => ({ ...prev, [field]: '' }));
+    setHasUnsavedChanges(true);
+  };
+
+  const validateForm = () => {
+    const newErrors = {
+      companyName: '',
+      logoUrl: '',
+      maxApiRequests: ''
+    };
+
+    if (!formData.companyName.trim()) {
+      newErrors.companyName = 'Company name is required';
+    }
+
+    if (!formData.logoUrl.trim()) {
+      newErrors.logoUrl = 'Logo URL is required';
+    } else if (!/^https?:\/\/.+/.test(formData.logoUrl)) {
+      newErrors.logoUrl = 'Please enter a valid URL';
+    }
+
+    if (!formData.maxApiRequests || formData.maxApiRequests <= 0) {
+      newErrors.maxApiRequests = 'Max API requests must be greater than 0';
+    }
+
+    setErrors(newErrors);
+    return !newErrors.companyName && !newErrors.logoUrl && !newErrors.maxApiRequests;
+  };
   const handleSave = () => {
-    // Handle save logic here
+    if (!validateForm()) {
+      return;
+    }
+
     console.log('Saving new company...');
     // Navigate back to companies list after save
     navigate('/companies');
@@ -66,8 +110,10 @@ export default function CreateCompanyPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Input
             label="Company Name"
+            value={formData.companyName}
+            onChange={(e) => handleFieldChange('companyName', e.target.value)}
             placeholder="Enter company name"
-            onChange={handleInputChange}
+            error={errors.companyName}
             required
           />
           <Input
@@ -109,8 +155,11 @@ export default function CreateCompanyPage() {
           </div>
           <Input
             label="Logo URL"
+            value={formData.logoUrl}
+            onChange={(e) => handleFieldChange('logoUrl', e.target.value)}
             placeholder="https://example.com/logo.png"
-            onChange={handleInputChange}
+            error={errors.logoUrl}
+            required
           />
           <div className="flex items-end">
             <Button variant="secondary" className="flex items-center gap-2">
@@ -126,9 +175,18 @@ export default function CreateCompanyPage() {
           />
           <Input
             label="Max API Requests"
+            value={formData.maxApiRequests}
+            onChange={(e) => handleFieldChange('maxApiRequests', parseInt(e.target.value) || 0)}
             type="number"
-            defaultValue="5000"
-            onChange={handleInputChange}
+            error={errors.maxApiRequests}
+            required
+          />
+          <Input
+            label="Expiration Date"
+            value={formData.expirationDate}
+            onChange={(e) => handleFieldChange('expirationDate', e.target.value)}
+            type="date"
+            required
           />
         </div>
 
@@ -239,6 +297,15 @@ export default function CreateCompanyPage() {
               className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
             />
             <span className="ml-2 text-sm text-gray-700">Enable Brand & Model Detection</span>
+          </label>
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              defaultChecked={true}
+              onChange={handleInputChange}
+              className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+            />
+            <span className="ml-2 text-sm text-gray-700">Enable Brand, Model & Color Recognition</span>
           </label>
         </div>
       </div>
