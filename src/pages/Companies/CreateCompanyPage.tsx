@@ -376,6 +376,15 @@ const EventsWebhooksTab = ({
                   />
                   <span className="ml-2 text-sm text-gray-700">Company Email Address</span>
                 </label>
+                {/* Company Email Address Field - shown when checkbox is checked */}
+                <div className="col-span-2">
+                  <Input
+                    label="Company Email Address"
+                    type="email"
+                    placeholder="company@example.com"
+                    onChange={handleInputChange}
+                  />
+                </div>
                 <label className="flex items-center">
                   <input
                     type="checkbox"
