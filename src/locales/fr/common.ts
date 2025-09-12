@@ -29,7 +29,9 @@ export const common = {
     login: 'Connexion',
     logout: 'Déconnexion',
     loading: 'Chargement...',
-    retry: 'Réessayer'
+    retry: 'Réessayer',
+    select: 'Sélectionner',
+    clearFilters: 'Effacer Tous les Filtres'
   },
   status: {
     active: 'Actif',
@@ -71,6 +73,19 @@ export const common = {
     sessionExpired: 'Votre session a expiré. Veuillez vous reconnecter.',
     accessDenied: 'Accès refusé. Vous n\'avez pas l\'autorisation de voir cette page.',
     networkError: 'Erreur réseau. Veuillez vérifier votre connexion et réessayer.'
+  },
+  filters: {
+    allTypes: 'Tous les Types',
+    allCompanies: 'Toutes les Entreprises',
+    allPriorities: 'Toutes les Priorités'
+  },
+  fields: {
+    actions: 'Actions',
+    level: 'Niveau'
+  },
+  sections: {
+    basicInformation: 'Informations de Base',
+    configuration: 'Configuration'
   },
   navigation: {
     dashboard: 'Tableau de bord',
