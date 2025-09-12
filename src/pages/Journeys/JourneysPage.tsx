@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../../components/Layout/Header';
 import Table from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
+import Modal from '../../components/UI/Modal';
+import Input from '../../components/UI/Input';
 import { mockJourneys } from '../../data/mockData';
 import { InspectionJourney } from '../../types';
 import { Edit, Eye, Copy, Trash2, Plus } from 'lucide-react';
@@ -10,6 +12,41 @@ import { Edit, Eye, Copy, Trash2, Plus } from 'lucide-react';
 export default function JourneysPage() {
   const navigate = useNavigate();
   const [journeys] = useState<InspectionJourney[]>(mockJourneys);
+  const [duplicateModal, setDuplicateModal] = useState<{ open: boolean; journey?: InspectionJourney }>({ open: false });
+  const [duplicateName, setDuplicateName] = useState('');
+
+  const handleDuplicate = (journey: InspectionJourney) => {
+    setDuplicateName(`${journey.name} (Copy)`);
+    setDuplicateModal({ open: true, journey });
+  };
+
+  const confirmDuplicate = () => {
+    if (!duplicateModal.journey || !duplicateName.trim()) {
+      return;
+    }
+
+    const duplicatedJourney: InspectionJourney = {
+      ...duplicateModal.journey,
+      id: `journey-${Date.now()}`,
+      name: duplicateName,
+      blocks: duplicateModal.journey.blocks.map(block => ({
+        ...block,
+        id: `block-${Date.now()}-${Math.random()}`,
+      })),
+    };
+
+    // In a real app, this would make an API call to create the journey
+    console.log('Duplicating journey:', duplicatedJourney);
+    
+    // Add to mock journeys array (in real app this would be handled by API)
+    mockJourneys.push(duplicatedJourney);
+    
+    setDuplicateModal({ open: false });
+    setDuplicateName('');
+    
+    // Refresh the page or update state to show the new journey
+    window.location.reload();
+  };
 
   const columns = [
     { key: 'name', label: 'Journey Name', sortable: true },
@@ -51,7 +88,7 @@ export default function JourneysPage() {
             <Edit size={16} />
           </button>
           <button
-            onClick={() => {/* Handle duplicate */}}
+            onClick={() => handleDuplicate(row)}
             className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
             title="Duplicate"
           >
@@ -92,6 +129,43 @@ export default function JourneysPage() {
           <Table columns={columns} data={journeys} />
         </div>
       </div>
+
+      {/* Duplicate Modal */}
+      <Modal
+        isOpen={duplicateModal.open}
+        onClose={() => setDuplicateModal({ open: false })}
+        title="Duplicate Journey"
+        size="md"
+      >
+        <div className="space-y-4">
+          <p className="text-gray-600">
+            Create a copy of <strong>{duplicateModal.journey?.name}</strong>
+          </p>
+          <Input
+            label="New Journey Name"
+            value={duplicateName}
+            onChange={(e) => setDuplicateName(e.target.value)}
+            placeholder="Enter new journey name"
+          />
+          <div className="flex gap-3 justify-end pt-4">
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setDuplicateModal({ open: false });
+                setDuplicateName('');
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmDuplicate}
+              disabled={!duplicateName.trim()}
+            >
+              Duplicate Journey
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
