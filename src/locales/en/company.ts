@@ -14,7 +14,7 @@ export const company = {
     retentionPeriod: 'Retention Period (months)',
     disableFastTrack: 'Disable Fast Track',
     enableMileageCapture: 'Enable Mileage Capture',
-    enableBlurDetection: 'Enable Blur Detection',
+    enableBlurDetection: 'Blur License plates',
     enableVinScanning: 'Enable VIN Scanning',
     enableBrandModelDetection: 'Enable Brand & Model Detection',
     iaValidation: 'IA Validation (Joelle model)',
