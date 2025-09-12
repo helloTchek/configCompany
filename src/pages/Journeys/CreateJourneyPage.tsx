@@ -303,66 +303,64 @@ export default function CreateJourneyPage() {
             <DragDropContext onDragEnd={handleDragEnd}>
               <Droppable droppableId="journey-blocks">
                 {(provided) => (
-                  <>
+                  <div
+                    {...provided.droppableProps}
+                    ref={provided.innerRef}
+                    className="space-y-3"
+                  >
                     {blocks.length === 0 && (
                       <div className="text-center py-8 text-gray-500">
                         <p>No blocks added yet. Click "Add Block" to start building your journey.</p>
                       </div>
                     )}
-                    <div
-                      {...provided.droppableProps}
-                      ref={provided.innerRef}
-                      className="space-y-3"
-                    >
-                      {blocks.map((block, index) => (
-                        <Draggable 
-                          key={block.id} 
-                          draggableId={block.id} 
-                          index={index}
-                        >
-                          {(provided, snapshot) => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              className={`bg-gray-50 rounded-lg p-4 flex items-center gap-4 ${
-                                snapshot.isDragging ? 'shadow-lg' : ''
-                              }`}
-                            >
-                              <div {...provided.dragHandleProps}>
-                                <GripVertical 
-                                  size={16} 
-                                  className="text-gray-400 cursor-grab hover:text-gray-600" 
-                                />
-                              </div>
-                              <div className="flex-1">
-                                <div className="flex items-center gap-3">
-                                  <span className="text-sm font-medium text-gray-900">{index + 1}.</span>
-                                  <h4 className="font-medium text-gray-900">{block.name}</h4>
-                                  <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
-                                    {block.type}
-                                  </span>
-                                </div>
-                                {block.description && (
-                                  <p className="text-sm text-gray-600 mt-1">{block.description}</p>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Button variant="secondary" size="sm">Edit</Button>
-                                <Button 
-                                  variant="danger" 
-                                  size="sm"
-                                  onClick={() => removeBlock(block.id)}
-                                >
-                                  Remove
-                                </Button>
-                              </div>
+                    {blocks.map((block, index) => (
+                      <Draggable 
+                        key={block.id} 
+                        draggableId={block.id} 
+                        index={index}
+                      >
+                        {(provided, snapshot) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            className={`bg-gray-50 rounded-lg p-4 flex items-center gap-4 ${
+                              snapshot.isDragging ? 'shadow-lg' : ''
+                            }`}
+                          >
+                            <div {...provided.dragHandleProps}>
+                              <GripVertical 
+                                size={16} 
+                                className="text-gray-400 cursor-grab hover:text-gray-600" 
+                              />
                             </div>
-                          )}
-                        </Draggable>
-                      ))}
-                      {provided.placeholder}
-                    </div>
-                  </>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3">
+                                <span className="text-sm font-medium text-gray-900">{index + 1}.</span>
+                                <h4 className="font-medium text-gray-900">{block.name}</h4>
+                                <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+                                  {block.type}
+                                </span>
+                              </div>
+                              {block.description && (
+                                <p className="text-sm text-gray-600 mt-1">{block.description}</p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button variant="secondary" size="sm">Edit</Button>
+                              <Button 
+                                variant="danger" 
+                                size="sm"
+                                onClick={() => removeBlock(block.id)}
+                              >
+                                Remove
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
                 )}
               </Droppable>
             </DragDropContext>
