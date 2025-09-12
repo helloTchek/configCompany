@@ -33,6 +33,10 @@ export default function CreateCompanyPage() {
     setHasUnsavedChanges(true);
   };
 
+  const handleLogoUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleFieldChange('logoUrl', e.target.value);
+  };
+
   const validateForm = () => {
     const newErrors = {
       companyName: '',
@@ -156,7 +160,7 @@ export default function CreateCompanyPage() {
           <Input
             label="Logo URL"
             value={formData.logoUrl}
-            onChange={(e) => handleFieldChange('logoUrl', e.target.value)}
+            onChange={handleLogoUrlChange}
             placeholder="https://example.com/logo.png"
             error={errors.logoUrl}
             required
