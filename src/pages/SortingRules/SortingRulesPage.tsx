@@ -214,22 +214,19 @@ export default function SortingRulesPage() {
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200">
-        <>
-          <div className="bg-white rounded-lg border border-gray-200">
-            <Table columns={columns} data={filteredRules} />
-          </div>
+          <Table columns={columns} data={filteredRules} />
+        </div>
 
-          {filteredRules.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              <p>No sorting rules found matching your criteria.</p>
-              {hasActiveFilters && (
-                <Button variant="secondary" onClick={clearFilters} className="mt-2">
-                  Clear Filters
-                </Button>
-              )}
-            </div>
-          )}
-        </>
+        {filteredRules.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            <p>No sorting rules found matching your criteria.</p>
+            {hasActiveFilters && (
+              <Button variant="secondary" onClick={clearFilters} className="mt-2">
+                Clear Filters
+              </Button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
