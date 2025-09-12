@@ -14,6 +14,7 @@ import CreateCompanyPage from './pages/Companies/CreateCompanyPage';
 import UsersPage from './pages/Users/UsersPage';
 import JourneysPage from './pages/Journeys/JourneysPage';
 import CreateJourneyPage from './pages/Journeys/CreateJourneyPage';
+import EditJourneyPage from './pages/Journeys/EditJourneyPage';
 import SortingRulesPage from './pages/SortingRules/SortingRulesPage';
 import CostMatricesPage from './pages/CostMatrices/CostMatricesPage';
 import { PERMISSIONS } from '@/types/auth';
