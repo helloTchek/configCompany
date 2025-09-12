@@ -4,13 +4,22 @@ import Header from '../../components/Layout/Header';
 import Table from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
 import Modal from '../../components/UI/Modal';
+import Input from '../../components/UI/Input';
 import { mockCompanies } from '../../data/mockData';
 import { Company } from '../../types';
-import { Edit, Trash2, Copy, Plus, Upload } from 'lucide-react';
+import { Edit, Trash2, Copy, Plus, Upload, Search, Filter, X } from 'lucide-react';
 
 export default function CompaniesPage() {
   const navigate = useNavigate();
   const [companies] = useState<Company[]>(mockCompanies);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    contractType: '',
+    businessSector: '',
+    parentCompany: '',
+    status: ''
+  });
   const [sortKey, setSortKey] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [deleteModal, setDeleteModal] = useState<{ open: boolean; company?: Company }>({ open: false });
@@ -133,6 +142,45 @@ export default function CompaniesPage() {
     });
   };
   const columns = [
+  // Filter and search logic
+  const filteredCompanies = companies.filter(company => {
+    // Search filter
+    const matchesSearch = !searchTerm || 
+      company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      company.identifier.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      company.companyCode.toLowerCase().includes(searchTerm.toLowerCase());
+
+    // Contract type filter
+    const matchesContractType = !filters.contractType || company.contractType === filters.contractType;
+
+    // Business sector filter
+    const matchesBusinessSector = !filters.businessSector || company.businessSector === filters.businessSector;
+
+    // Parent company filter
+    const matchesParentCompany = !filters.parentCompany || 
+      (filters.parentCompany === 'root' && !company.parentCompany) ||
+      (filters.parentCompany === 'child' && company.parentCompany);
+
+    // Status filter (based on API requests)
+    const matchesStatus = !filters.status ||
+      (filters.status === 'active' && company.currentApiRequests < company.maxApiRequests) ||
+      (filters.status === 'limit-reached' && company.currentApiRequests >= company.maxApiRequests);
+
+    return matchesSearch && matchesContractType && matchesBusinessSector && matchesParentCompany && matchesStatus;
+  });
+
+  const clearFilters = () => {
+    setFilters({
+      contractType: '',
+      businessSector: '',
+      parentCompany: '',
+      status: ''
+    });
+    setSearchTerm('');
+  };
+
+  const hasActiveFilters = searchTerm || Object.values(filters).some(filter => filter !== '');
+
     { key: 'name', label: 'Company Name', sortable: true },
     { key: 'identifier', label: 'Identifier', sortable: true },
     { key: 'companyCode', label: 'Company ID', sortable: true },
@@ -197,14 +245,138 @@ export default function CompaniesPage() {
           </Button>
         </div>
 
+        {/* Search and Filters */}
+        <div className="mb-6 space-y-4">
+          {/* Search Bar */}
+          <div className="flex gap-4">
+            <div className="relative flex-1 max-w-md">
+              <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search companies..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+            <Button
+              variant="secondary"
+              onClick={() => setShowFilters(!showFilters)}
+              className={`flex items-center gap-2 ${hasActiveFilters ? 'bg-blue-50 text-blue-700 border-blue-200' : ''}`}
+            >
+              <Filter size={16} />
+              Filters
+              {hasActiveFilters && (
+                <span className="bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {Object.values(filters).filter(f => f !== '').length + (searchTerm ? 1 : 0)}
+                </span>
+              )}
+            </Button>
+          </div>
+
+          {/* Filters Panel */}
+          {showFilters && (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Contract Type</label>
+                  <select
+                    value={filters.contractType}
+                    onChange={(e) => setFilters(prev => ({ ...prev, contractType: e.target.value }))}
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">All Types</option>
+                    <option value="Client">Client</option>
+                    <option value="Prospect">Prospect</option>
+                    <option value="Test">Test</option>
+                    <option value="Demo">Demo</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Business Sector</label>
+                  <select
+                    value={filters.businessSector}
+                    onChange={(e) => setFilters(prev => ({ ...prev, businessSector: e.target.value }))}
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">All Sectors</option>
+                    <option value="Insurance">Insurance</option>
+                    <option value="Leasing">Leasing</option>
+                    <option value="Rental">Rental</option>
+                    <option value="Fleet Management">Fleet Management</option>
+                    <option value="Automotive">Automotive</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Company Type</label>
+                  <select
+                    value={filters.parentCompany}
+                    onChange={(e) => setFilters(prev => ({ ...prev, parentCompany: e.target.value }))}
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">All Companies</option>
+                    <option value="root">Root Companies</option>
+                    <option value="child">Child Companies</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">API Status</label>
+                  <select
+                    value={filters.status}
+                    onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">All Status</option>
+                    <option value="active">Active (Under Limit)</option>
+                    <option value="limit-reached">Limit Reached</option>
+                  </select>
+                </div>
+              </div>
+
+              {hasActiveFilters && (
+                <div className="mt-4 flex justify-between items-center">
+                  <span className="text-sm text-gray-600">
+                    Showing {filteredCompanies.length} of {companies.length} companies
+                  </span>
+                  <Button variant="secondary" size="sm" onClick={clearFilters}>
+                    Clear All Filters
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
         <div className="bg-white rounded-lg border border-gray-200">
           <Table
             columns={columns}
-            data={companies}
+            data={filteredCompanies}
             sortKey={sortKey}
             sortDirection={sortDirection}
             onSort={handleSort}
           />
+          
+          {filteredCompanies.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              <p>No companies found matching your criteria.</p>
+              {hasActiveFilters && (
+                <Button variant="secondary" onClick={clearFilters} className="mt-2">
+                  Clear Filters
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
