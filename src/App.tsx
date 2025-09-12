@@ -17,6 +17,8 @@ import CreateJourneyPage from './pages/Journeys/CreateJourneyPage';
 import EditJourneyPage from './pages/Journeys/EditJourneyPage';
 import SortingRulesPage from './pages/SortingRules/SortingRulesPage';
 import CostMatricesPage from './pages/CostMatrices/CostMatricesPage';
+import CreateCostMatrixPage from './pages/CostMatrices/CreateCostMatrixPage';
+import EditCostMatrixPage from './pages/CostMatrices/EditCostMatrixPage';
 import { PERMISSIONS } from '@/types/auth';
 
 function App() {
@@ -84,6 +86,16 @@ function App() {
                     <Route path="/cost-matrices" element={
                       <ProtectedRoute requiredPermission={PERMISSIONS.COSTS.VIEW}>
                         <CostMatricesPage />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/cost-matrices/new" element={
+                      <ProtectedRoute requiredPermission={PERMISSIONS.COSTS.CREATE}>
+                        <CreateCostMatrixPage />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/cost-matrices/:id/edit" element={
+                      <ProtectedRoute requiredPermission={PERMISSIONS.COSTS.UPDATE}>
+                        <EditCostMatrixPage />
                       </ProtectedRoute>
                     } />
                   </Routes>
