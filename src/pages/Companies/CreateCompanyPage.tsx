@@ -275,7 +275,7 @@ export default function CreateCompanyPage() {
           <label className="flex items-center">
             <input
               type="checkbox"
-              defaultChecked={true}
+              defaultChecked={false}
               onChange={handleInputChange}
               className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
             />
