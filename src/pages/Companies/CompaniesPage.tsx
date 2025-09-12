@@ -141,7 +141,7 @@ export default function CompaniesPage() {
       }
     });
   };
-  const columns = [
+
   // Filter and search logic
   const filteredCompanies = companies.filter(company => {
     // Search filter
@@ -181,6 +181,7 @@ export default function CompaniesPage() {
 
   const hasActiveFilters = searchTerm || Object.values(filters).some(filter => filter !== '');
 
+  const columns = [
     { key: 'name', label: 'Company Name', sortable: true },
     { key: 'identifier', label: 'Identifier', sortable: true },
     { key: 'companyCode', label: 'Company ID', sortable: true },
