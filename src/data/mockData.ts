@@ -8,7 +8,7 @@ export const mockCompanies: Company[] = [
     apiToken: 'ac_tk_abc123def456',
     currentApiRequests: 2450,
     maxApiRequests: 5000,
-    requestsExpiryDate: '2024-12-31',
+    requestsExpiryDate: '2025-12-31',
     companyCode: 'AUTOCORP',
     parentCompany: undefined,
     childrenCount: 3,
