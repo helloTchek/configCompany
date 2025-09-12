@@ -290,15 +290,15 @@ export default function EditSortingRulePage() {
               <div>
                 <h4 className="font-medium text-blue-800 mb-2">Filter Examples:</h4>
                 <div className="space-y-2 text-sm">
-                  <div className="bg-white p-2 rounded border font-mono">{"severity": {"$gte": 3}}</div>
-                  <div className="bg-white p-2 rounded border font-mono">{"damageType": "scratch", "confidence": {"$gt": 0.8}}</div>
+                  <div className="bg-white p-2 rounded border font-mono">{JSON.stringify({"severity": {"$gte": 3}})}</div>
+                  <div className="bg-white p-2 rounded border font-mono">{JSON.stringify({"damageType": "scratch", "confidence": {"$gt": 0.8}})}</div>
                 </div>
               </div>
               <div>
                 <h4 className="font-medium text-blue-800 mb-2">Update Examples:</h4>
                 <div className="space-y-2 text-sm">
-                  <div className="bg-white p-2 rounded border font-mono">{"priority": "high"}</div>
-                  <div className="bg-white p-2 rounded border font-mono">{"status": "validated", "reviewRequired": true}</div>
+                  <div className="bg-white p-2 rounded border font-mono">{JSON.stringify({"priority": "high"})}</div>
+                  <div className="bg-white p-2 rounded border font-mono">{JSON.stringify({"status": "validated", "reviewRequired": true})}</div>
                 </div>
               </div>
             </div>
