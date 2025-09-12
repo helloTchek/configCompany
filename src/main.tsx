@@ -10,14 +10,12 @@ import ErrorBoundary from '@/components/ui/ErrorBoundary';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <ErrorBoundary>
-      <AuthProvider>
-        <Suspense fallback={<LoadingSpinner />}>
-          <App />
-          <ToastProvider />
-        </Suspense>
-      </AuthProvider>
-    </ErrorBoundary>
-  </StrictMode>
+  <ErrorBoundary>
+    <AuthProvider>
+      <Suspense fallback={<LoadingSpinner />}>
+        <App />
+        <ToastProvider />
+      </Suspense>
+    </AuthProvider>
+  </ErrorBoundary>
 );
