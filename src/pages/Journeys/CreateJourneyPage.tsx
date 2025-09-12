@@ -303,20 +303,21 @@ export default function CreateJourneyPage() {
             <DragDropContext onDragEnd={handleDragEnd}>
               <Droppable droppableId="journey-blocks">
                 {(provided) => (
-                  <div
-                    {...provided.droppableProps}
-                    ref={provided.innerRef}
-                    className="space-y-3"
-                  >
-                    {blocks.length === 0 ? (
+                  <>
+                    {blocks.length === 0 && (
                       <div className="text-center py-8 text-gray-500">
                         <p>No blocks added yet. Click "Add Block" to start building your journey.</p>
                       </div>
-                    ) : (
-                      blocks.map((block, index) => (
+                    )}
+                    <div
+                      {...provided.droppableProps}
+                      ref={provided.innerRef}
+                      className="space-y-3"
+                    >
+                      {blocks.map((block, index) => (
                         <Draggable 
-                          key={`${block.id}-${index}`} 
-                          draggableId={`${block.id}-${index}`} 
+                          key={block.id} 
+                          draggableId={block.id} 
                           index={index}
                         >
                           {(provided, snapshot) => (
@@ -358,10 +359,10 @@ export default function CreateJourneyPage() {
                             </div>
                           )}
                         </Draggable>
-                      ))
-                    )}
-                    {provided.placeholder}
-                  </div>
+                      ))}
+                      {provided.placeholder}
+                    </div>
+                  </>
                 )}
               </Droppable>
             </DragDropContext>
