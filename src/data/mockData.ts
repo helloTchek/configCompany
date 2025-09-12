@@ -29,7 +29,7 @@ export const mockCompanies: Company[] = [
     apiToken: 'fm_tk_xyz789ghi012',
     currentApiRequests: 1200,
     maxApiRequests: 3000,
-    requestsExpiryDate: '2024-11-30',
+    requestsExpiryDate: '2025-11-30',
     companyCode: 'FLEETMAX',
     parentCompany: '1',
     childrenCount: 1,
