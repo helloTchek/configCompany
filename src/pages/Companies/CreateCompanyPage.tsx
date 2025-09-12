@@ -600,18 +600,32 @@ export default function CreateCompanyPage() {
   ];
 
   const variables = [
-    { key: '{{customerName}}', name: 'Customer Name' },
-    { key: '{{customerEmail}}', name: 'Customer Email' },
-    { key: '{{customerPhone}}', name: 'Customer Phone' },
-    { key: '{{inspectionId}}', name: 'Inspection ID' },
-    { key: '{{inspectionLink}}', name: 'Inspection Link' },
-    { key: '{{vehicleMake}}', name: 'Vehicle Make' },
-    { key: '{{vehicleModel}}', name: 'Vehicle Model' },
-    { key: '{{licensePlate}}', name: 'License Plate' },
-    { key: '{{companyName}}', name: 'Company Name' },
-    { key: '{{agentName}}', name: 'Agent Name' },
-    { key: '{{inspectionDate}}', name: 'Inspection Date' },
-    { key: '{{trackingUrl}}', name: 'Tracking URL' }
+    { key: '##clientLastName##', name: 'Client Last Name' },
+    { key: '##clientFirstName##', name: 'Client First Name' },
+    { key: '##clientMail##', name: 'Client Email' },
+    { key: '##clientPhone##', name: 'Client Phone' },
+    { key: '##clientLanguage##', name: 'Client Language' },
+    { key: '##personInCharge##', name: 'Person In Charge' },
+    { key: '##notes##', name: 'Notes' },
+    { key: '##date##', name: 'Date' },
+    { key: '##dateFirstPicture##', name: 'Date First Picture' },
+    { key: '##vehicleMileage##', name: 'Vehicle Mileage' },
+    { key: '##customerLastName##', name: 'Customer Last Name' },
+    { key: '##customerFirstName##', name: 'Customer First Name' },
+    { key: '##customerLocale##', name: 'Customer Locale' },
+    { key: '##customerPhone##', name: 'Customer Phone' },
+    { key: '##customerMail##', name: 'Customer Email' },
+    { key: '##customerVIN##', name: 'Customer VIN' },
+    { key: '##customerImmat##', name: 'Customer Registration' },
+    { key: '##companyName##', name: 'Company Name' },
+    { key: '##immat##', name: 'Registration Number' },
+    { key: '##vin##', name: 'VIN Number' },
+    { key: '##reporturl##', name: 'Report URL' },
+    { key: '##reporturlWithoutCosts##', name: 'Report URL Without Costs' },
+    { key: '##fasttrackurl##', name: 'Fast Track URL' },
+    { key: '##tradeinSSO##', name: 'Trade-in SSO' },
+    { key: '##editreporturl##', name: 'Edit Report URL' },
+    { key: '##agentEmailAddress##', name: 'Agent Email Address' }
   ];
 
   const tabs = [
