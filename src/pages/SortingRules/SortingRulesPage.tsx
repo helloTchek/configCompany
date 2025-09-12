@@ -173,9 +173,6 @@ export default function SortingRulesPage() {
                     <option value="detectionPhase">Detection Phase</option>
                   </select>
                 </div>
-          </div>
-        </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
                   <select
@@ -187,7 +184,7 @@ export default function SortingRulesPage() {
                     <option value="FleetMax Leasing">FleetMax Leasing</option>
                   </select>
                 </div>
-        <div className="bg-white rounded-lg border border-gray-200">
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Priority Level</label>
                   <select
@@ -201,7 +198,7 @@ export default function SortingRulesPage() {
                   </select>
                 </div>
               </div>
-          <Table columns={columns} data={filteredRules} />
+
               {hasActiveFilters && (
                 <div className="mt-4 flex justify-between items-center">
                   <span className="text-sm text-gray-600">
@@ -214,18 +211,23 @@ export default function SortingRulesPage() {
               )}
             </div>
           )}
-          
-          {filteredRules.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              <p>No sorting rules found matching your criteria.</p>
-              {hasActiveFilters && (
-                <Button variant="secondary" onClick={clearFilters} className="mt-2">
-                  Clear Filters
-                </Button>
-              )}
-            </div>
-          )}
         </div>
+
+        <div className="bg-white rounded-lg border border-gray-200">
+              </div>
+          <Table columns={columns} data={filteredRules} />
+        </div>
+
+        {filteredRules.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            <p>No sorting rules found matching your criteria.</p>
+            {hasActiveFilters && (
+              <Button variant="secondary" onClick={clearFilters} className="mt-2">
+                Clear Filters
+              </Button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
