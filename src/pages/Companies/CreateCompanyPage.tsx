@@ -37,6 +37,10 @@ export default function CreateCompanyPage() {
     handleFieldChange('logoUrl', e.target.value);
   };
 
+  const handleCompanyNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleFieldChange('companyName', e.target.value);
+  };
+
   const validateForm = () => {
     const newErrors = {
       companyName: '',
@@ -115,7 +119,7 @@ export default function CreateCompanyPage() {
           <Input
             label="Company Name"
             value={formData.companyName}
-            onChange={(e) => handleFieldChange('companyName', e.target.value)}
+            onChange={handleCompanyNameChange}
             placeholder="Enter company name"
             error={errors.companyName}
             required
