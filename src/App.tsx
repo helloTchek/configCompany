@@ -74,6 +74,11 @@ function App() {
                         <CreateJourneyPage />
                       </ProtectedRoute>
                     } />
+                    <Route path="/journeys/:id/edit" element={
+                      <ProtectedRoute requiredPermission={PERMISSIONS.WORKFLOWS.UPDATE}>
+                        <CreateJourneyPage />
+                      </ProtectedRoute>
+                    } />
                     <Route path="/sorting-rules" element={<SortingRulesPage />} />
                     <Route path="/cost-matrices" element={
                       <ProtectedRoute requiredPermission={PERMISSIONS.COSTS.VIEW}>
