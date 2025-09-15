@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/Layout/Header';
 import Button from '../../components/UI/Button';
@@ -303,7 +303,7 @@ const EventsWebhooksTab = ({
 }) => {
   // State to track which field is currently focused
   const [focusedField, setFocusedField] = useState(null);
-  const [fieldRefs, setFieldRefs] = useState({});
+  const fieldRefs = useRef({});
 
   const [eventCompanyEmailStates, setEventCompanyEmailStates] = useState(() => {
     // Initialize all events with Company Email Address checked by default
@@ -360,8 +360,8 @@ const EventsWebhooksTab = ({
   };
 
   const handleVariableClick = (variableKey) => {
-    if (focusedField && fieldRefs[focusedField]) {
-      const field = fieldRefs[focusedField];
+    if (focusedField && fieldRefs.current[focusedField]) {
+      const field = fieldRefs.current[focusedField];
       const start = field.selectionStart;
       const end = field.selectionEnd;
       const currentValue = field.value;
@@ -394,12 +394,13 @@ const EventsWebhooksTab = ({
     setTimeout(() => setFocusedField(null), 200);
   };
 
-  const setFieldRef = (fieldId, ref) => {
-    setFieldRefs(prev => ({
-      ...prev,
-      [fieldId]: ref
-    }));
-  };
+  const assignFieldRef = useCallback((fieldId, ref) => {
+    if (ref) {
+      fieldRefs.current[fieldId] = ref;
+    } else {
+      delete fieldRefs.current[fieldId];
+    }
+  }, []);
 
   return (
   <div className="space-y-6">
@@ -546,7 +547,7 @@ const EventsWebhooksTab = ({
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
                     <input
-                      ref={(ref) => setFieldRef(`${event.key}-${selectedLanguage}-email-subject`, ref)}
+                      ref={(ref) => assignFieldRef(`${event.key}-${selectedLanguage}-email-subject`, ref)}
                       type="text"
                       value={templates[event.key][selectedLanguage].email.subject}
                       onChange={(e) => updateTemplate(event.key, selectedLanguage, 'email', 'subject', e.target.value)}
@@ -561,7 +562,7 @@ const EventsWebhooksTab = ({
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">HTML Content</label>
                     <textarea
-                      ref={(ref) => setFieldRef(`${event.key}-${selectedLanguage}-email-content`, ref)}
+                      ref={(ref) => assignFieldRef(`${event.key}-${selectedLanguage}-email-content`, ref)}
                       rows={4}
                       value={templates[event.key][selectedLanguage].email.htmlContent}
                       onChange={(e) => updateTemplate(event.key, selectedLanguage, 'email', 'htmlContent', e.target.value)}
@@ -593,7 +594,7 @@ const EventsWebhooksTab = ({
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Text Content</label>
                   <textarea
-                    ref={(ref) => setFieldRef(`${event.key}-${selectedLanguage}-sms-content`, ref)}
+                    ref={(ref) => assignFieldRef(`${event.key}-${selectedLanguage}-sms-content`, ref)}
                     rows={3}
                     value={templates[event.key][selectedLanguage].sms.content}
                     onChange={(e) => updateTemplate(event.key, selectedLanguage, 'sms', 'content', e.target.value)}
