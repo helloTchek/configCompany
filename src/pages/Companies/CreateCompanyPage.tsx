@@ -117,6 +117,12 @@ const GeneralSettingsTab = ({
               ?
             </div>
             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+              Disables fast track functionality for this company
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="mt-6 space-y-4">
         <div>
           <div className="flex items-center justify-between mb-2">
