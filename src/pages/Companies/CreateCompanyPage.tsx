@@ -310,6 +310,27 @@ const EventsWebhooksTab = ({
     return initialStates;
   });
 
+  // State to store templates for each language and event
+  const [templates, setTemplates] = useState(() => {
+    const initialTemplates = {};
+    events.forEach(event => {
+      initialTemplates[event.key] = {};
+      languages.forEach(lang => {
+        initialTemplates[event.key][lang.code] = {
+          email: {
+            subject: '',
+            htmlContent: '',
+            enabled: true
+          },
+          sms: {
+            content: '',
+            enabled: true
+          }
+        };
+      });
+    });
+    return initialTemplates;
+  });
   const handleCompanyEmailToggle = (eventKey, isChecked) => {
     setEventCompanyEmailStates(prev => ({
       ...prev,
@@ -317,6 +338,22 @@ const EventsWebhooksTab = ({
     }));
   };
 
+  const updateTemplate = (eventKey, language, templateType, field, value) => {
+    setTemplates(prev => ({
+      ...prev,
+      [eventKey]: {
+        ...prev[eventKey],
+        [language]: {
+          ...prev[eventKey][language],
+          [templateType]: {
+            ...prev[eventKey][language][templateType],
+            [field]: value
+          }
+        }
+      }
+    }));
+    handleInputChange();
+  };
   return (
   <div className="space-y-6">
     {/* Global Settings */}
@@ -429,24 +466,30 @@ const EventsWebhooksTab = ({
                   <label className="flex items-center">
                     <input
                       type="checkbox"
-                      defaultChecked={true}
-                      onChange={handleInputChange}
+                      checked={templates[event.key][selectedLanguage].email.enabled}
+                      onChange={(e) => updateTemplate(event.key, selectedLanguage, 'email', 'enabled', e.target.checked)}
                       className="rounded border-gray-300 text-blue-600 shadow-sm"
                     />
                     <span className="ml-2 text-xs text-gray-600">Enabled</span>
                   </label>
                 </div>
                 <div className="space-y-3">
-                  <Input
-                    label="Subject"
-                    placeholder="Email subject"
-                    onChange={handleInputChange}
-                  />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                    <input
+                      type="text"
+                      value={templates[event.key][selectedLanguage].email.subject}
+                      onChange={(e) => updateTemplate(event.key, selectedLanguage, 'email', 'subject', e.target.value)}
+                      placeholder="Email subject"
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">HTML Content</label>
                     <textarea
                       rows={4}
-                      onChange={handleInputChange}
+                      value={templates[event.key][selectedLanguage].email.htmlContent}
+                      onChange={(e) => updateTemplate(event.key, selectedLanguage, 'email', 'htmlContent', e.target.value)}
                       className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                       placeholder="HTML email content..."
                     />
@@ -461,8 +504,8 @@ const EventsWebhooksTab = ({
                   <label className="flex items-center">
                     <input
                       type="checkbox"
-                      defaultChecked={true}
-                      onChange={handleInputChange}
+                      checked={templates[event.key][selectedLanguage].sms.enabled}
+                      onChange={(e) => updateTemplate(event.key, selectedLanguage, 'sms', 'enabled', e.target.checked)}
                       className="rounded border-gray-300 text-blue-600 shadow-sm"
                     />
                     <span className="ml-2 text-xs text-gray-600">Enabled</span>
@@ -472,12 +515,13 @@ const EventsWebhooksTab = ({
                   <label className="block text-sm font-medium text-gray-700 mb-1">Text Content</label>
                   <textarea
                     rows={3}
-                    onChange={handleInputChange}
+                    value={templates[event.key][selectedLanguage].sms.content}
+                    onChange={(e) => updateTemplate(event.key, selectedLanguage, 'sms', 'content', e.target.value)}
                     className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                     placeholder="SMS content (160 characters max)..."
                     maxLength={160}
                   />
-                  <p className="text-xs text-gray-500 mt-1">Character count: 0/160</p>
+                  <p className="text-xs text-gray-500 mt-1">Character count: {templates[event.key][selectedLanguage].sms.content.length}/160</p>
                 </div>
               </div>
             </div>
