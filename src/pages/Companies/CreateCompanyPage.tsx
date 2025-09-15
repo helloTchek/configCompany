@@ -332,12 +332,6 @@ const EventsWebhooksTab = ({
     return initialTemplates;
   });
   const handleCompanyEmailToggle = (eventKey, isChecked) => {
-    // State to track which field is currently focused
-    const [focusedField, setFocusedField] = useState(null);
-    const [fieldRefs, setFieldRefs] = useState({});
-  // State to track which field is currently focused
-  const [focusedField, setFocusedField] = useState(null);
-  const [fieldRefs, setFieldRefs] = useState({});
     setEventCompanyEmailStates(prev => ({
       ...prev,
       [eventKey]: isChecked
