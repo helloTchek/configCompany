@@ -254,44 +254,6 @@ const GeneralSettingsTab = ({
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Validation</h3>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <label className="flex items-center">
-          <input
-            type="checkbox"
-            checked={formData.humanValidationEnabled}
-            onChange={(e) => handleFieldChange('humanValidationEnabled', e.target.checked)}
-            className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
-          />
-          <span className="ml-2 text-sm text-gray-700">Human Validation Enabled</span>
-        </label>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Validation Priority (0-5)
-          </label>
-          <select 
-            value={formData.validationPriority}
-            onChange={(e) => handleFieldChange('validationPriority', parseInt(e.target.value))}
-            className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="0">0 - Lowest</option>
-            <option value="1">1 - Very Low</option>
-            <option value="2">2 - Low</option>
-            <option value="3">3 - Medium</option>
-            <option value="4">4 - High</option>
-            <option value="5">5 - Highest</option>
-          </select>
-        </div>
-        <Input
-          label="Max Validation Delay (minutes)"
-          type="number"
-          value={formData.maxValidationDelay}
-          onChange={(e) => handleFieldChange('maxValidationDelay', parseInt(e.target.value) || 60)}
-        />
-        <Input
-          label="Min Task Processing Duration (minutes)"
-          type="number"
-          value={formData.minTaskProcessingDuration}
-          onChange={(e) => handleFieldChange('minTaskProcessingDuration', parseInt(e.target.value) || 5)}
-        />
         <label className="flex items-center lg:col-span-2">
           <input
             type="checkbox"
