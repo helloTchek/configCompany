@@ -216,6 +216,24 @@ const GeneralSettingsTab = ({
         <label className="flex items-center">
           <input
             type="checkbox"
+            checked={formData.enableInteriorDamageDetection}
+            onChange={(e) => handleFieldChange('enableInteriorDamageDetection', e.target.checked)}
+            className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+          />
+          <span className="ml-2 text-sm text-gray-700">Enable Interior Damage Detection</span>
+        </label>
+        <label className="flex items-center">
+          <input
+            type="checkbox"
+            checked={formData.enableDashboardWarningLightsDetection}
+            onChange={(e) => handleFieldChange('enableDashboardWarningLightsDetection', e.target.checked)}
+            className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+          />
+          <span className="ml-2 text-sm text-gray-700">Enable Dashboard Warning Lights Detection</span>
+        </label>
+        <label className="flex items-center">
+          <input
+            type="checkbox"
             checked={formData.enableBrandModelColorRecognition}
             onChange={(e) => handleFieldChange('enableBrandModelColorRecognition', e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
@@ -506,6 +524,8 @@ export default function EditCompanyPage() {
     enableVinScanning: true,
     enableBrandModelDetection: true,
     enableBrandModelColorRecognition: true,
+    enableInteriorDamageDetection: false,
+    enableDashboardWarningLightsDetection: false,
     showStartInstantInspection: true,
     showSendInspectionLink: true,
     humanValidationEnabled: true,
