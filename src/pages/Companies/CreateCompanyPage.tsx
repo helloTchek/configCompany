@@ -117,21 +117,6 @@ const GeneralSettingsTab = ({
               ?
             </div>
             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-              If checked, inspections will appear as completed as soon as received
-              <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-          <input
-            type="checkbox"
-            onChange={handleInputChange}
-            className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
-          />
-          <span className="ml-2 text-sm text-gray-700">Disable Fast Track</span>
-        </label>
-      </div>
-
       <div className="mt-6 space-y-4">
         <div>
           <div className="flex items-center justify-between mb-2">
