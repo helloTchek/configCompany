@@ -304,6 +304,7 @@ const EventsWebhooksTab = ({
   languages, 
   events, 
   variables 
+}) => {
   const [eventCompanyEmailStates, setEventCompanyEmailStates] = useState(() => {
     // Initialize all events with Company Email Address checked by default
     const initialStates = {};
@@ -320,7 +321,7 @@ const EventsWebhooksTab = ({
     }));
   };
 
-}) => (
+  return (
   <div className="space-y-6">
     {/* Global Settings */}
     <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -508,7 +509,8 @@ const EventsWebhooksTab = ({
       </div>
     </div>
   </div>
-);
+  );
+};
 
 const HierarchyTab = ({ handleInputChange, formData, handleFieldChange }) => (
   <div className="space-y-6">
