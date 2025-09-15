@@ -305,6 +305,7 @@ const EventsWebhooksTab = ({
   events, 
   variables 
 }) => {
+}) => {
   const [eventCompanyEmailStates, setEventCompanyEmailStates] = useState(() => {
     // Initialize all events with Company Email Address checked by default
     const initialStates = {};
