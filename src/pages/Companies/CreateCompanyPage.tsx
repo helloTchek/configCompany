@@ -371,8 +371,10 @@ const EventsWebhooksTab = ({
       field.value = newValue;
       
       // Trigger the onChange event to update state
-      const event = new Event('input', { bubbles: true });
-      field.dispatchEvent(event);
+      const changeEvent = new Event('change', { bubbles: true });
+      const inputEvent = new Event('input', { bubbles: true });
+      field.dispatchEvent(changeEvent);
+      field.dispatchEvent(inputEvent);
       
       // Set cursor position after the inserted variable
       setTimeout(() => {
@@ -390,8 +392,8 @@ const EventsWebhooksTab = ({
   };
 
   const handleFieldBlur = () => {
-    // Delay clearing focus to allow variable clicks
-    setTimeout(() => setFocusedField(null), 200);
+    // Don't clear focus immediately - keep variables visible
+    // Only clear when another field is focused or user clicks outside
   };
 
   const assignFieldRef = useCallback((fieldId, ref) => {
@@ -550,9 +552,13 @@ const EventsWebhooksTab = ({
                       ref={(ref) => assignFieldRef(`${event.key}-${selectedLanguage}-email-subject`, ref)}
                       type="text"
                       value={templates[event.key][selectedLanguage].email.subject}
-                      onChange={(e) => updateTemplate(event.key, selectedLanguage, 'email', 'subject', e.target.value)}
+                      onChange={(e) => {
+                        updateTemplate(event.key, selectedLanguage, 'email', 'subject', e.target.value);
+                      }}
                       onFocus={() => handleFieldFocus(`${event.key}-${selectedLanguage}-email-subject`)}
-                      onBlur={handleFieldBlur}
+                      onBlur={() => {
+                        // Keep focus state for variables panel
+                      }}
                       placeholder="Email subject"
                       className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                         focusedField === `${event.key}-${selectedLanguage}-email-subject` ? 'border-blue-300 bg-blue-50' : 'border-gray-300'
@@ -565,9 +571,13 @@ const EventsWebhooksTab = ({
                       ref={(ref) => assignFieldRef(`${event.key}-${selectedLanguage}-email-content`, ref)}
                       rows={4}
                       value={templates[event.key][selectedLanguage].email.htmlContent}
-                      onChange={(e) => updateTemplate(event.key, selectedLanguage, 'email', 'htmlContent', e.target.value)}
+                      onChange={(e) => {
+                        updateTemplate(event.key, selectedLanguage, 'email', 'htmlContent', e.target.value);
+                      }}
                       onFocus={() => handleFieldFocus(`${event.key}-${selectedLanguage}-email-content`)}
-                      onBlur={handleFieldBlur}
+                      onBlur={() => {
+                        // Keep focus state for variables panel
+                      }}
                       className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
                         focusedField === `${event.key}-${selectedLanguage}-email-content` ? 'border-blue-300 bg-blue-50' : 'border-gray-300'
                       }`}
@@ -597,9 +607,13 @@ const EventsWebhooksTab = ({
                     ref={(ref) => assignFieldRef(`${event.key}-${selectedLanguage}-sms-content`, ref)}
                     rows={3}
                     value={templates[event.key][selectedLanguage].sms.content}
-                    onChange={(e) => updateTemplate(event.key, selectedLanguage, 'sms', 'content', e.target.value)}
+                    onChange={(e) => {
+                      updateTemplate(event.key, selectedLanguage, 'sms', 'content', e.target.value);
+                    }}
                     onFocus={() => handleFieldFocus(`${event.key}-${selectedLanguage}-sms-content`)}
-                    onBlur={handleFieldBlur}
+                    onBlur={() => {
+                      // Keep focus state for variables panel
+                    }}
                     className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
                       focusedField === `${event.key}-${selectedLanguage}-sms-content` ? 'border-blue-300 bg-blue-50' : 'border-gray-300'
                     }`}
@@ -616,7 +630,7 @@ const EventsWebhooksTab = ({
     </div>
 
     {/* Available Variables */}
-    {!focusedField && (
+    {!focusedField ? (
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Available Variables</h3>
         <p className="text-sm text-gray-600 mb-4">Focus on a template field above to see variables for easy insertion</p>
@@ -630,6 +644,32 @@ const EventsWebhooksTab = ({
             >
               <div className="font-medium text-blue-600">{variable.key}</div>
               <div className="text-xs text-gray-500">{variable.name}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+    ) : (
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Available Variables</h3>
+          <button
+            onClick={() => setFocusedField(null)}
+            className="text-sm text-gray-500 hover:text-gray-700 px-2 py-1 rounded hover:bg-gray-100"
+          >
+            Hide Variables
+          </button>
+        </div>
+        <p className="text-sm text-gray-600 mb-4">Click any variable to insert it at cursor position</p>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-60 overflow-y-auto">
+          {variables.map((variable) => (
+            <button
+              key={variable.key}
+              onClick={() => handleVariableClick(variable.key)}
+              className="text-left p-2 bg-blue-50 hover:bg-blue-100 rounded border border-blue-200 text-sm font-mono transition-colors hover:shadow-sm"
+              title={`Click to insert ${variable.key}`}
+            >
+              <div className="font-medium text-blue-700">{variable.key}</div>
+              <div className="text-xs text-blue-500">{variable.name}</div>
             </button>
           ))}
         </div>
