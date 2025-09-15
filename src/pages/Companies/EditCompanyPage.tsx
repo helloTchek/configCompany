@@ -304,6 +304,22 @@ const EventsWebhooksTab = ({
   languages, 
   events, 
   variables 
+  const [eventCompanyEmailStates, setEventCompanyEmailStates] = useState(() => {
+    // Initialize all events with Company Email Address checked by default
+    const initialStates = {};
+    events.forEach(event => {
+      initialStates[event.key] = true;
+    });
+    return initialStates;
+  });
+
+  const handleCompanyEmailToggle = (eventKey, isChecked) => {
+    setEventCompanyEmailStates(prev => ({
+      ...prev,
+      [eventKey]: isChecked
+    }));
+  };
+
 }) => (
   <div className="space-y-6">
     {/* Global Settings */}
@@ -365,20 +381,25 @@ const EventsWebhooksTab = ({
                   <input
                     type="checkbox"
                     defaultChecked={true}
-                    onChange={handleInputChange}
+                    onChange={(e) => {
+                      handleInputChange();
+                      handleCompanyEmailToggle(event.key, e.target.checked);
+                    }}
                     className="rounded border-gray-300 text-blue-600 shadow-sm"
                   />
                   <span className="ml-2 text-sm text-gray-700">Company Email Address</span>
                 </label>
                 {/* Company Email Address Field - shown when checkbox is checked */}
-                <div className="col-span-2">
-                  <Input
-                    label="Company Email Address"
-                    type="email"
-                    placeholder="company@example.com"
-                    onChange={handleInputChange}
-                  />
-                </div>
+                {eventCompanyEmailStates[event.key] && (
+                  <div className="col-span-2">
+                    <Input
+                      label="Company Email Address"
+                      type="email"
+                      placeholder="company@example.com"
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                )}
                 <label className="flex items-center">
                   <input
                     type="checkbox"
