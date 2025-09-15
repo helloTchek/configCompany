@@ -332,6 +332,9 @@ const EventsWebhooksTab = ({
     return initialTemplates;
   });
   const handleCompanyEmailToggle = (eventKey, isChecked) => {
+  // State to track which field is currently focused
+  const [focusedField, setFocusedField] = useState(null);
+  const [fieldRefs, setFieldRefs] = useState({});
     setEventCompanyEmailStates(prev => ({
       ...prev,
       [eventKey]: isChecked
@@ -355,6 +358,47 @@ const EventsWebhooksTab = ({
     handleInputChange();
   };
   return (
+  const handleVariableClick = (variableKey) => {
+    if (focusedField && fieldRefs[focusedField]) {
+      const field = fieldRefs[focusedField];
+      const start = field.selectionStart;
+      const end = field.selectionEnd;
+      const currentValue = field.value;
+      const newValue = currentValue.substring(0, start) + variableKey + currentValue.substring(end);
+      
+      // Update the field value
+      field.value = newValue;
+      
+      // Trigger the onChange event to update state
+      const event = new Event('input', { bubbles: true });
+      field.dispatchEvent(event);
+      
+      // Set cursor position after the inserted variable
+      setTimeout(() => {
+        field.focus();
+        field.setSelectionRange(start + variableKey.length, start + variableKey.length);
+      }, 0);
+    } else {
+      // Fallback to clipboard
+      navigator.clipboard.writeText(variableKey);
+    }
+  };
+
+  const handleFieldFocus = (fieldId) => {
+    setFocusedField(fieldId);
+  };
+
+  const handleFieldBlur = () => {
+    // Delay clearing focus to allow variable clicks
+    setTimeout(() => setFocusedField(null), 200);
+  };
+
+  const setFieldRef = (fieldId, ref) => {
+    setFieldRefs(prev => ({
+      ...prev,
+      [fieldId]: ref
+    }));
+  };
   <div className="space-y-6">
     {/* Global Settings */}
     <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -373,6 +417,28 @@ const EventsWebhooksTab = ({
       </div>
     </div>
 
+    {/* Available Variables - Sticky when field is focused */}
+    {focusedField && (
+      <div className="sticky top-4 z-10 bg-white rounded-lg border-2 border-blue-200 shadow-lg p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-md font-semibold text-blue-900">📋 Available Variables</h3>
+          <span className="text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded">Click to insert</span>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-40 overflow-y-auto">
+          {variables.map((variable) => (
+            <button
+              key={variable.key}
+              onClick={() => handleVariableClick(variable.key)}
+              className="text-left p-2 bg-blue-50 hover:bg-blue-100 rounded border border-blue-200 text-sm font-mono transition-colors hover:shadow-sm"
+              title={`Click to insert ${variable.key}`}
+            >
+              <div className="font-medium text-blue-700">{variable.key}</div>
+              <div className="text-xs text-blue-500">{variable.name}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+    )}
     {/* Events Configuration */}
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <div className="flex items-center justify-between mb-6">
@@ -477,20 +543,30 @@ const EventsWebhooksTab = ({
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
                     <input
+                      ref={(ref) => setFieldRef(`${event.key}-${selectedLanguage}-email-subject`, ref)}
                       type="text"
                       value={templates[event.key][selectedLanguage].email.subject}
                       onChange={(e) => updateTemplate(event.key, selectedLanguage, 'email', 'subject', e.target.value)}
+                      onFocus={() => handleFieldFocus(`${event.key}-${selectedLanguage}-email-subject`)}
+                      onBlur={handleFieldBlur}
                       placeholder="Email subject"
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                        focusedField === `${event.key}-${selectedLanguage}-email-subject` ? 'border-blue-300 bg-blue-50' : 'border-gray-300'
+                      }`}
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">HTML Content</label>
                     <textarea
+                      ref={(ref) => setFieldRef(`${event.key}-${selectedLanguage}-email-content`, ref)}
                       rows={4}
                       value={templates[event.key][selectedLanguage].email.htmlContent}
                       onChange={(e) => updateTemplate(event.key, selectedLanguage, 'email', 'htmlContent', e.target.value)}
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      onFocus={() => handleFieldFocus(`${event.key}-${selectedLanguage}-email-content`)}
+                      onBlur={handleFieldBlur}
+                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
+                        focusedField === `${event.key}-${selectedLanguage}-email-content` ? 'border-blue-300 bg-blue-50' : 'border-gray-300'
+                      }`}
                       placeholder="HTML email content..."
                     />
                   </div>
@@ -514,10 +590,15 @@ const EventsWebhooksTab = ({
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Text Content</label>
                   <textarea
+                    ref={(ref) => setFieldRef(`${event.key}-${selectedLanguage}-sms-content`, ref)}
                     rows={3}
                     value={templates[event.key][selectedLanguage].sms.content}
                     onChange={(e) => updateTemplate(event.key, selectedLanguage, 'sms', 'content', e.target.value)}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    onFocus={() => handleFieldFocus(`${event.key}-${selectedLanguage}-sms-content`)}
+                    onBlur={handleFieldBlur}
+                    className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
+                      focusedField === `${event.key}-${selectedLanguage}-sms-content` ? 'border-blue-300 bg-blue-50' : 'border-gray-300'
+                    }`}
                     placeholder="SMS content (160 characters max)..."
                     maxLength={160}
                   />
@@ -531,23 +612,25 @@ const EventsWebhooksTab = ({
     </div>
 
     {/* Available Variables */}
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Available Variables</h3>
-      <p className="text-sm text-gray-600 mb-4">Click any variable to copy it to your clipboard</p>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-        {variables.map((variable) => (
-          <button
-            key={variable.key}
-            onClick={() => navigator.clipboard.writeText(variable.key)}
-            className="text-left p-2 bg-gray-50 hover:bg-gray-100 rounded border text-sm font-mono transition-colors"
-            title={`Click to copy ${variable.key}`}
-          >
-            <div className="font-medium text-blue-600">{variable.key}</div>
-            <div className="text-xs text-gray-500">{variable.name}</div>
-          </button>
-        ))}
+    {!focusedField && (
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Available Variables</h3>
+        <p className="text-sm text-gray-600 mb-4">Focus on a template field above to see variables for easy insertion</p>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+          {variables.map((variable) => (
+            <button
+              key={variable.key}
+              onClick={() => handleVariableClick(variable.key)}
+              className="text-left p-2 bg-gray-50 hover:bg-gray-100 rounded border text-sm font-mono transition-colors"
+              title={`Click to copy ${variable.key}`}
+            >
+              <div className="font-medium text-blue-600">{variable.key}</div>
+              <div className="text-xs text-gray-500">{variable.name}</div>
+            </button>
+          ))}
+        </div>
       </div>
-    </div>
+    )}
   </div>
   );
 };
