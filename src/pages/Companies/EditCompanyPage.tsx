@@ -123,18 +123,6 @@ const GeneralSettingsTab = ({
               If checked, inspections will appear as completed as soon as received
               <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
             </div>
-          </div>
-        </div>
-      </div>
-          <input
-            type="checkbox"
-            checked={formData.disableFastTrack}
-            onChange={(e) => handleFieldChange('disableFastTrack', e.target.checked)}
-            className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
-          />
-          <span className="ml-2 text-sm text-gray-700">Disable Fast Track</span>
-        </label>
-      </div>
 
       <div className="mt-6 space-y-4">
         <div>
