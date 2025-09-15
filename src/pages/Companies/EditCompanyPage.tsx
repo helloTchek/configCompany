@@ -518,6 +518,7 @@ export default function EditCompanyPage() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
   const [selectedLanguage, setSelectedLanguage] = useState('en');
+  const [companyEmailEnabled, setCompanyEmailEnabled] = useState({});
   
   // Initialize form data with existing company data (mock data for now)
   const [formData, setFormData] = useState({
@@ -683,6 +684,8 @@ export default function EditCompanyPage() {
         languages={languages}
         events={events}
         variables={variables}
+        companyEmailEnabled={companyEmailEnabled}
+        setCompanyEmailEnabled={setCompanyEmailEnabled}
       />
     },
     {
