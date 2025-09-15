@@ -336,6 +336,9 @@ const EventsWebhooksTab = ({
     return initialTemplates;
   });
   const handleCompanyEmailToggle = (eventKey, isChecked) => {
+    // State to track which field is currently focused
+    const [focusedField, setFocusedField] = useState(null);
+    const [fieldRefs, setFieldRefs] = useState({});
   // State to track which field is currently focused
   const [focusedField, setFocusedField] = useState(null);
   const [fieldRefs, setFieldRefs] = useState({});
@@ -361,7 +364,7 @@ const EventsWebhooksTab = ({
     }));
     handleInputChange();
   };
-  return (
+
   const handleVariableClick = (variableKey) => {
     if (focusedField && fieldRefs[focusedField]) {
       const field = fieldRefs[focusedField];
@@ -403,6 +406,8 @@ const EventsWebhooksTab = ({
       [fieldId]: ref
     }));
   };
+
+  return (
   <div className="space-y-6">
     {/* Global Settings */}
     <div className="bg-white rounded-lg border border-gray-200 p-6">
