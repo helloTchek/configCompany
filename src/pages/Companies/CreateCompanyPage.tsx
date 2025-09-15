@@ -301,6 +301,10 @@ const EventsWebhooksTab = ({
   events, 
   variables 
 }) => {
+  // State to track which field is currently focused
+  const [focusedField, setFocusedField] = useState(null);
+  const [fieldRefs, setFieldRefs] = useState({});
+
   const [eventCompanyEmailStates, setEventCompanyEmailStates] = useState(() => {
     // Initialize all events with Company Email Address checked by default
     const initialStates = {};
