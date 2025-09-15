@@ -314,6 +314,30 @@ const EventsWebhooksTab = ({
     return initialStates;
   });
 
+  // State for automated chase-up reminders
+  const [chaseUpReminders, setChaseUpReminders] = useState([
+    {
+      id: 'reminder-1',
+      name: 'First Reminder',
+      delayDays: 1,
+      delayMinutes: 0,
+      recipients: {
+        customerPhone: true,
+        companyEmail: true,
+        agentEmail: false,
+        webhook: false
+      },
+      companyEmailAddress: ''
+    }
+  ]);
+
+  // State for chase-up general settings
+  const [chaseUpSettings, setChaseUpSettings] = useState({
+    activationDate: new Date().toISOString().split('T')[0],
+    maxSendings: 3,
+    sendingHour: 9,
+    sendingMinute: 0
+  });
   // State to store templates for each language and event
   const [templates, setTemplates] = useState(() => {
     const initialTemplates = {};
@@ -333,6 +357,25 @@ const EventsWebhooksTab = ({
         };
       });
     });
+    
+    // Initialize templates for chase-up reminders
+    chaseUpReminders.forEach(reminder => {
+      initialTemplates[`chaseUp-${reminder.id}`] = {};
+      languages.forEach(lang => {
+        initialTemplates[`chaseUp-${reminder.id}`][lang.code] = {
+          email: {
+            subject: '',
+            htmlContent: '',
+            enabled: true
+          },
+          sms: {
+            content: '',
+            enabled: true
+          }
+        };
+      });
+    });
+    
     return initialTemplates;
   });
   const handleCompanyEmailToggle = (eventKey, isChecked) => {
@@ -342,6 +385,79 @@ const EventsWebhooksTab = ({
     }));
   };
 
+  const addChaseUpReminder = () => {
+    const newReminder = {
+      id: `reminder-${Date.now()}`,
+      name: `Reminder ${chaseUpReminders.length + 1}`,
+      delayDays: chaseUpReminders.length === 0 ? 1 : 7,
+      delayMinutes: 0,
+      recipients: {
+        customerPhone: true,
+        companyEmail: true,
+        agentEmail: false,
+        webhook: false
+      },
+      companyEmailAddress: ''
+    };
+    
+    setChaseUpReminders(prev => [...prev, newReminder]);
+    
+    // Initialize templates for new reminder
+    setTemplates(prev => {
+      const newTemplates = { ...prev };
+      newTemplates[`chaseUp-${newReminder.id}`] = {};
+      languages.forEach(lang => {
+        newTemplates[`chaseUp-${newReminder.id}`][lang.code] = {
+          email: {
+            subject: '',
+            htmlContent: '',
+            enabled: true
+          },
+          sms: {
+            content: '',
+            enabled: true
+          }
+        };
+      });
+      return newTemplates;
+    });
+    
+    handleInputChange();
+  };
+
+  const removeChaseUpReminder = (reminderId) => {
+    setChaseUpReminders(prev => prev.filter(r => r.id !== reminderId));
+    
+    // Remove templates for deleted reminder
+    setTemplates(prev => {
+      const newTemplates = { ...prev };
+      delete newTemplates[`chaseUp-${reminderId}`];
+      return newTemplates;
+    });
+    
+    handleInputChange();
+  };
+
+  const updateChaseUpReminder = (reminderId, field, value) => {
+    setChaseUpReminders(prev => prev.map(reminder => 
+      reminder.id === reminderId ? { ...reminder, [field]: value } : reminder
+    ));
+    handleInputChange();
+  };
+
+  const updateChaseUpReminderRecipient = (reminderId, recipient, value) => {
+    setChaseUpReminders(prev => prev.map(reminder => 
+      reminder.id === reminderId 
+        ? { ...reminder, recipients: { ...reminder.recipients, [recipient]: value } }
+        : reminder
+    ));
+    handleInputChange();
+  };
+
+  const updateChaseUpSettings = (field, value) => {
+    setChaseUpSettings(prev => ({ ...prev, [field]: value }));
+    handleInputChange();
+  };
   const updateTemplate = (eventKey, language, templateType, field, value) => {
     setTemplates(prev => ({
       ...prev,
@@ -454,6 +570,289 @@ const EventsWebhooksTab = ({
           <select
             value={selectedLanguage}
             onChange={(e) => setSelectedLanguage(e.target.value)}
+    {/* Automated Chase-up Messages Configuration */}
+    <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-lg font-semibold text-gray-900">Automated Chase-up Messages</h3>
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium text-gray-700">Language:</label>
+          <select
+            value={selectedLanguage}
+            onChange={(e) => setSelectedLanguage(e.target.value)}
+            className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            {languages.map((lang) => (
+              <option key={lang.code} value={lang.code}>
+                {lang.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* General Settings for Chase-up */}
+      <div className="bg-gray-50 rounded-lg p-4 mb-6">
+        <h4 className="text-md font-semibold text-gray-900 mb-4">General Settings</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Activation Date</label>
+            <input
+              type="date"
+              value={chaseUpSettings.activationDate}
+              onChange={(e) => updateChaseUpSettings('activationDate', e.target.value)}
+              className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Max Number of Sendings</label>
+            <input
+              type="number"
+              min="1"
+              max="10"
+              value={chaseUpSettings.maxSendings}
+              onChange={(e) => updateChaseUpSettings('maxSendings', parseInt(e.target.value) || 1)}
+              className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Sending Time (UTC)</label>
+            <div className="flex gap-2">
+              <select
+                value={chaseUpSettings.sendingHour}
+                onChange={(e) => updateChaseUpSettings('sendingHour', parseInt(e.target.value))}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                {Array.from({ length: 24 }, (_, i) => (
+                  <option key={i} value={i}>{i.toString().padStart(2, '0')}h</option>
+                ))}
+              </select>
+              <select
+                value={chaseUpSettings.sendingMinute}
+                onChange={(e) => updateChaseUpSettings('sendingMinute', parseInt(e.target.value))}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                {[0, 15, 30, 45].map(minute => (
+                  <option key={minute} value={minute}>{minute.toString().padStart(2, '0')}m</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="flex items-end">
+            <button
+              onClick={addChaseUpReminder}
+              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+            >
+              <Plus size={16} />
+              Add Reminder
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Individual Reminders */}
+      <div className="space-y-6">
+        {chaseUpReminders.map((reminder, index) => (
+          <div key={reminder.id} className="border border-gray-200 rounded-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-4">
+                <h4 className="text-md font-semibold text-gray-900">{reminder.name}</h4>
+                <input
+                  type="text"
+                  value={reminder.name}
+                  onChange={(e) => updateChaseUpReminder(reminder.id, 'name', e.target.value)}
+                  className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-500">#{index + 1}</span>
+                {chaseUpReminders.length > 1 && (
+                  <button
+                    onClick={() => removeChaseUpReminder(reminder.id)}
+                    className="p-1 text-red-600 hover:bg-red-100 rounded transition-colors"
+                    title="Remove reminder"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Delay Settings */}
+            <div className="mb-6">
+              <h5 className="text-sm font-medium text-gray-700 mb-3">
+                Delay {index === 0 ? 'from inspection completion' : 'from previous reminder'}
+              </h5>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Days</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={reminder.delayDays}
+                    onChange={(e) => updateChaseUpReminder(reminder.id, 'delayDays', parseInt(e.target.value) || 0)}
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Minutes</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="1439"
+                    value={reminder.delayMinutes}
+                    onChange={(e) => updateChaseUpReminder(reminder.id, 'delayMinutes', parseInt(e.target.value) || 0)}
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Recipients */}
+            <div className="mb-6">
+              <h5 className="text-sm font-medium text-gray-700 mb-3">Recipients</h5>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={reminder.recipients.customerPhone}
+                    onChange={(e) => updateChaseUpReminderRecipient(reminder.id, 'customerPhone', e.target.checked)}
+                    className="rounded border-gray-300 text-blue-600 shadow-sm"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Customer Phone Number</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={reminder.recipients.companyEmail}
+                    onChange={(e) => updateChaseUpReminderRecipient(reminder.id, 'companyEmail', e.target.checked)}
+                    className="rounded border-gray-300 text-blue-600 shadow-sm"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Company Email Address</span>
+                </label>
+                {reminder.recipients.companyEmail && (
+                  <div className="col-span-2">
+                    <Input
+                      label="Company Email Address"
+                      type="email"
+                      value={reminder.companyEmailAddress}
+                      onChange={(e) => updateChaseUpReminder(reminder.id, 'companyEmailAddress', e.target.value)}
+                      placeholder="company@example.com"
+                    />
+                  </div>
+                )}
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={reminder.recipients.agentEmail}
+                    onChange={(e) => updateChaseUpReminderRecipient(reminder.id, 'agentEmail', e.target.checked)}
+                    className="rounded border-gray-300 text-blue-600 shadow-sm"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Agent Email Address</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={reminder.recipients.webhook}
+                    onChange={(e) => updateChaseUpReminderRecipient(reminder.id, 'webhook', e.target.checked)}
+                    className="rounded border-gray-300 text-blue-600 shadow-sm"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Webhook URL</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Message Templates */}
+            <div className="space-y-4">
+              <h5 className="text-sm font-medium text-gray-700">Message Templates</h5>
+              
+              {/* Email Template */}
+              <div className="border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h6 className="text-sm font-medium text-gray-700">Email Template</h6>
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={templates[`chaseUp-${reminder.id}`]?.[selectedLanguage]?.email?.enabled ?? true}
+                      onChange={(e) => updateTemplate(`chaseUp-${reminder.id}`, selectedLanguage, 'email', 'enabled', e.target.checked)}
+                      className="rounded border-gray-300 text-blue-600 shadow-sm"
+                    />
+                    <span className="ml-2 text-xs text-gray-600">Enabled</span>
+                  </label>
+                </div>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                    <input
+                      ref={(ref) => assignFieldRef(`chaseUp-${reminder.id}-${selectedLanguage}-email-subject`, ref)}
+                      type="text"
+                      value={templates[`chaseUp-${reminder.id}`]?.[selectedLanguage]?.email?.subject ?? ''}
+                      onChange={(e) => {
+                        updateTemplate(`chaseUp-${reminder.id}`, selectedLanguage, 'email', 'subject', e.target.value);
+                      }}
+                      onFocus={() => handleFieldFocus(`chaseUp-${reminder.id}-${selectedLanguage}-email-subject`)}
+                      placeholder="Email subject"
+                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                        focusedField === `chaseUp-${reminder.id}-${selectedLanguage}-email-subject` ? 'border-blue-300 bg-blue-50' : 'border-gray-300'
+                      }`}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">HTML Content</label>
+                    <textarea
+                      ref={(ref) => assignFieldRef(`chaseUp-${reminder.id}-${selectedLanguage}-email-content`, ref)}
+                      rows={4}
+                      value={templates[`chaseUp-${reminder.id}`]?.[selectedLanguage]?.email?.htmlContent ?? ''}
+                      onChange={(e) => {
+                        updateTemplate(`chaseUp-${reminder.id}`, selectedLanguage, 'email', 'htmlContent', e.target.value);
+                      }}
+                      onFocus={() => handleFieldFocus(`chaseUp-${reminder.id}-${selectedLanguage}-email-content`)}
+                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
+                        focusedField === `chaseUp-${reminder.id}-${selectedLanguage}-email-content` ? 'border-blue-300 bg-blue-50' : 'border-gray-300'
+                      }`}
+                      placeholder="HTML email content..."
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* SMS Template */}
+              <div className="border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h6 className="text-sm font-medium text-gray-700">SMS Template</h6>
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={templates[`chaseUp-${reminder.id}`]?.[selectedLanguage]?.sms?.enabled ?? true}
+                      onChange={(e) => updateTemplate(`chaseUp-${reminder.id}`, selectedLanguage, 'sms', 'enabled', e.target.checked)}
+                      className="rounded border-gray-300 text-blue-600 shadow-sm"
+                    />
+                    <span className="ml-2 text-xs text-gray-600">Enabled</span>
+                  </label>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Text Content</label>
+                  <textarea
+                    ref={(ref) => assignFieldRef(`chaseUp-${reminder.id}-${selectedLanguage}-sms-content`, ref)}
+                    rows={3}
+                    value={templates[`chaseUp-${reminder.id}`]?.[selectedLanguage]?.sms?.content ?? ''}
+                    onChange={(e) => {
+                      updateTemplate(`chaseUp-${reminder.id}`, selectedLanguage, 'sms', 'content', e.target.value);
+                    }}
+                    onFocus={() => handleFieldFocus(`chaseUp-${reminder.id}-${selectedLanguage}-sms-content`)}
+                    className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
+                      focusedField === `chaseUp-${reminder.id}-${selectedLanguage}-sms-content` ? 'border-blue-300 bg-blue-50' : 'border-gray-300'
+                    }`}
+                    placeholder="SMS content (160 characters max)..."
+                    maxLength={160}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Character count: {(templates[`chaseUp-${reminder.id}`]?.[selectedLanguage]?.sms?.content ?? '').length}/160</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
             className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             {languages.map((lang) => (
@@ -683,7 +1082,7 @@ const HierarchyTab = ({ handleInputChange }) => (
   <div className="space-y-6">
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Company Hierarchy</h3>
-      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-gray-900">Other Events Configuration</h3>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Parent Company (optional)</label>
           <select 
@@ -698,7 +1097,7 @@ const HierarchyTab = ({ handleInputChange }) => (
         </div>
       </div>
     </div>
-  </div>
+        {events.filter(event => event.key !== 'automatedChaseUp').map((event) => (
 );
 
 export default function CreateCompanyPage() {
