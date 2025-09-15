@@ -512,6 +512,7 @@ export default function CreateCompanyPage() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
   const [selectedLanguage, setSelectedLanguage] = useState('en');
+  const [companyEmailEnabled, setCompanyEmailEnabled] = useState({});
   const [formData, setFormData] = useState({
     companyName: '',
     logoUrl: '',
@@ -650,6 +651,8 @@ export default function CreateCompanyPage() {
         languages={languages}
         events={events}
         variables={variables}
+        companyEmailEnabled={companyEmailEnabled}
+        setCompanyEmailEnabled={setCompanyEmailEnabled}
       />
     },
     {
