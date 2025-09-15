@@ -123,6 +123,9 @@ const GeneralSettingsTab = ({
               If checked, inspections will appear as completed as soon as received
               <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
             </div>
+          </div>
+        </div>
+      </div>
 
       <div className="mt-6 space-y-4">
         <div>
