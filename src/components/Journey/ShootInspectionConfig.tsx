@@ -1529,7 +1529,9 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
       id: '',
       name: '',
       description: '',
-      config: defaultSteps
+      typeImage: '',
+      stepType: '',
+      customStepTypeName: '',
     }
   );
 
