@@ -9,29 +9,40 @@ import { ArrowLeft, Save, Plus, Trash2, Upload, Download } from 'lucide-react';
 interface ChaseUpMessage {
   id: string;
   name: string;
-  activationDate: string;
   maxSendings: number;
-  utcHour: number;
-  utcMinute: number;
   delayDays: number;
   delayMinutes: number;
-  recipients: Array<{
-    id: string;
-    type: 'email' | 'sms';
-    address: string;
-    enabled: boolean;
-  }>;
-  templates: {
-    [language: string]: {
-      email?: {
-        subject: string;
-        htmlContent: string;
-        enabled: boolean;
-      };
-      sms?: {
-        content: string;
-        enabled: boolean;
-      };
+  webhookEnabled: boolean;
+  recipients: {
+    customer: {
+      enabled: boolean;
+      config: { type: 'email' | 'sms'; address: string };
+      templates: {
+        [language: string]: {
+          email: { subject: string; htmlContent: string; enabled: boolean };
+          sms: { content: string; enabled: boolean };
+        }
+      }
+    };
+    agent: {
+      enabled: boolean;
+      config: { type: 'email' | 'sms'; address: string };
+      templates: {
+        [language: string]: {
+          email: { subject: string; htmlContent: string; enabled: boolean };
+          sms: { content: string; enabled: boolean };
+        }
+      }
+    };
+    companyEmailAddress: {
+      enabled: boolean;
+      config: { type: 'email' | 'sms'; address: string };
+      templates: {
+        [language: string]: {
+          email: { subject: string; htmlContent: string; enabled: boolean };
+          sms: { content: string; enabled: boolean };
+        }
+      }
     };
   };
 }
@@ -93,33 +104,148 @@ export default function CreateCompanyPage() {
 
   // Events & Webhooks
   const [webhookUrl, setWebhookUrl] = useState('');
+  const [eventConfigs, setEventConfigs] = useState({
+    selfInspectionCreation: {
+      enabled: false,
+      recipients: {
+        customerPhone: { enabled: false, address: '{{customerPhone}}' },
+        companyEmail: { enabled: false, address: 'company@example.com' },
+        agentEmail: { enabled: false, address: 'agent@example.com' }
+      },
+      templates: languages.reduce((acc, lang) => ({
+        ...acc,
+        [lang]: {
+          email: { subject: 'Vehicle Inspection Created', htmlContent: 'Your inspection has been created.', enabled: true },
+          sms: { content: 'Your vehicle inspection is ready.', enabled: false }
+        }
+      }), {})
+    },
+    automatedChaseUp: {
+      enabled: false,
+      recipients: {
+        customerPhone: { enabled: false, address: '{{customerPhone}}' },
+        companyEmail: { enabled: false, address: 'company@example.com' },
+        agentEmail: { enabled: false, address: 'agent@example.com' }
+      },
+      templates: languages.reduce((acc, lang) => ({
+        ...acc,
+        [lang]: {
+          email: { subject: 'Reminder: Complete your inspection', htmlContent: 'Please complete your vehicle inspection.', enabled: true },
+          sms: { content: 'Reminder: Complete your inspection {{inspectionLink}}', enabled: false }
+        }
+      }), {})
+    },
+    manualChaseUp: {
+      enabled: false,
+      recipients: {
+        customerPhone: { enabled: false, address: '{{customerPhone}}' },
+        companyEmail: { enabled: false, address: 'company@example.com' },
+        agentEmail: { enabled: false, address: 'agent@example.com' }
+      },
+      templates: languages.reduce((acc, lang) => ({
+        ...acc,
+        [lang]: {
+          email: { subject: 'Manual Reminder', htmlContent: 'Manual reminder to complete inspection.', enabled: true },
+          sms: { content: 'Manual reminder: {{inspectionLink}}', enabled: false }
+        }
+      }), {})
+    },
+    inspectionFinished: {
+      enabled: false,
+      recipients: {
+        customerPhone: { enabled: false, address: '{{customerPhone}}' },
+        companyEmail: { enabled: false, address: 'company@example.com' },
+        agentEmail: { enabled: false, address: 'agent@example.com' }
+      },
+      templates: languages.reduce((acc, lang) => ({
+        ...acc,
+        [lang]: {
+          email: { subject: 'Inspection Completed', htmlContent: 'Your vehicle inspection has been completed.', enabled: true },
+          sms: { content: 'Your inspection is complete.', enabled: false }
+        }
+      }), {})
+    },
+    damageReviewFinished: {
+      enabled: false,
+      recipients: {
+        customerPhone: { enabled: false, address: '{{customerPhone}}' },
+        companyEmail: { enabled: false, address: 'company@example.com' },
+        agentEmail: { enabled: false, address: 'agent@example.com' }
+      },
+      templates: languages.reduce((acc, lang) => ({
+        ...acc,
+        [lang]: {
+          email: { subject: 'Damage Review Complete', htmlContent: 'Damage review has been completed.', enabled: true },
+          sms: { content: 'Damage review complete.', enabled: false }
+        }
+      }), {})
+    },
+    shareUpdatedReport: {
+      enabled: false,
+      recipients: {
+        customerPhone: { enabled: false, address: '{{customerPhone}}' },
+        companyEmail: { enabled: false, address: 'company@example.com' },
+        agentEmail: { enabled: false, address: 'agent@example.com' }
+      },
+      templates: languages.reduce((acc, lang) => ({
+        ...acc,
+        [lang]: {
+          email: { subject: 'Updated Report Available', htmlContent: 'Your updated report is available.', enabled: true },
+          sms: { content: 'Updated report available.', enabled: false }
+        }
+      }), {})
+    }
+  });
+
+  // Automated Chase-up Messages (separate tab)
+  const [chaseUpGlobalConfig, setChaseUpGlobalConfig] = useState({
+    activationDate: new Date().toISOString().split('T')[0],
+    utcHour: 9,
+    utcMinute: 0
+  });
   const [chaseUpMessages, setChaseUpMessages] = useState<ChaseUpMessage[]>([
     {
       id: '1',
       name: 'First Reminder',
-      activationDate: new Date().toISOString().split('T')[0],
       maxSendings: 3,
-      utcHour: 9,
-      utcMinute: 0,
       delayDays: 1,
       delayMinutes: 0,
-      recipients: [
-        { id: '1', type: 'email', address: '{{customerEmail}}', enabled: true }
-      ],
-      templates: languages.reduce((acc, lang) => ({
-        ...acc,
-        [lang]: {
-          email: {
-            subject: 'Reminder: Complete your vehicle inspection',
-            htmlContent: 'Dear {{customerName}},\n\nThis is a reminder to complete your vehicle inspection.\n\nInspection Link: {{inspectionLink}}\n\nBest regards,\n{{companyName}}',
-            enabled: true
-          },
-          sms: {
-            content: 'Hi {{customerName}}, please complete your vehicle inspection: {{inspectionLink}}',
-            enabled: false
-          }
+      webhookEnabled: false,
+      recipients: {
+        customer: {
+          enabled: true,
+          config: { type: 'email', address: '{{customerEmail}}' },
+          templates: languages.reduce((acc, lang) => ({
+            ...acc,
+            [lang]: {
+              email: { subject: 'Reminder: Complete your inspection', htmlContent: 'Dear {{customerName}}, please complete your inspection.', enabled: true },
+              sms: { content: 'Hi {{customerName}}, please complete your inspection: {{inspectionLink}}', enabled: false }
+            }
+          }), {})
+        },
+        agent: {
+          enabled: false,
+          config: { type: 'email', address: 'agent@example.com' },
+          templates: languages.reduce((acc, lang) => ({
+            ...acc,
+            [lang]: {
+              email: { subject: 'Customer Reminder Sent', htmlContent: 'A reminder has been sent to {{customerName}}.', enabled: true },
+              sms: { content: 'Reminder sent to {{customerName}}', enabled: false }
+            }
+          }), {})
+        },
+        companyEmailAddress: {
+          enabled: false,
+          config: { type: 'email', address: 'company@example.com' },
+          templates: languages.reduce((acc, lang) => ({
+            ...acc,
+            [lang]: {
+              email: { subject: 'Reminder Activity', htmlContent: 'Reminder sent for inspection {{inspectionId}}.', enabled: true },
+              sms: { content: 'Reminder activity for {{inspectionId}}', enabled: false }
+            }
+          }), {})
         }
-      }), {})
+      }
     }
   ]);
 
@@ -146,29 +272,45 @@ export default function CreateCompanyPage() {
     const newMessage: ChaseUpMessage = {
       id: Date.now().toString(),
       name: `Reminder ${chaseUpMessages.length + 1}`,
-      activationDate: new Date().toISOString().split('T')[0],
       maxSendings: 3,
-      utcHour: 9,
-      utcMinute: 0,
       delayDays: chaseUpMessages.length === 0 ? 1 : 3,
       delayMinutes: 0,
-      recipients: [
-        { id: '1', type: 'email', address: '{{customerEmail}}', enabled: true }
-      ],
-      templates: languages.reduce((acc, lang) => ({
-        ...acc,
-        [lang]: {
-          email: {
-            subject: 'Reminder: Complete your vehicle inspection',
-            htmlContent: 'Dear {{customerName}},\n\nThis is a reminder to complete your vehicle inspection.\n\nInspection Link: {{inspectionLink}}\n\nBest regards,\n{{companyName}}',
-            enabled: true
-          },
-          sms: {
-            content: 'Hi {{customerName}}, please complete your vehicle inspection: {{inspectionLink}}',
-            enabled: false
-          }
+      webhookEnabled: false,
+      recipients: {
+        customer: {
+          enabled: true,
+          config: { type: 'email', address: '{{customerEmail}}' },
+          templates: languages.reduce((acc, lang) => ({
+            ...acc,
+            [lang]: {
+              email: { subject: 'Reminder: Complete your inspection', htmlContent: 'Dear {{customerName}}, please complete your inspection.', enabled: true },
+              sms: { content: 'Hi {{customerName}}, please complete your inspection: {{inspectionLink}}', enabled: false }
+            }
+          }), {})
+        },
+        agent: {
+          enabled: false,
+          config: { type: 'email', address: 'agent@example.com' },
+          templates: languages.reduce((acc, lang) => ({
+            ...acc,
+            [lang]: {
+              email: { subject: 'Customer Reminder Sent', htmlContent: 'A reminder has been sent to {{customerName}}.', enabled: true },
+              sms: { content: 'Reminder sent to {{customerName}}', enabled: false }
+            }
+          }), {})
+        },
+        companyEmailAddress: {
+          enabled: false,
+          config: { type: 'email', address: 'company@example.com' },
+          templates: languages.reduce((acc, lang) => ({
+            ...acc,
+            [lang]: {
+              email: { subject: 'Reminder Activity', htmlContent: 'Reminder sent for inspection {{inspectionId}}.', enabled: true },
+              sms: { content: 'Reminder activity for {{inspectionId}}', enabled: false }
+            }
+          }), {})
         }
-      }), {})
+      }
     };
     setChaseUpMessages([...chaseUpMessages, newMessage]);
   };
@@ -187,19 +329,66 @@ export default function CreateCompanyPage() {
     );
   };
 
-  const updateChaseUpTemplate = (messageId: string, language: string, type: 'email' | 'sms', field: string, value: any) => {
+  const updateChaseUpRecipient = (messageId: string, recipientKey: string, field: string, value: any) => {
     setChaseUpMessages(messages =>
       messages.map(msg =>
         msg.id === messageId
           ? {
               ...msg,
-              templates: {
-                ...msg.templates,
-                [language]: {
-                  ...msg.templates[language],
-                  [type]: {
-                    ...msg.templates[language]?.[type],
+              recipients: {
+                ...msg.recipients,
+                [recipientKey]: {
+                  ...msg.recipients[recipientKey],
+                  [field]: value
+                }
+              }
+            }
+          : msg
+      )
+    );
+  };
+
+  const updateChaseUpRecipientConfig = (messageId: string, recipientKey: string, field: string, value: any) => {
+    setChaseUpMessages(messages =>
+      messages.map(msg =>
+        msg.id === messageId
+          ? {
+              ...msg,
+              recipients: {
+                ...msg.recipients,
+                [recipientKey]: {
+                  ...msg.recipients[recipientKey],
+                  config: {
+                    ...msg.recipients[recipientKey].config,
                     [field]: value
+                  }
+                }
+              }
+            }
+          : msg
+      )
+    );
+  };
+
+  const updateChaseUpRecipientTemplate = (messageId: string, recipientKey: string, language: string, type: 'email' | 'sms', field: string, value: any) => {
+    setChaseUpMessages(messages =>
+      messages.map(msg =>
+        msg.id === messageId
+          ? {
+              ...msg,
+              recipients: {
+                ...msg.recipients,
+                [recipientKey]: {
+                  ...msg.recipients[recipientKey],
+                  templates: {
+                    ...msg.recipients[recipientKey].templates,
+                    [language]: {
+                      ...msg.recipients[recipientKey].templates[language],
+                      [type]: {
+                        ...msg.recipients[recipientKey].templates[language]?.[type],
+                        [field]: value
+                      }
+                    }
                   }
                 }
               }
@@ -219,9 +408,31 @@ export default function CreateCompanyPage() {
         const newValue = currentValue.substring(0, start) + variable + currentValue.substring(end);
         
         // Update the appropriate state
-        if (focusedField.includes('chaseup-')) {
-          const [, messageId, language, type, field] = focusedField.split('-');
-          updateChaseUpTemplate(messageId, language, type as 'email' | 'sms', field, newValue);
+        if (focusedField.startsWith('event-')) {
+          const [, eventKey, language, type, field] = focusedField.split('-');
+          setEventConfigs(prev => ({
+            ...prev,
+            [eventKey]: {
+              ...prev[eventKey],
+              templates: {
+                ...prev[eventKey].templates,
+                [language]: {
+                  ...prev[eventKey].templates[language],
+                  [type]: {
+                    ...prev[eventKey].templates[language]?.[type],
+                    [field]: newValue
+                  }
+                }
+              }
+            }
+          }));
+        } else if (focusedField.startsWith('chaseup-')) {
+          const parts = focusedField.split('-');
+          if (parts.length === 6) {
+            // chaseup-messageId-recipientKey-language-type-field
+            const [, messageId, recipientKey, language, type, field] = parts;
+            updateChaseUpRecipientTemplate(messageId, recipientKey, language, type as 'email' | 'sms', field, newValue);
+          }
         }
         
         // Set cursor position after the inserted variable
@@ -532,11 +743,305 @@ export default function CreateCompanyPage() {
             />
           </div>
 
-          {/* Automated Chase-up Messages */}
+          {/* Event Configurations */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">Event Notifications</h3>
+            
+            {Object.entries(eventConfigs).map(([eventKey, eventConfig]) => (
+              <div key={eventKey} className="border border-gray-200 rounded-lg p-6 mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="font-medium text-gray-900">
+                    {eventKey === 'selfInspectionCreation' && 'Self Inspection Creation'}
+                    {eventKey === 'automatedChaseUp' && 'Automated Chase-up Message'}
+                    {eventKey === 'manualChaseUp' && 'Manual Chase-up Message'}
+                    {eventKey === 'inspectionFinished' && 'Inspection Finished Message'}
+                    {eventKey === 'damageReviewFinished' && 'Damage Review Finished Message'}
+                    {eventKey === 'shareUpdatedReport' && 'Share Updated Report Message'}
+                  </h4>
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={eventConfig.enabled}
+                      onChange={(e) => setEventConfigs(prev => ({
+                        ...prev,
+                        [eventKey]: { ...prev[eventKey], enabled: e.target.checked }
+                      }))}
+                      className="rounded border-gray-300 text-blue-600 shadow-sm"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">Enabled</span>
+                  </label>
+                </div>
+
+                {/* Recipients */}
+                <div className="mb-6">
+                  <h5 className="font-medium text-gray-900 mb-3">Recipients</h5>
+                  <div className="space-y-3">
+                    {Object.entries(eventConfig.recipients).map(([recipientKey, recipient]) => (
+                      <div key={recipientKey} className="flex items-center gap-4">
+                        <label className="flex items-center min-w-[150px]">
+                          <input
+                            type="checkbox"
+                            checked={recipient.enabled}
+                            onChange={(e) => setEventConfigs(prev => ({
+                              ...prev,
+                              [eventKey]: {
+                                ...prev[eventKey],
+                                recipients: {
+                                  ...prev[eventKey].recipients,
+                                  [recipientKey]: { ...recipient, enabled: e.target.checked }
+                                }
+                              }
+                            }))}
+                            className="rounded border-gray-300 text-blue-600 shadow-sm"
+                          />
+                          <span className="ml-2 text-sm text-gray-700 capitalize">
+                            {recipientKey === 'customerPhone' && 'Customer Phone'}
+                            {recipientKey === 'companyEmail' && 'Company Email'}
+                            {recipientKey === 'agentEmail' && 'Agent Email'}
+                          </span>
+                        </label>
+                        <input
+                          type="text"
+                          value={recipient.address}
+                          onChange={(e) => setEventConfigs(prev => ({
+                            ...prev,
+                            [eventKey]: {
+                              ...prev[eventKey],
+                              recipients: {
+                                ...prev[eventKey].recipients,
+                                [recipientKey]: { ...recipient, address: e.target.value }
+                              }
+                            }
+                          }))}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Email address or variable"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Templates */}
+                <div>
+                  <h5 className="font-medium text-gray-900 mb-3">Message Templates</h5>
+                  <div className="space-y-4">
+                    {languages.map((language) => (
+                      <div key={language} className="border border-gray-200 rounded-lg p-4">
+                        <h6 className="font-medium text-gray-800 mb-3 uppercase">{language}</h6>
+                        
+                        {/* Email Template */}
+                        <div className="mb-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <label className="text-sm font-medium text-gray-700">Email Template</label>
+                            <label className="flex items-center">
+                              <input
+                                type="checkbox"
+                                checked={eventConfig.templates[language]?.email?.enabled || false}
+                                onChange={(e) => setEventConfigs(prev => ({
+                                  ...prev,
+                                  [eventKey]: {
+                                    ...prev[eventKey],
+                                    templates: {
+                                      ...prev[eventKey].templates,
+                                      [language]: {
+                                        ...prev[eventKey].templates[language],
+                                        email: {
+                                          ...prev[eventKey].templates[language]?.email,
+                                          enabled: e.target.checked
+                                        }
+                                      }
+                                    }
+                                  }
+                                }))}
+                                className="rounded border-gray-300 text-blue-600 shadow-sm"
+                              />
+                              <span className="ml-2 text-sm text-gray-700">Enabled</span>
+                            </label>
+                          </div>
+                          <Input
+                            label="Subject"
+                            value={eventConfig.templates[language]?.email?.subject || ''}
+                            onChange={(e) => setEventConfigs(prev => ({
+                              ...prev,
+                              [eventKey]: {
+                                ...prev[eventKey],
+                                templates: {
+                                  ...prev[eventKey].templates,
+                                  [language]: {
+                                    ...prev[eventKey].templates[language],
+                                    email: {
+                                      ...prev[eventKey].templates[language]?.email,
+                                      subject: e.target.value
+                                    }
+                                  }
+                                }
+                              }
+                            }))}
+                            className="mb-2"
+                          />
+                          <textarea
+                            rows={4}
+                            value={eventConfig.templates[language]?.email?.htmlContent || ''}
+                            onChange={(e) => setEventConfigs(prev => ({
+                              ...prev,
+                              [eventKey]: {
+                                ...prev[eventKey],
+                                templates: {
+                                  ...prev[eventKey].templates,
+                                  [language]: {
+                                    ...prev[eventKey].templates[language],
+                                    email: {
+                                      ...prev[eventKey].templates[language]?.email,
+                                      htmlContent: e.target.value
+                                    }
+                                  }
+                                }
+                              }
+                            }))}
+                            onFocus={() => setFocusedField(`event-${eventKey}-${language}-email-htmlContent`)}
+                            onBlur={() => setFocusedField(null)}
+                            data-field={`event-${eventKey}-${language}-email-htmlContent`}
+                            className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Email content..."
+                          />
+                        </div>
+
+                        {/* SMS Template */}
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <label className="text-sm font-medium text-gray-700">SMS Template</label>
+                            <label className="flex items-center">
+                              <input
+                                type="checkbox"
+                                checked={eventConfig.templates[language]?.sms?.enabled || false}
+                                onChange={(e) => setEventConfigs(prev => ({
+                                  ...prev,
+                                  [eventKey]: {
+                                    ...prev[eventKey],
+                                    templates: {
+                                      ...prev[eventKey].templates,
+                                      [language]: {
+                                        ...prev[eventKey].templates[language],
+                                        sms: {
+                                          ...prev[eventKey].templates[language]?.sms,
+                                          enabled: e.target.checked
+                                        }
+                                      }
+                                    }
+                                  }
+                                }))}
+                                className="rounded border-gray-300 text-blue-600 shadow-sm"
+                              />
+                              <span className="ml-2 text-sm text-gray-700">Enabled</span>
+                            </label>
+                          </div>
+                          <textarea
+                            rows={3}
+                            value={eventConfig.templates[language]?.sms?.content || ''}
+                            onChange={(e) => setEventConfigs(prev => ({
+                              ...prev,
+                              [eventKey]: {
+                                ...prev[eventKey],
+                                templates: {
+                                  ...prev[eventKey].templates,
+                                  [language]: {
+                                    ...prev[eventKey].templates[language],
+                                    sms: {
+                                      ...prev[eventKey].templates[language]?.sms,
+                                      content: e.target.value
+                                    }
+                                  }
+                                }
+                              }
+                            }))}
+                            onFocus={() => setFocusedField(`event-${eventKey}-${language}-sms-content`)}
+                            onBlur={() => setFocusedField(null)}
+                            data-field={`event-${eventKey}-${language}-sms-content`}
+                            className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="SMS content..."
+                          />
+                          <p className="text-xs text-gray-500 mt-1">
+                            Character count: {(eventConfig.templates[language]?.sms?.content || '').length}/160
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Variables Panel */}
+          {focusedField && focusedField.startsWith('event-') && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h4 className="font-medium text-blue-900 mb-3">Available Variables</h4>
+              <p className="text-sm text-blue-700 mb-3">Click any variable to insert it into the focused field:</p>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                {variables.map((variable) => (
+                  <button
+                    key={variable.key}
+                    onClick={() => insertVariable(variable.key)}
+                    className="text-left p-2 bg-white border border-blue-200 rounded hover:bg-blue-100 transition-colors"
+                  >
+                    <div className="font-mono text-xs text-blue-800">{variable.key}</div>
+                    <div className="text-xs text-blue-600">{variable.description}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )
+    },
+    {
+      key: 'automated-chaseup',
+      label: 'Automated Chase-up Messages',
+      content: (
+        <div className="space-y-6">
+          {/* Global Configuration */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Global Configuration</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Input
+                label="Activation Date (applies to all reminders)"
+                type="date"
+                value={chaseUpGlobalConfig.activationDate}
+                onChange={(e) => setChaseUpGlobalConfig(prev => ({ ...prev, activationDate: e.target.value }))}
+              />
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">UTC Sending Time (applies to all reminders)</label>
+                <div className="flex gap-2">
+                  <select
+                    value={chaseUpGlobalConfig.utcHour}
+                    onChange={(e) => setChaseUpGlobalConfig(prev => ({ ...prev, utcHour: parseInt(e.target.value) }))}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    {Array.from({ length: 24 }, (_, i) => (
+                      <option key={i} value={i}>{i.toString().padStart(2, '0')}</option>
+                    ))}
+                  </select>
+                  <select
+                    value={chaseUpGlobalConfig.utcMinute}
+                    onChange={(e) => setChaseUpGlobalConfig(prev => ({ ...prev, utcMinute: parseInt(e.target.value) }))}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value={0}>00</option>
+                    <option value={15}>15</option>
+                    <option value={30}>30</option>
+                    <option value={45}>45</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Reminders */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Automated Chase-up Messages</h3>
+                <h3 className="text-lg font-semibold text-gray-900">Reminder Sequences</h3>
                 <p className="text-sm text-gray-600">Configure multiple reminder sequences</p>
               </div>
               <Button onClick={addChaseUpMessage} className="flex items-center gap-2">
@@ -570,45 +1075,30 @@ export default function CreateCompanyPage() {
                     />
 
                     <Input
-                      label="Activation Date"
-                      type="date"
-                      value={message.activationDate}
-                      onChange={(e) => updateChaseUpMessage(message.id, 'activationDate', e.target.value)}
-                    />
-
-                    <Input
                       label="Max Sendings"
                       type="number"
                       min="1"
                       max="10"
                       value={message.maxSendings}
-                      onChange={(e) => updateChaseUpMessage(message.id, 'maxSendings', parseInt(e.target.value) || 1)}
+                      onChange={(e) => {
+                        const newValue = parseInt(e.target.value) || 1;
+                        updateChaseUpMessage(message.id, 'maxSendings', newValue);
+                        // Auto-adjust based on delay rules
+                        if ((message.delayDays > 0 || message.delayMinutes > 0) && newValue < 2) {
+                          updateChaseUpMessage(message.id, 'maxSendings', 2);
+                        }
+                      }}
                     />
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">UTC Sending Time</label>
-                      <div className="flex gap-2">
-                        <select
-                          value={message.utcHour}
-                          onChange={(e) => updateChaseUpMessage(message.id, 'utcHour', parseInt(e.target.value))}
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                          {Array.from({ length: 24 }, (_, i) => (
-                            <option key={i} value={i}>{i.toString().padStart(2, '0')}</option>
-                          ))}
-                        </select>
-                        <select
-                          value={message.utcMinute}
-                          onChange={(e) => updateChaseUpMessage(message.id, 'utcMinute', parseInt(e.target.value))}
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                          <option value={0}>00</option>
-                          <option value={15}>15</option>
-                          <option value={30}>30</option>
-                          <option value={45}>45</option>
-                        </select>
-                      </div>
-                    </div>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={message.webhookEnabled}
+                        onChange={(e) => updateChaseUpMessage(message.id, 'webhookEnabled', e.target.checked)}
+                        className="rounded border-gray-300 text-blue-600 shadow-sm"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">Webhook Enabled</span>
+                    </label>
                   </div>
 
                   {/* Delay Configuration */}
@@ -618,7 +1108,14 @@ export default function CreateCompanyPage() {
                       type="number"
                       min="0"
                       value={message.delayDays}
-                      onChange={(e) => updateChaseUpMessage(message.id, 'delayDays', parseInt(e.target.value) || 0)}
+                      onChange={(e) => {
+                        const newValue = parseInt(e.target.value) || 0;
+                        updateChaseUpMessage(message.id, 'delayDays', newValue);
+                        // Auto-adjust max sendings if delay is set
+                        if ((newValue > 0 || message.delayMinutes > 0) && message.maxSendings < 2) {
+                          updateChaseUpMessage(message.id, 'maxSendings', 2);
+                        }
+                      }}
                     />
 
                     <Input
@@ -627,131 +1124,131 @@ export default function CreateCompanyPage() {
                       min="0"
                       max="1439"
                       value={message.delayMinutes}
-                      onChange={(e) => updateChaseUpMessage(message.id, 'delayMinutes', parseInt(e.target.value) || 0)}
+                      onChange={(e) => {
+                        const newValue = parseInt(e.target.value) || 0;
+                        updateChaseUpMessage(message.id, 'delayMinutes', newValue);
+                        // Auto-adjust max sendings if delay is set
+                        if ((newValue > 0 || message.delayDays > 0) && message.maxSendings < 2) {
+                          updateChaseUpMessage(message.id, 'maxSendings', 2);
+                        }
+                      }}
                     />
                   </div>
 
-                  {/* Recipients */}
-                  <div className="mb-6">
-                    <h5 className="font-medium text-gray-900 mb-3">Recipients</h5>
-                    <div className="space-y-2">
-                      {message.recipients.map((recipient) => (
-                        <div key={recipient.id} className="flex items-center gap-4">
-                          <select
-                            value={recipient.type}
-                            onChange={(e) => {
-                              const newRecipients = message.recipients.map(r =>
-                                r.id === recipient.id ? { ...r, type: e.target.value as 'email' | 'sms' } : r
-                              );
-                              updateChaseUpMessage(message.id, 'recipients', newRecipients);
-                            }}
-                            className="px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          >
-                            <option value="email">Email</option>
-                            <option value="sms">SMS</option>
-                          </select>
-                          <input
-                            type="text"
-                            value={recipient.address}
-                            onChange={(e) => {
-                              const newRecipients = message.recipients.map(r =>
-                                r.id === recipient.id ? { ...r, address: e.target.value } : r
-                              );
-                              updateChaseUpMessage(message.id, 'recipients', newRecipients);
-                            }}
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder={recipient.type === 'email' ? 'email@example.com or {{customerEmail}}' : 'Phone number or {{customerPhone}}'}
-                          />
+                  {/* Recipients with individual configs and templates */}
+                  <div className="space-y-6">
+                    {Object.entries(message.recipients).map(([recipientKey, recipientData]) => (
+                      <div key={recipientKey} className="border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-4">
+                          <h5 className="font-medium text-gray-900 capitalize">
+                            {recipientKey === 'companyEmailAddress' ? 'Company Email Address' : recipientKey}
+                          </h5>
                           <label className="flex items-center">
                             <input
                               type="checkbox"
-                              checked={recipient.enabled}
-                              onChange={(e) => {
-                                const newRecipients = message.recipients.map(r =>
-                                  r.id === recipient.id ? { ...r, enabled: e.target.checked } : r
-                                );
-                                updateChaseUpMessage(message.id, 'recipients', newRecipients);
-                              }}
+                              checked={recipientData.enabled}
+                              onChange={(e) => updateChaseUpRecipient(message.id, recipientKey, 'enabled', e.target.checked)}
                               className="rounded border-gray-300 text-blue-600 shadow-sm"
                             />
                             <span className="ml-2 text-sm text-gray-700">Enabled</span>
                           </label>
                         </div>
-                      ))}
-                    </div>
-                  </div>
 
-                  {/* Templates */}
-                  <div>
-                    <h5 className="font-medium text-gray-900 mb-3">Message Templates</h5>
-                    <div className="space-y-4">
-                      {languages.map((language) => (
-                        <div key={language} className="border border-gray-200 rounded-lg p-4">
-                          <h6 className="font-medium text-gray-800 mb-3 uppercase">{language}</h6>
-                          
-                          {/* Email Template */}
-                          <div className="mb-4">
-                            <div className="flex items-center justify-between mb-2">
-                              <label className="text-sm font-medium text-gray-700">Email Template</label>
-                              <label className="flex items-center">
-                                <input
-                                  type="checkbox"
-                                  checked={message.templates[language]?.email?.enabled || false}
-                                  onChange={(e) => updateChaseUpTemplate(message.id, language, 'email', 'enabled', e.target.checked)}
-                                  className="rounded border-gray-300 text-blue-600 shadow-sm"
-                                />
-                                <span className="ml-2 text-sm text-gray-700">Enabled</span>
-                              </label>
-                            </div>
-                            <Input
-                              label="Subject"
-                              value={message.templates[language]?.email?.subject || ''}
-                              onChange={(e) => updateChaseUpTemplate(message.id, language, 'email', 'subject', e.target.value)}
-                              className="mb-2"
-                            />
-                            <textarea
-                              rows={4}
-                              value={message.templates[language]?.email?.htmlContent || ''}
-                              onChange={(e) => updateChaseUpTemplate(message.id, language, 'email', 'htmlContent', e.target.value)}
-                              onFocus={() => setFocusedField(`chaseup-${message.id}-${language}-email-htmlContent`)}
-                              onBlur={() => setFocusedField(null)}
-                              data-field={`chaseup-${message.id}-${language}-email-htmlContent`}
-                              className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                              placeholder="Email content..."
-                            />
-                          </div>
-
-                          {/* SMS Template */}
+                        {/* Recipient Config */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                           <div>
-                            <div className="flex items-center justify-between mb-2">
-                              <label className="text-sm font-medium text-gray-700">SMS Template</label>
-                              <label className="flex items-center">
-                                <input
-                                  type="checkbox"
-                                  checked={message.templates[language]?.sms?.enabled || false}
-                                  onChange={(e) => updateChaseUpTemplate(message.id, language, 'sms', 'enabled', e.target.checked)}
-                                  className="rounded border-gray-300 text-blue-600 shadow-sm"
-                                />
-                                <span className="ml-2 text-sm text-gray-700">Enabled</span>
-                              </label>
-                            </div>
-                            <textarea
-                              rows={3}
-                              value={message.templates[language]?.sms?.content || ''}
-                              onChange={(e) => updateChaseUpTemplate(message.id, language, 'sms', 'content', e.target.value)}
-                              onFocus={() => setFocusedField(`chaseup-${message.id}-${language}-sms-content`)}
-                              onBlur={() => setFocusedField(null)}
-                              data-field={`chaseup-${message.id}-${language}-sms-content`}
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                            <select
+                              value={recipientData.config.type}
+                              onChange={(e) => updateChaseUpRecipientConfig(message.id, recipientKey, 'type', e.target.value)}
                               className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                              placeholder="SMS content..."
-                            />
-                            <p className="text-xs text-gray-500 mt-1">
-                              Character count: {(message.templates[language]?.sms?.content || '').length}/160
-                            </p>
+                            >
+                              <option value="email">Email</option>
+                              <option value="sms">SMS</option>
+                            </select>
+                          </div>
+                          <Input
+                            label="Address"
+                            value={recipientData.config.address}
+                            onChange={(e) => updateChaseUpRecipientConfig(message.id, recipientKey, 'address', e.target.value)}
+                            placeholder={recipientData.config.type === 'email' ? 'email@example.com or {{customerEmail}}' : 'Phone number or {{customerPhone}}'}
+                          />
+                        </div>
+
+                        {/* Templates for this recipient */}
+                        <div>
+                          <h6 className="font-medium text-gray-800 mb-3">Templates for {recipientKey}</h6>
+                          <div className="space-y-4">
+                            {languages.map((language) => (
+                              <div key={language} className="border border-gray-100 rounded-lg p-3">
+                                <h6 className="font-medium text-gray-700 mb-2 uppercase text-sm">{language}</h6>
+                                
+                                {/* Email Template */}
+                                <div className="mb-3">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <label className="text-xs font-medium text-gray-600">Email Template</label>
+                                    <label className="flex items-center">
+                                      <input
+                                        type="checkbox"
+                                        checked={recipientData.templates[language]?.email?.enabled || false}
+                                        onChange={(e) => updateChaseUpRecipientTemplate(message.id, recipientKey, language, 'email', 'enabled', e.target.checked)}
+                                        className="rounded border-gray-300 text-blue-600 shadow-sm"
+                                      />
+                                      <span className="ml-1 text-xs text-gray-600">Enabled</span>
+                                    </label>
+                                  </div>
+                                  <Input
+                                    label="Subject"
+                                    value={recipientData.templates[language]?.email?.subject || ''}
+                                    onChange={(e) => updateChaseUpRecipientTemplate(message.id, recipientKey, language, 'email', 'subject', e.target.value)}
+                                    className="mb-2"
+                                  />
+                                  <textarea
+                                    rows={3}
+                                    value={recipientData.templates[language]?.email?.htmlContent || ''}
+                                    onChange={(e) => updateChaseUpRecipientTemplate(message.id, recipientKey, language, 'email', 'htmlContent', e.target.value)}
+                                    onFocus={() => setFocusedField(`chaseup-${message.id}-${recipientKey}-${language}-email-htmlContent`)}
+                                    onBlur={() => setFocusedField(null)}
+                                    data-field={`chaseup-${message.id}-${recipientKey}-${language}-email-htmlContent`}
+                                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                    placeholder="Email content..."
+                                  />
+                                </div>
+
+                                {/* SMS Template */}
+                                <div>
+                                  <div className="flex items-center justify-between mb-2">
+                                    <label className="text-xs font-medium text-gray-600">SMS Template</label>
+                                    <label className="flex items-center">
+                                      <input
+                                        type="checkbox"
+                                        checked={recipientData.templates[language]?.sms?.enabled || false}
+                                        onChange={(e) => updateChaseUpRecipientTemplate(message.id, recipientKey, language, 'sms', 'enabled', e.target.checked)}
+                                        className="rounded border-gray-300 text-blue-600 shadow-sm"
+                                      />
+                                      <span className="ml-1 text-xs text-gray-600">Enabled</span>
+                                    </label>
+                                  </div>
+                                  <textarea
+                                    rows={2}
+                                    value={recipientData.templates[language]?.sms?.content || ''}
+                                    onChange={(e) => updateChaseUpRecipientTemplate(message.id, recipientKey, language, 'sms', 'content', e.target.value)}
+                                    onFocus={() => setFocusedField(`chaseup-${message.id}-${recipientKey}-${language}-sms-content`)}
+                                    onBlur={() => setFocusedField(null)}
+                                    data-field={`chaseup-${message.id}-${recipientKey}-${language}-sms-content`}
+                                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                    placeholder="SMS content..."
+                                  />
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    Character count: {(recipientData.templates[language]?.sms?.content || '').length}/160
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               ))}
@@ -759,7 +1256,7 @@ export default function CreateCompanyPage() {
           </div>
 
           {/* Variables Panel */}
-          {focusedField && (
+          {focusedField && focusedField.startsWith('chaseup-') && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <h4 className="font-medium text-blue-900 mb-3">Available Variables</h4>
               <p className="text-sm text-blue-700 mb-3">Click any variable to insert it into the focused field:</p>

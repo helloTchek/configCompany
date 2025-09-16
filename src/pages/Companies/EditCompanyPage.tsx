@@ -96,35 +96,191 @@ export default function EditCompanyPage() {
 
   // Events & Webhooks
   const [webhookUrl, setWebhookUrl] = useState('');
+  const [eventConfigs, setEventConfigs] = useState({
+    selfInspectionCreation: {
+      enabled: false,
+      recipients: {
+        customerPhone: { enabled: false, address: '{{customerPhone}}' },
+        companyEmail: { enabled: false, address: 'company@example.com' },
+        agentEmail: { enabled: false, address: 'agent@example.com' }
+      },
+      templates: languages.reduce((acc, lang) => ({
+        ...acc,
+        [lang]: {
+          email: { subject: 'Vehicle Inspection Created', htmlContent: 'Your inspection has been created.', enabled: true },
+          sms: { content: 'Your vehicle inspection is ready.', enabled: false }
+        }
+      }), {})
+    },
+    automatedChaseUp: {
+      enabled: false,
+      recipients: {
+        customerPhone: { enabled: false, address: '{{customerPhone}}' },
+        companyEmail: { enabled: false, address: 'company@example.com' },
+        agentEmail: { enabled: false, address: 'agent@example.com' }
+      },
+      templates: languages.reduce((acc, lang) => ({
+        ...acc,
+        [lang]: {
+          email: { subject: 'Reminder: Complete your inspection', htmlContent: 'Please complete your vehicle inspection.', enabled: true },
+          sms: { content: 'Reminder: Complete your inspection {{inspectionLink}}', enabled: false }
+        }
+      }), {})
+    },
+    manualChaseUp: {
+      enabled: false,
+      recipients: {
+        customerPhone: { enabled: false, address: '{{customerPhone}}' },
+        companyEmail: { enabled: false, address: 'company@example.com' },
+        agentEmail: { enabled: false, address: 'agent@example.com' }
+      },
+      templates: languages.reduce((acc, lang) => ({
+        ...acc,
+        [lang]: {
+          email: { subject: 'Manual Reminder', htmlContent: 'Manual reminder to complete inspection.', enabled: true },
+          sms: { content: 'Manual reminder: {{inspectionLink}}', enabled: false }
+        }
+      }), {})
+    },
+    inspectionFinished: {
+      enabled: false,
+      recipients: {
+        customerPhone: { enabled: false, address: '{{customerPhone}}' },
+        companyEmail: { enabled: false, address: 'company@example.com' },
+        agentEmail: { enabled: false, address: 'agent@example.com' }
+      },
+      templates: languages.reduce((acc, lang) => ({
+        ...acc,
+        [lang]: {
+          email: { subject: 'Inspection Completed', htmlContent: 'Your vehicle inspection has been completed.', enabled: true },
+          sms: { content: 'Your inspection is complete.', enabled: false }
+        }
+      }), {})
+    },
+    damageReviewFinished: {
+      enabled: false,
+      recipients: {
+        customerPhone: { enabled: false, address: '{{customerPhone}}' },
+        companyEmail: { enabled: false, address: 'company@example.com' },
+        agentEmail: { enabled: false, address: 'agent@example.com' }
+      },
+      templates: languages.reduce((acc, lang) => ({
+        ...acc,
+        [lang]: {
+          email: { subject: 'Damage Review Complete', htmlContent: 'Damage review has been completed.', enabled: true },
+          sms: { content: 'Damage review complete.', enabled: false }
+        }
+      }), {})
+    },
+    shareUpdatedReport: {
+      enabled: false,
+      recipients: {
+        customerPhone: { enabled: false, address: '{{customerPhone}}' },
+        companyEmail: { enabled: false, address: 'company@example.com' },
+        agentEmail: { enabled: false, address: 'agent@example.com' }
+      },
+      templates: languages.reduce((acc, lang) => ({
+        ...acc,
+        [lang]: {
+          email: { subject: 'Updated Report Available', htmlContent: 'Your updated report is available.', enabled: true },
+          sms: { content: 'Updated report available.', enabled: false }
+        }
+      }), {})
+    }
+  });
+
+  // Automated Chase-up Messages (separate tab)
+  const [chaseUpGlobalConfig, setChaseUpGlobalConfig] = useState({
+    activationDate: new Date().toISOString().split('T')[0],
+    utcHour: 9,
+    utcMinute: 0
+  });
   const [chaseUpMessages, setChaseUpMessages] = useState<ChaseUpMessage[]>([
     {
       id: '1',
       name: 'First Reminder',
-      activationDate: new Date().toISOString().split('T')[0],
       maxSendings: 3,
-      utcHour: 9,
-      utcMinute: 0,
       delayDays: 1,
       delayMinutes: 0,
-      recipients: [
-        { id: '1', type: 'email', address: '{{customerEmail}}', enabled: true }
-      ],
-      templates: languages.reduce((acc, lang) => ({
-        ...acc,
-        [lang]: {
-          email: {
-            subject: 'Reminder: Complete your vehicle inspection',
-            htmlContent: 'Dear {{customerName}},\n\nThis is a reminder to complete your vehicle inspection.\n\nInspection Link: {{inspectionLink}}\n\nBest regards,\n{{companyName}}',
-            enabled: true
-          },
-          sms: {
-            content: 'Hi {{customerName}}, please complete your vehicle inspection: {{inspectionLink}}',
-            enabled: false
-          }
+      webhookEnabled: false,
+      recipients: {
+        customer: {
+          enabled: true,
+          config: { type: 'email', address: '{{customerEmail}}' },
+          templates: languages.reduce((acc, lang) => ({
+            ...acc,
+            [lang]: {
+              email: { subject: 'Reminder: Complete your inspection', htmlContent: 'Dear {{customerName}}, please complete your inspection.', enabled: true },
+              sms: { content: 'Hi {{customerName}}, please complete your inspection: {{inspectionLink}}', enabled: false }
+            }
+          }), {})
+        },
+        agent: {
+          enabled: false,
+          config: { type: 'email', address: 'agent@example.com' },
+          templates: languages.reduce((acc, lang) => ({
+            ...acc,
+            [lang]: {
+              email: { subject: 'Customer Reminder Sent', htmlContent: 'A reminder has been sent to {{customerName}}.', enabled: true },
+              sms: { content: 'Reminder sent to {{customerName}}', enabled: false }
+            }
+          }), {})
+        },
+        companyEmailAddress: {
+          enabled: false,
+          config: { type: 'email', address: 'company@example.com' },
+          templates: languages.reduce((acc, lang) => ({
+            ...acc,
+            [lang]: {
+              email: { subject: 'Reminder Activity', htmlContent: 'Reminder sent for inspection {{inspectionId}}.', enabled: true },
+              sms: { content: 'Reminder activity for {{inspectionId}}', enabled: false }
+            }
+          }), {})
         }
-      }), {})
+      }
     }
   ]);
+
+  interface ChaseUpMessage {
+    id: string;
+    name: string;
+    maxSendings: number;
+    delayDays: number;
+    delayMinutes: number;
+    webhookEnabled: boolean;
+    recipients: {
+      customer: {
+        enabled: boolean;
+        config: { type: 'email' | 'sms'; address: string };
+        templates: {
+          [language: string]: {
+            email: { subject: string; htmlContent: string; enabled: boolean };
+            sms: { content: string; enabled: boolean };
+          }
+        }
+      };
+      agent: {
+        enabled: boolean;
+        config: { type: 'email' | 'sms'; address: string };
+        templates: {
+          [language: string]: {
+            email: { subject: string; htmlContent: string; enabled: boolean };
+            sms: { content: string; enabled: boolean };
+          }
+        }
+      };
+      companyEmailAddress: {
+        enabled: boolean;
+        config: { type: 'email' | 'sms'; address: string };
+        templates: {
+          [language: string]: {
+            email: { subject: string; htmlContent: string; enabled: boolean };
+            sms: { content: string; enabled: boolean };
+          }
+        }
+      };
+    }
+  }
 
   // Report Settings & Config Modules
   const [reportSettings, setReportSettings] = useState('');
