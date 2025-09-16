@@ -26,6 +26,7 @@ export default function CreateJourneyPage() {
   const [blocks, setBlocks] = useState<JourneyBlock[]>([]);
   const [blockModal, setBlockModal] = useState<{ open: boolean; type?: string }>({ open: false });
   const [showShootInspectionConfig, setShowShootInspectionConfig] = useState(false);
+  const [currentShootInspectionConfigData, setCurrentShootInspectionConfigData] = useState<ShootInspectionData | null>(null);
 
   const handleSave = () => {
     if (!journeyName.trim()) {
@@ -75,6 +76,11 @@ export default function CreateJourneyPage() {
 
   const addBlock = (blockType: string) => {
     if (blockType === 'shootInspection') {
+      setCurrentShootInspectionConfigData({
+        name: 'Shoot Inspection Block',
+        description: '',
+        config: []
+      });
       setShowShootInspectionConfig(true);
       setBlockModal({ open: false });
       return;
@@ -108,6 +114,7 @@ export default function CreateJourneyPage() {
       order: blocks.length + 1
     };
     setBlocks([...blocks, newBlock]);
+    setCurrentShootInspectionConfigData(null);
     setShowShootInspectionConfig(false);
   };
 
@@ -459,14 +466,23 @@ export default function CreateJourneyPage() {
       {/* Shoot Inspection Config Modal */}
       <Modal
         isOpen={showShootInspectionConfig}
-        onClose={() => setShowShootInspectionConfig(false)}
+        onClose={() => {
+          setCurrentShootInspectionConfigData(null);
+          setShowShootInspectionConfig(false);
+        }}
         title="Configure Shoot Inspection Block"
         size="xl"
       >
-        <ShootInspectionConfig
-          onSave={handleShootInspectionSave}
-          onCancel={() => setShowShootInspectionConfig(false)}
-        />
+        {currentShootInspectionConfigData && (
+          <ShootInspectionConfig
+            initialData={currentShootInspectionConfigData}
+            onSave={handleShootInspectionSave}
+            onCancel={() => {
+              setCurrentShootInspectionConfigData(null);
+              setShowShootInspectionConfig(false);
+            }}
+          />
+        )}
       </Modal>
     </div>
   );
