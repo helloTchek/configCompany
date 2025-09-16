@@ -786,7 +786,6 @@ export default function CreateCompanyPage() {
 
   const events = [
     { key: 'selfInspectionCreation', name: 'Self Inspection Creation' },
-    { key: 'automatedChaseUp', name: 'Automated Chase-up Message' },
     { key: 'manualChaseUp', name: 'Manual Chase-up Message' },
     { key: 'inspectionFinished', name: 'Inspection Finished Message' },
     { key: 'damageReviewFinished', name: 'Damage Review Finished Message' },
