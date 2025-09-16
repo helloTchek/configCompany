@@ -2075,6 +2075,13 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
                     </div>
                   </div>
 
+                  <Input
+                    label="Overlay URL"
+                    value={newStep.overlayUrl}
+                    onChange={(e) => setNewStep(prev => ({ ...prev, overlayUrl: e.target.value }))}
+                    placeholder="https://example.com/overlay.png"
+                  />
+
                   {/* Landscape Constraints */}
                   <div>
                     <h5 className="text-sm font-medium text-gray-900 mb-3">Landscape Constraints</h5>
