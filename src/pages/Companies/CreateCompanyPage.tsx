@@ -48,6 +48,8 @@ const CreateCompanyPage: React.FC = () => {
   const [showUnsavedModal, setShowUnsavedModal] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
 
+  const [activeTab, setActiveTab] = useState('company-info');
+
   const handleInputChange = (field: string, value: string) => {
     setCompanyData(prev => ({
       ...prev,
@@ -546,7 +548,7 @@ const CreateCompanyPage: React.FC = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <Tabs tabs={tabs} />
+        <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
       </div>
 
       <Modal

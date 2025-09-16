@@ -50,6 +50,8 @@ const EditCompanyPage: React.FC = () => {
   const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const [activeTab, setActiveTab] = useState('company-info');
+
   useEffect(() => {
     // Load company data
     const loadCompanyData = async () => {
@@ -598,7 +600,7 @@ const EditCompanyPage: React.FC = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <Tabs tabs={tabs} />
+        <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
       </div>
 
       <Modal
