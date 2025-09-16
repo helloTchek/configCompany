@@ -1,641 +1,395 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Save, Plus, Trash2, Eye, EyeOff } from 'lucide-react';
+import Header from '../../components/Layout/Header';
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
-import Modal from '../../components/UI/Modal';
-import Tabs from '../../components/UI/Tabs';
+import { ArrowLeft, Save } from 'lucide-react';
+import { mockCompanies } from '../../data/mockData';
 
-const EditCompanyPage: React.FC = () => {
+export default function EditCompanyPage() {
   const navigate = useNavigate();
-  const { id } = useParams<{ id: string }>();
-  const { t } = useTranslation();
-  
-  // Company basic info state
-  const [companyData, setCompanyData] = useState({
-    name: '',
-    address: '',
-    city: '',
-    postalCode: '',
-    country: '',
-    phone: '',
-    email: '',
-    website: '',
-    vatNumber: '',
-    registrationNumber: ''
-  });
-
-  // Events & Webhooks state
-  const [eventCompanyEmailStates, setEventCompanyEmailStates] = useState({});
-  const [chaseUpSettings, setChaseUpSettings] = useState({
-    activationDate: '',
-    maxSendings: 3,
-    sendingHour: 9,
-    sendingMinute: 0
-  });
-  const [reminders, setReminders] = useState([
-    {
-      id: 1,
-      name: 'First Reminder',
-      delayDays: 1,
-      delayMinutes: 0,
-      recipients: [],
-      templates: {}
-    }
-  ]);
-
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [showUnsavedModal, setShowUnsavedModal] = useState(false);
-  const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
+  const { id } = useParams();
   const [loading, setLoading] = useState(true);
-
-  const [activeTab, setActiveTab] = useState('company-info');
+  const [formData, setFormData] = useState({
+    name: '',
+    identifier: '',
+    companyCode: '',
+    contractType: 'Client',
+    businessSector: 'Insurance',
+    logoUrl: '',
+    retentionPeriod: 24,
+    disableFastTrack: false,
+    enableMileageCapture: true,
+    enableBlurDetection: true,
+    enableVinScanning: true,
+    enableBrandModelDetection: true,
+    iaValidation: false,
+    humanValidationEnabled: true,
+    validationPriority: 3,
+    maxValidationDelay: 60,
+    minTaskProcessingDuration: 5,
+    showStartInstantInspection: true,
+    showSendInspectionLink: true,
+    parentCompany: ''
+  });
+  const [errors, setErrors] = useState({
+    name: '',
+    identifier: '',
+    companyCode: ''
+  });
 
   useEffect(() => {
     // Load company data
-    const loadCompanyData = async () => {
-      try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Mock data - replace with actual API call
-        setCompanyData({
-          name: 'Sample Company',
-          address: '123 Main St',
-          city: 'Sample City',
-          postalCode: '12345',
-          country: 'Sample Country',
-          phone: '+1234567890',
-          email: 'contact@sample.com',
-          website: 'https://sample.com',
-          vatNumber: 'VAT123456',
-          registrationNumber: 'REG789012'
-        });
-        
-        setEventCompanyEmailStates({
-          inspection_completed: true,
-          report_generated: false,
-          payment_received: true
-        });
-        
-        setLoading(false);
-      } catch (error) {
-        console.error('Error loading company data:', error);
-        setLoading(false);
-      }
+    const company = mockCompanies.find(c => c.id === id);
+    if (company) {
+      setFormData({
+        name: company.name,
+        identifier: company.identifier,
+        companyCode: company.companyCode,
+        contractType: company.contractType,
+        businessSector: company.businessSector,
+        logoUrl: company.logoUrl || '',
+        retentionPeriod: company.retentionPeriod,
+        disableFastTrack: company.disableFastTrack,
+        enableMileageCapture: true, // Default values for new fields
+        enableBlurDetection: true,
+        enableVinScanning: true,
+        enableBrandModelDetection: true,
+        iaValidation: false,
+        humanValidationEnabled: true,
+        validationPriority: 3,
+        maxValidationDelay: 60,
+        minTaskProcessingDuration: 5,
+        showStartInstantInspection: true,
+        showSendInspectionLink: true,
+        parentCompany: company.parentCompany || ''
+      });
+    } else {
+      navigate('/companies');
+      return;
+    }
+    setLoading(false);
+  }, [id, navigate]);
+
+  const handleInputChange = (field: string, value: string | number | boolean) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    setErrors(prev => ({ ...prev, [field]: '' }));
+  };
+
+  const validateForm = () => {
+    const newErrors = {
+      name: '',
+      identifier: '',
+      companyCode: ''
     };
 
-    if (id) {
-      loadCompanyData();
+    if (!formData.name.trim()) {
+      newErrors.name = 'Company name is required';
     }
-  }, [id]);
 
-  const handleInputChange = (field: string, value: string) => {
-    setCompanyData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-    setHasUnsavedChanges(true);
+    if (!formData.identifier.trim()) {
+      newErrors.identifier = 'Company identifier is required';
+    }
+
+    if (!formData.companyCode.trim()) {
+      newErrors.companyCode = 'Company code is required';
+    }
+
+    setErrors(newErrors);
+    return !newErrors.name && !newErrors.identifier && !newErrors.companyCode;
   };
 
   const handleSave = () => {
-    console.log('Saving company:', companyData);
-    setHasUnsavedChanges(false);
-    navigate('/companies');
-  };
-
-  const handleNavigation = (path: string) => {
-    if (hasUnsavedChanges) {
-      setPendingNavigation(path);
-      setShowUnsavedModal(true);
-    } else {
-      navigate(path);
+    if (!validateForm()) {
+      return;
     }
-  };
 
-  const handleCompanyEmailToggle = (eventType: string, enabled: boolean) => {
-    setEventCompanyEmailStates(prev => ({
-      ...prev,
-      [eventType]: enabled
-    }));
-    setHasUnsavedChanges(true);
-  };
-
-  const handleChaseUpSettingsChange = (field: string, value: any) => {
-    setChaseUpSettings(prev => ({
-      ...prev,
-      [field]: value
-    }));
-    setHasUnsavedChanges(true);
-  };
-
-  const addReminder = () => {
-    const newReminder = {
-      id: Date.now(),
-      name: `Reminder ${reminders.length + 1}`,
-      delayDays: 3,
-      delayMinutes: 0,
-      recipients: [],
-      templates: {}
+    const updatedCompany = {
+      id,
+      ...formData,
+      updatedAt: new Date().toISOString()
     };
-    setReminders(prev => [...prev, newReminder]);
-    setHasUnsavedChanges(true);
-  };
 
-  const removeReminder = (id: number) => {
-    if (reminders.length > 1) {
-      setReminders(prev => prev.filter(r => r.id !== id));
-      setHasUnsavedChanges(true);
-    }
-  };
-
-  const updateReminder = (id: number, field: string, value: any) => {
-    setReminders(prev => prev.map(r => 
-      r.id === id ? { ...r, [field]: value } : r
-    ));
-    setHasUnsavedChanges(true);
+    console.log('Updating company:', updatedCompany);
+    navigate('/companies');
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">{t('common.loading')}</p>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header title="Loading..." />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading company...</p>
+          </div>
         </div>
       </div>
     );
   }
 
-  const CompanyInfoTab = () => (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Input
-          label={t('company.name')}
-          value={companyData.name}
-          onChange={(value) => handleInputChange('name', value)}
-          required
-        />
-        <Input
-          label={t('company.email')}
-          type="email"
-          value={companyData.email}
-          onChange={(value) => handleInputChange('email', value)}
-        />
-        <Input
-          label={t('company.phone')}
-          value={companyData.phone}
-          onChange={(value) => handleInputChange('phone', value)}
-        />
-        <Input
-          label={t('company.website')}
-          value={companyData.website}
-          onChange={(value) => handleInputChange('website', value)}
-        />
-        <Input
-          label={t('company.address')}
-          value={companyData.address}
-          onChange={(value) => handleInputChange('address', value)}
-        />
-        <Input
-          label={t('company.city')}
-          value={companyData.city}
-          onChange={(value) => handleInputChange('city', value)}
-        />
-        <Input
-          label={t('company.postalCode')}
-          value={companyData.postalCode}
-          onChange={(value) => handleInputChange('postalCode', value)}
-        />
-        <Input
-          label={t('company.country')}
-          value={companyData.country}
-          onChange={(value) => handleInputChange('country', value)}
-        />
-        <Input
-          label={t('company.vatNumber')}
-          value={companyData.vatNumber}
-          onChange={(value) => handleInputChange('vatNumber', value)}
-        />
-        <Input
-          label={t('company.registrationNumber')}
-          value={companyData.registrationNumber}
-          onChange={(value) => handleInputChange('registrationNumber', value)}
-        />
-      </div>
-    </div>
-  );
-
-  const EventsWebhooksTab = () => {
-    const [focusedField, setFocusedField] = useState<string | null>(null);
-    const fieldRefs = useRef<{[key: string]: HTMLInputElement | HTMLTextAreaElement}>({});
-    const [showVariables, setShowVariables] = useState(false);
-
-    const assignFieldRef = useCallback((fieldName: string) => {
-      return (element: HTMLInputElement | HTMLTextAreaElement | null) => {
-        if (element) {
-          fieldRefs.current[fieldName] = element;
-        } else {
-          delete fieldRefs.current[fieldName];
-        }
-      };
-    }, []);
-
-    const availableVariables = [
-      '{{company_name}}',
-      '{{inspection_date}}',
-      '{{inspector_name}}',
-      '{{report_url}}',
-      '{{due_date}}',
-      '{{contact_person}}'
-    ];
-
-    const handleVariableClick = (variable: string) => {
-      if (focusedField && fieldRefs.current[focusedField]) {
-        const field = fieldRefs.current[focusedField];
-        const start = field.selectionStart || 0;
-        const end = field.selectionEnd || 0;
-        const currentValue = field.value;
-        const newValue = currentValue.substring(0, start) + variable + currentValue.substring(end);
-        
-        field.value = newValue;
-        field.dispatchEvent(new Event('input', { bubbles: true }));
-        field.dispatchEvent(new Event('change', { bubbles: true }));
-        
-        const newCursorPos = start + variable.length;
-        setTimeout(() => {
-          field.setSelectionRange(newCursorPos, newCursorPos);
-          field.focus();
-        }, 0);
-      }
-    };
-
-    const eventTypes = [
-      { key: 'inspection_completed', label: t('events.inspectionCompleted') },
-      { key: 'report_generated', label: t('events.reportGenerated') },
-      { key: 'payment_received', label: t('events.paymentReceived') }
-    ];
-
-    return (
-      <div className="space-y-8">
-        {/* Event Email Settings */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            {t('events.emailNotifications')}
-          </h3>
-          <div className="space-y-4">
-            {eventTypes.map(event => (
-              <div key={event.key} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                <span className="font-medium text-gray-700">{event.label}</span>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="sr-only peer"
-                    checked={eventCompanyEmailStates[event.key] || false}
-                    onChange={(e) => handleCompanyEmailToggle(event.key, e.target.checked)}
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Chase-up Messages */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-900">
-              {t('events.automatedChaseUp')}
-            </h3>
-            <Button
-              onClick={addReminder}
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              {t('events.addReminder')}
-            </Button>
-          </div>
-
-          {/* General Settings */}
-          <div className="bg-gray-50 rounded-lg p-4 mb-6">
-            <h4 className="font-medium text-gray-900 mb-4">{t('events.generalSettings')}</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Input
-                label={t('events.activationDate')}
-                type="date"
-                value={chaseUpSettings.activationDate}
-                onChange={(value) => handleChaseUpSettingsChange('activationDate', value)}
-              />
-              <Input
-                label={t('events.maxSendings')}
-                type="number"
-                min="1"
-                max="10"
-                value={chaseUpSettings.maxSendings.toString()}
-                onChange={(value) => handleChaseUpSettingsChange('maxSendings', parseInt(value) || 1)}
-              />
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('events.sendingTime')} (UTC)
-                </label>
-                <div className="flex gap-2">
-                  <select
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={chaseUpSettings.sendingHour}
-                    onChange={(e) => handleChaseUpSettingsChange('sendingHour', parseInt(e.target.value))}
-                  >
-                    {Array.from({ length: 24 }, (_, i) => (
-                      <option key={i} value={i}>{i.toString().padStart(2, '0')}</option>
-                    ))}
-                  </select>
-                  <select
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={chaseUpSettings.sendingMinute}
-                    onChange={(e) => handleChaseUpSettingsChange('sendingMinute', parseInt(e.target.value))}
-                  >
-                    <option value={0}>00</option>
-                    <option value={15}>15</option>
-                    <option value={30}>30</option>
-                    <option value={45}>45</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Reminders */}
-          <div className="space-y-6">
-            {reminders.map((reminder, index) => (
-              <div key={reminder.id} className="border border-gray-200 rounded-lg p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <span className="bg-blue-100 text-blue-800 text-sm font-medium px-2.5 py-0.5 rounded">
-                      #{index + 1}
-                    </span>
-                    <Input
-                      value={reminder.name}
-                      onChange={(value) => updateReminder(reminder.id, 'name', value)}
-                      className="font-medium"
-                      placeholder={t('events.reminderName')}
-                    />
-                  </div>
-                  {reminders.length > 1 && (
-                    <Button
-                      onClick={() => removeReminder(reminder.id)}
-                      variant="outline"
-                      size="sm"
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  )}
-                </div>
-
-                {/* Delay Settings */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {index === 0 ? t('events.delayFromInspection') : t('events.delayFromPrevious')}
-                    </label>
-                    <div className="flex gap-2">
-                      <Input
-                        type="number"
-                        min="0"
-                        value={reminder.delayDays.toString()}
-                        onChange={(value) => updateReminder(reminder.id, 'delayDays', parseInt(value) || 0)}
-                        placeholder="0"
-                      />
-                      <span className="flex items-center text-sm text-gray-500">days</span>
-                      <Input
-                        type="number"
-                        min="0"
-                        max="1439"
-                        value={reminder.delayMinutes.toString()}
-                        onChange={(value) => updateReminder(reminder.id, 'delayMinutes', parseInt(value) || 0)}
-                        placeholder="0"
-                      />
-                      <span className="flex items-center text-sm text-gray-500">min</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Recipients */}
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('events.recipients')}
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {['client', 'inspector', 'admin'].map(recipient => (
-                      <label key={recipient} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                          checked={reminder.recipients.includes(recipient)}
-                          onChange={(e) => {
-                            const newRecipients = e.target.checked
-                              ? [...reminder.recipients, recipient]
-                              : reminder.recipients.filter(r => r !== recipient);
-                            updateReminder(reminder.id, 'recipients', newRecipients);
-                          }}
-                        />
-                        <span className="ml-2 text-sm text-gray-700 capitalize">{recipient}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Templates */}
-                <div className="space-y-4">
-                  <h5 className="font-medium text-gray-900">{t('events.templates')}</h5>
-                  
-                  {/* Email Templates */}
-                  <div className="space-y-3">
-                    <h6 className="text-sm font-medium text-gray-700">{t('events.emailTemplates')}</h6>
-                    {['en', 'fr'].map(lang => (
-                      <div key={`email-${lang}`} className="space-y-2">
-                        <label className="block text-sm text-gray-600">
-                          {t('events.emailSubject')} ({lang.toUpperCase()})
-                        </label>
-                        <input
-                          type="text"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder={t('events.emailSubjectPlaceholder')}
-                          ref={assignFieldRef(`reminder-${reminder.id}-email-subject-${lang}`)}
-                          onFocus={() => {
-                            setFocusedField(`reminder-${reminder.id}-email-subject-${lang}`);
-                            setShowVariables(true);
-                          }}
-                        />
-                        <label className="block text-sm text-gray-600">
-                          {t('events.emailBody')} ({lang.toUpperCase()})
-                        </label>
-                        <textarea
-                          rows={4}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder={t('events.emailBodyPlaceholder')}
-                          ref={assignFieldRef(`reminder-${reminder.id}-email-body-${lang}`)}
-                          onFocus={() => {
-                            setFocusedField(`reminder-${reminder.id}-email-body-${lang}`);
-                            setShowVariables(true);
-                          }}
-                        />
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* SMS Templates */}
-                  <div className="space-y-3">
-                    <h6 className="text-sm font-medium text-gray-700">{t('events.smsTemplates')}</h6>
-                    {['en', 'fr'].map(lang => (
-                      <div key={`sms-${lang}`} className="space-y-2">
-                        <label className="block text-sm text-gray-600">
-                          {t('events.smsMessage')} ({lang.toUpperCase()})
-                        </label>
-                        <textarea
-                          rows={3}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder={t('events.smsMessagePlaceholder')}
-                          maxLength={160}
-                          ref={assignFieldRef(`reminder-${reminder.id}-sms-${lang}`)}
-                          onFocus={() => {
-                            setFocusedField(`reminder-${reminder.id}-sms-${lang}`);
-                            setShowVariables(true);
-                          }}
-                        />
-                        <div className="text-xs text-gray-500 text-right">
-                          160 characters max
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Available Variables Panel */}
-        {showVariables && focusedField && (
-          <div className="fixed right-4 top-1/2 transform -translate-y-1/2 bg-white border border-gray-200 rounded-lg shadow-lg p-4 w-64 z-50">
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="font-medium text-gray-900">{t('events.availableVariables')}</h4>
-              <Button
-                onClick={() => setShowVariables(false)}
-                variant="outline"
-                size="sm"
-                className="p-1"
-              >
-                <EyeOff className="w-4 h-4" />
-              </Button>
-            </div>
-            <div className="text-xs text-gray-600 mb-3">
-              {t('events.clickToInsert')}
-            </div>
-            <div className="max-h-64 overflow-y-auto space-y-1">
-              {availableVariables.map(variable => (
-                <button
-                  key={variable}
-                  onClick={() => handleVariableClick(variable)}
-                  className="w-full text-left px-2 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded font-mono"
-                >
-                  {variable}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const tabs = [
-    {
-      id: 'company-info',
-      label: t('company.companyInfo'),
-      content: <CompanyInfoTab />
-    },
-    {
-      id: 'events-webhooks',
-      label: t('company.eventsWebhooks'),
-      content: <EventsWebhooksTab />
-    }
-  ];
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button
-              onClick={() => handleNavigation('/companies')}
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              {t('common.back')}
-            </Button>
-            <h1 className="text-2xl font-bold text-gray-900">
-              {t('company.editCompany')}
-            </h1>
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <Header title="Edit Company" />
+      
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="mb-6">
+          <Button
+            variant="secondary"
+            onClick={() => navigate('/companies')}
+            className="flex items-center gap-2 mb-4"
+          >
+            <ArrowLeft size={16} />
+            Back to Companies
+          </Button>
+        </div>
+
+        <div className="max-w-4xl mx-auto space-y-6">
+          {/* Basic Information */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Input
+                label="Company Name"
+                value={formData.name}
+                onChange={(e) => handleInputChange('name', e.target.value)}
+                error={errors.name}
+                required
+              />
+
+              <Input
+                label="Company Identifier"
+                value={formData.identifier}
+                onChange={(e) => handleInputChange('identifier', e.target.value)}
+                error={errors.identifier}
+                required
+              />
+
+              <Input
+                label="Company Code"
+                value={formData.companyCode}
+                onChange={(e) => handleInputChange('companyCode', e.target.value)}
+                error={errors.companyCode}
+                required
+              />
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Contract Type</label>
+                <select
+                  value={formData.contractType}
+                  onChange={(e) => handleInputChange('contractType', e.target.value)}
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="Client">Client</option>
+                  <option value="Prospect">Prospect</option>
+                  <option value="Test">Test</option>
+                  <option value="Demo">Demo</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Business Sector</label>
+                <select
+                  value={formData.businessSector}
+                  onChange={(e) => handleInputChange('businessSector', e.target.value)}
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="Insurance">Insurance</option>
+                  <option value="Leasing">Leasing</option>
+                  <option value="Rental">Rental</option>
+                  <option value="Fleet Management">Fleet Management</option>
+                  <option value="Automotive">Automotive</option>
+                </select>
+              </div>
+
+              <Input
+                label="Logo URL"
+                value={formData.logoUrl}
+                onChange={(e) => handleInputChange('logoUrl', e.target.value)}
+                placeholder="https://example.com/logo.png"
+              />
+
+              <Input
+                label="Retention Period (months)"
+                type="number"
+                value={formData.retentionPeriod}
+                onChange={(e) => handleInputChange('retentionPeriod', parseInt(e.target.value) || 24)}
+                min="1"
+                max="120"
+              />
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Parent Company</label>
+                <select
+                  value={formData.parentCompany}
+                  onChange={(e) => handleInputChange('parentCompany', e.target.value)}
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">None (Root Company)</option>
+                  <option value="1">AutoCorp Insurance</option>
+                  <option value="2">FleetMax Leasing</option>
+                </select>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            {hasUnsavedChanges && (
-              <span className="text-sm text-amber-600 font-medium">
-                {t('common.unsavedChanges')}
-              </span>
-            )}
-            <Button
+
+          {/* Processing Configuration */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Processing Configuration</h3>
+            <div className="space-y-4">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.disableFastTrack}
+                  onChange={(e) => handleInputChange('disableFastTrack', e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+                />
+                <span className="ml-2 text-sm text-gray-700">Disable Fast Track</span>
+              </label>
+
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.enableMileageCapture}
+                  onChange={(e) => handleInputChange('enableMileageCapture', e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+                />
+                <span className="ml-2 text-sm text-gray-700">Enable Mileage Capture</span>
+              </label>
+
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.enableBlurDetection}
+                  onChange={(e) => handleInputChange('enableBlurDetection', e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+                />
+                <span className="ml-2 text-sm text-gray-700">Blur License Plates</span>
+              </label>
+
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.enableVinScanning}
+                  onChange={(e) => handleInputChange('enableVinScanning', e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+                />
+                <span className="ml-2 text-sm text-gray-700">Enable VIN Scanning</span>
+              </label>
+
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.enableBrandModelDetection}
+                  onChange={(e) => handleInputChange('enableBrandModelDetection', e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+                />
+                <span className="ml-2 text-sm text-gray-700">Enable Brand & Model Detection</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Validation Settings */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Validation Settings</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.iaValidation}
+                  onChange={(e) => handleInputChange('iaValidation', e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+                />
+                <span className="ml-2 text-sm text-gray-700">IA Validation (Joelle model)</span>
+              </label>
+
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.humanValidationEnabled}
+                  onChange={(e) => handleInputChange('humanValidationEnabled', e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+                />
+                <span className="ml-2 text-sm text-gray-700">Human Validation Enabled</span>
+              </label>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Validation Priority (0-5)</label>
+                <select
+                  value={formData.validationPriority}
+                  onChange={(e) => handleInputChange('validationPriority', parseInt(e.target.value))}
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value={0}>0 - Lowest Priority</option>
+                  <option value={1}>1 - Very Low Priority</option>
+                  <option value={2}>2 - Low Priority</option>
+                  <option value={3}>3 - Medium Priority</option>
+                  <option value={4}>4 - High Priority</option>
+                  <option value={5}>5 - Highest Priority</option>
+                </select>
+              </div>
+
+              <Input
+                label="Max Validation Delay (minutes)"
+                type="number"
+                value={formData.maxValidationDelay}
+                onChange={(e) => handleInputChange('maxValidationDelay', parseInt(e.target.value) || 60)}
+                min="1"
+                max="1440"
+              />
+
+              <Input
+                label="Min Task Processing Duration (minutes)"
+                type="number"
+                value={formData.minTaskProcessingDuration}
+                onChange={(e) => handleInputChange('minTaskProcessingDuration', parseInt(e.target.value) || 5)}
+                min="1"
+                max="60"
+              />
+            </div>
+          </div>
+
+          {/* Hub Configuration */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Hub Configuration</h3>
+            <div className="space-y-4">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.showStartInstantInspection}
+                  onChange={(e) => handleInputChange('showStartInstantInspection', e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+                />
+                <span className="ml-2 text-sm text-gray-700">Show Start Instant Inspection</span>
+              </label>
+
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.showSendInspectionLink}
+                  onChange={(e) => handleInputChange('showSendInspectionLink', e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+                />
+                <span className="ml-2 text-sm text-gray-700">Show Send Inspection Link</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Save Buttons */}
+          <div className="flex gap-4 justify-end sticky bottom-0 bg-white py-4 border-t border-gray-200">
+            <Button variant="secondary" onClick={() => navigate('/companies')}>
+              Cancel
+            </Button>
+            <Button 
+              className="flex items-center gap-2" 
               onClick={handleSave}
-              className="flex items-center gap-2"
             >
-              <Save className="w-4 h-4" />
-              {t('common.save')}
+              <Save size={16} />
+              Save Changes
             </Button>
           </div>
         </div>
       </div>
-
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
-      </div>
-
-      <Modal
-        isOpen={showUnsavedModal}
-        onClose={() => setShowUnsavedModal(false)}
-        title={t('common.unsavedChanges')}
-      >
-        <div className="space-y-4">
-          <p className="text-gray-600">
-            {t('common.unsavedChangesMessage')}
-          </p>
-          <div className="flex justify-end gap-3">
-            <Button
-              onClick={() => setShowUnsavedModal(false)}
-              variant="outline"
-            >
-              {t('common.cancel')}
-            </Button>
-            <Button
-              onClick={() => {
-                setHasUnsavedChanges(false);
-                setShowUnsavedModal(false);
-                if (pendingNavigation) {
-                  navigate(pendingNavigation);
-                }
-              }}
-              variant="destructive"
-            >
-              {t('common.discardChanges')}
-            </Button>
-          </div>
-        </div>
-      </Modal>
     </div>
   );
-};
-
-export default EditCompanyPage;
+}
