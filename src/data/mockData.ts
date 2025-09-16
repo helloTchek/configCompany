@@ -130,6 +130,14 @@ export const mockChaseupRules: ChaseupRule[] = [
       hour: 9,
       minute: 0
     },
+    affectedStatuses: {
+      inspectionCreated: true,
+      inspectionInProgress: true,
+      detectionFinished: false,
+      damageReviewOngoing: false,
+      completed: false,
+      chasedUpManually: false
+    },
     firstDelayDays: 1,
     secondDelayDays: 3,
     maxSendings: 2,

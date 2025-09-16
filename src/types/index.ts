@@ -137,6 +137,14 @@ export interface ChaseupRule {
     hour: number;
     minute: number;
   };
+  affectedStatuses: {
+    inspectionCreated: boolean;
+    inspectionInProgress: boolean;
+    detectionFinished: boolean;
+    damageReviewOngoing: boolean;
+    completed: boolean;
+    chasedUpManually: boolean;
+  };
   firstDelayDays?: number;
   firstDelayMinutes?: number;
   secondDelayDays?: number;

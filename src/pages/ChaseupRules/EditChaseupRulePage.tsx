@@ -80,6 +80,14 @@ export default function EditChaseupRulePage() {
     type: 'event' as 'event' | 'anonymization',
     activationDate: '',
     utcSendingTime: { hour: 9, minute: 0 },
+    affectedStatuses: {
+      inspectionCreated: false,
+      inspectionInProgress: false,
+      detectionFinished: false,
+      damageReviewOngoing: false,
+      completed: false,
+      chasedUpManually: false
+    },
     firstDelayDays: undefined as number | undefined,
     firstDelayMinutes: undefined as number | undefined,
     secondDelayDays: undefined as number | undefined,
@@ -103,6 +111,14 @@ export default function EditChaseupRulePage() {
         type: rule.type,
         activationDate: rule.activationDate,
         utcSendingTime: rule.utcSendingTime,
+        affectedStatuses: rule.affectedStatuses || {
+          inspectionCreated: false,
+          inspectionInProgress: false,
+          detectionFinished: false,
+          damageReviewOngoing: false,
+          completed: false,
+          chasedUpManually: false
+        },
         firstDelayDays: rule.firstDelayDays,
         firstDelayMinutes: rule.firstDelayMinutes,
         secondDelayDays: rule.secondDelayDays,
@@ -135,6 +151,16 @@ export default function EditChaseupRulePage() {
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setErrors(prev => ({ ...prev, [field]: '' }));
+  };
+
+  const handleStatusChange = (status: string, checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      affectedStatuses: {
+        ...prev.affectedStatuses,
+        [status]: checked
+      }
+    }));
   };
 
   const handleReminderChange = (reminderType: 'firstReminder' | 'secondReminder', path: string, value: any) => {
@@ -479,6 +505,68 @@ export default function EditChaseupRulePage() {
                   </select>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Affected Inspection Statuses */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Affected Inspection Statuses</h3>
+            <p className="text-sm text-gray-600 mb-4">Rules will apply only to inspections in the selected statuses</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.affectedStatuses.inspectionCreated}
+                  onChange={(e) => handleStatusChange('inspectionCreated', e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 shadow-sm"
+                />
+                <span className="ml-2 text-sm text-gray-700">Inspection Created</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.affectedStatuses.inspectionInProgress}
+                  onChange={(e) => handleStatusChange('inspectionInProgress', e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 shadow-sm"
+                />
+                <span className="ml-2 text-sm text-gray-700">Inspection In Progress</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.affectedStatuses.detectionFinished}
+                  onChange={(e) => handleStatusChange('detectionFinished', e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 shadow-sm"
+                />
+                <span className="ml-2 text-sm text-gray-700">Detection Finished</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.affectedStatuses.damageReviewOngoing}
+                  onChange={(e) => handleStatusChange('damageReviewOngoing', e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 shadow-sm"
+                />
+                <span className="ml-2 text-sm text-gray-700">Damage Review Ongoing</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.affectedStatuses.completed}
+                  onChange={(e) => handleStatusChange('completed', e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 shadow-sm"
+                />
+                <span className="ml-2 text-sm text-gray-700">Completed</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.affectedStatuses.chasedUpManually}
+                  onChange={(e) => handleStatusChange('chasedUpManually', e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 shadow-sm"
+                />
+                <span className="ml-2 text-sm text-gray-700">Chased-up Manually</span>
+              </label>
             </div>
           </div>
 
