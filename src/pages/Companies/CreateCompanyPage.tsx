@@ -5,7 +5,7 @@ import { ArrowLeft, Save, Plus, Trash2, Eye, EyeOff } from 'lucide-react';
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
 import Modal from '../../components/UI/Modal';
-import { Tabs } from '../../components/UI/Tabs';
+import Tabs from '../../components/UI/Tabs';
 
 const CreateCompanyPage: React.FC = () => {
   const navigate = useNavigate();
