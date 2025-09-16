@@ -127,3 +127,60 @@ export interface CostMatrixPart {
   severity: string;
   cost: number;
 }
+
+export interface ChaseupRule {
+  id: string;
+  company: string;
+  type: 'event' | 'anonymization';
+  activationDate: string;
+  utcSendingTime: {
+    hour: number;
+    minute: number;
+  };
+  firstDelayDays?: number;
+  firstDelayMinutes?: number;
+  secondDelayDays?: number;
+  secondDelayMinutes?: number;
+  maxSendings: 0 | 1 | 2;
+  firstReminder: ChaseupReminder;
+  secondReminder?: ChaseupReminder;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ChaseupReminder {
+  webhook: {
+    enabled: boolean;
+  };
+  user: {
+    enabled: boolean;
+    sms: boolean;
+    email: boolean;
+    templates: ChaseupTemplates;
+  };
+  customer: {
+    enabled: boolean;
+    sms: boolean;
+    email: boolean;
+    templates: ChaseupTemplates;
+  };
+  emailAddress: {
+    enabled: boolean;
+    address: string;
+    sms: boolean;
+    email: boolean;
+    templates: ChaseupTemplates;
+  };
+}
+
+export interface ChaseupTemplates {
+  [language: string]: {
+    email: {
+      subject: string;
+      content: string;
+    };
+    sms: {
+      content: string;
+    };
+  };
+}

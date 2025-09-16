@@ -61,6 +61,11 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       icon: Filter 
     },
     { 
+      name: 'Chase-up Rules', 
+      href: '/chaseup-rules', 
+      icon: Route 
+    },
+    { 
       name: t('common:navigation.settings'), 
       href: '/settings', 
       icon: Settings,

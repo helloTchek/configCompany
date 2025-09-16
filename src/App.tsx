@@ -21,6 +21,9 @@ import CreateCostMatrixPage from './pages/CostMatrices/CreateCostMatrixPage';
 import EditCostMatrixPage from './pages/CostMatrices/EditCostMatrixPage';
 import CreateSortingRulePage from './pages/SortingRules/CreateSortingRulePage';
 import EditSortingRulePage from './pages/SortingRules/EditSortingRulePage';
+import ChaseupRulesPage from './pages/ChaseupRules/ChaseupRulesPage';
+import CreateChaseupRulePage from './pages/ChaseupRules/CreateChaseupRulePage';
+import EditChaseupRulePage from './pages/ChaseupRules/EditChaseupRulePage';
 import { PERMISSIONS } from '@/types/auth';
 
 function App() {
@@ -87,6 +90,9 @@ function App() {
                     <Route path="/sorting-rules" element={<SortingRulesPage />} />
                     <Route path="/sorting-rules/new" element={<CreateSortingRulePage />} />
                     <Route path="/sorting-rules/:id/edit" element={<EditSortingRulePage />} />
+                    <Route path="/chaseup-rules" element={<ChaseupRulesPage />} />
+                    <Route path="/chaseup-rules/new" element={<CreateChaseupRulePage />} />
+                    <Route path="/chaseup-rules/:id/edit" element={<EditChaseupRulePage />} />
                     <Route path="/cost-matrices" element={
                       <ProtectedRoute requiredPermission={PERMISSIONS.COSTS.VIEW}>
                         <CostMatricesPage />
