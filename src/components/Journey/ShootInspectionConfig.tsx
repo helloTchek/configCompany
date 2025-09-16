@@ -2179,13 +2179,7 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Shoot Inspection Configuration</h3>
         <div className="grid grid-cols-1 gap-4">
           <Input
-            label="ID"
-            value={shootData.id}
-            onChange={(e) => setShootData({ ...shootData, id: e.target.value })}
-            placeholder="Enter shoot inspection ID"
-          />
-          <Input
-            label="Name"
+            label="Configuration Name"
             value={shootData.name}
             onChange={(e) => setShootData({ ...shootData, name: e.target.value })}
             placeholder="Enter shoot inspection name"
