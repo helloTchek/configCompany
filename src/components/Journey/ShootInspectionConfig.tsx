@@ -1532,6 +1532,7 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
       typeImage: '',
       stepType: '',
       customStepTypeName: '',
+      config: defaultSteps
     }
   );
 
@@ -2074,13 +2075,6 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
                       </label>
                     </div>
                   </div>
-
-                  <Input
-                    label="Overlay URL"
-                    value={newStep.overlayUrl}
-                    onChange={(e) => setNewStep(prev => ({ ...prev, overlayUrl: e.target.value }))}
-                    placeholder="https://example.com/overlay.png"
-                  />
 
                   {/* Landscape Constraints */}
                   <div>
