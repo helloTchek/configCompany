@@ -137,6 +137,12 @@ export default function EditJourneyPage() {
     setHasUnsavedChanges(true);
   };
 
+  const editBlock = (block: JourneyBlock) => {
+    // Set the block type for the modal
+    setBlockModal({ open: true, type: block.type === 'shootInspect' ? 'shootInspection' : block.type });
+    // You could also pre-populate the form with existing block data here
+  };
+
   const handleShootInspectionSave = (config: ShootInspectionData) => {
     const newBlock: JourneyBlock = {
       id: `block-${Date.now()}`,
@@ -429,7 +435,13 @@ export default function EditJourneyPage() {
                               )}
                             </div>
                             <div className="flex items-center gap-2">
-                              <Button variant="secondary" size="sm">Edit</Button>
+                              <Button 
+                                variant="secondary" 
+                                size="sm"
+                                onClick={() => editBlock(block)}
+                              >
+                                Edit
+                              </Button>
                               <Button 
                                 variant="danger" 
                                 size="sm"
