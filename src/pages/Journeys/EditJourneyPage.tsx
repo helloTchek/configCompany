@@ -29,7 +29,6 @@ export default function EditJourneyPage() {
   const [blocks, setBlocks] = useState<JourneyBlock[]>([]);
   const [blockModal, setBlockModal] = useState<{ open: boolean; type?: string }>({ open: false });
   const [showShootInspectionConfig, setShowShootInspectionConfig] = useState(false);
-  const [currentShootInspectionConfigData, setCurrentShootInspectionConfigData] = useState<ShootInspectionData | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -113,11 +112,6 @@ export default function EditJourneyPage() {
 
   const addBlock = (blockType: string) => {
     if (blockType === 'shootInspection') {
-      setCurrentShootInspectionConfigData({
-        name: 'Shoot Inspection Block',
-        description: '',
-        config: []
-      });
       setShowShootInspectionConfig(true);
       setBlockModal({ open: false });
       return;
@@ -143,21 +137,6 @@ export default function EditJourneyPage() {
     setHasUnsavedChanges(true);
   };
 
-  const editBlock = (block: JourneyBlock) => {
-    if (block.type === 'shootInspect') {
-      setCurrentShootInspectionConfigData({
-        name: block.name,
-        description: block.description || '',
-        config: []
-      });
-      setShowShootInspectionConfig(true);
-    } else {
-      // Set the block type for the modal
-      setBlockModal({ open: true, type: block.type });
-      // You could also pre-populate the form with existing block data here
-    }
-  };
-
   const handleShootInspectionSave = (config: ShootInspectionData) => {
     const newBlock: JourneyBlock = {
       id: `block-${Date.now()}`,
@@ -168,7 +147,6 @@ export default function EditJourneyPage() {
       order: blocks.length + 1
     };
     setBlocks([...blocks, newBlock]);
-    setCurrentShootInspectionConfigData(null);
     setShowShootInspectionConfig(false);
     setHasUnsavedChanges(true);
   };
@@ -451,13 +429,7 @@ export default function EditJourneyPage() {
                               )}
                             </div>
                             <div className="flex items-center gap-2">
-                              <Button 
-                                variant="secondary" 
-                                size="sm"
-                                onClick={() => editBlock(block)}
-                              >
-                                Edit
-                              </Button>
+                              <Button variant="secondary" size="sm">Edit</Button>
                               <Button 
                                 variant="danger" 
                                 size="sm"
@@ -559,23 +531,14 @@ export default function EditJourneyPage() {
       {/* Shoot Inspection Config Modal */}
       <Modal
         isOpen={showShootInspectionConfig}
-        onClose={() => {
-          setCurrentShootInspectionConfigData(null);
-          setShowShootInspectionConfig(false);
-        }}
+        onClose={() => setShowShootInspectionConfig(false)}
         title="Configure Shoot Inspection Block"
         size="xl"
       >
-        {currentShootInspectionConfigData && (
-          <ShootInspectionConfig
-            initialData={currentShootInspectionConfigData}
-            onSave={handleShootInspectionSave}
-            onCancel={() => {
-              setCurrentShootInspectionConfigData(null);
-              setShowShootInspectionConfig(false);
-            }}
-          />
-        )}
+        <ShootInspectionConfig
+          onSave={handleShootInspectionSave}
+          onCancel={() => setShowShootInspectionConfig(false)}
+        />
       </Modal>
     </div>
   );
