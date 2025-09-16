@@ -26,6 +26,7 @@ export default function CreateJourneyPage() {
   const [blocks, setBlocks] = useState<JourneyBlock[]>([]);
   const [blockModal, setBlockModal] = useState<{ open: boolean; type?: string }>({ open: false });
   const [showShootInspectionConfig, setShowShootInspectionConfig] = useState(false);
+  const [currentShootInspectionConfigData, setCurrentShootInspectionConfigData] = useState<ShootInspectionData | null>(null);
 
   const handleSave = () => {
     if (!journeyName.trim()) {
@@ -75,6 +76,13 @@ export default function CreateJourneyPage() {
 
   const addBlock = (blockType: string) => {
     if (blockType === 'shootInspection') {
+      const shootInspectionData: ShootInspectionData = {
+        id: `shoot-inspect-${Date.now()}`,
+        name: 'Shoot Inspection Block',
+        description: '',
+        config: []
+      };
+      setCurrentShootInspectionConfigData(shootInspectionData);
       setShowShootInspectionConfig(true);
       setBlockModal({ open: false });
       return;
@@ -109,6 +117,7 @@ export default function CreateJourneyPage() {
     };
     setBlocks([...blocks, newBlock]);
     setShowShootInspectionConfig(false);
+    setCurrentShootInspectionConfigData(null);
   };
 
   const BlockConfigModal = () => {
@@ -346,7 +355,16 @@ export default function CreateJourneyPage() {
                               )}
                             </div>
                             <div className="flex items-center gap-2">
-                              <Button variant="secondary" size="sm">Edit</Button>
+                              <Button 
+                                variant="secondary" 
+                                size="sm"
+                                onClick={() => {
+                                  // For create page, we can add edit functionality later
+                                  console.log('Edit block:', block);
+                                }}
+                              >
+                                Edit
+                              </Button>
                               <Button 
                                 variant="danger" 
                                 size="sm"
@@ -459,14 +477,23 @@ export default function CreateJourneyPage() {
       {/* Shoot Inspection Config Modal */}
       <Modal
         isOpen={showShootInspectionConfig}
-        onClose={() => setShowShootInspectionConfig(false)}
+        onClose={() => {
+          setShowShootInspectionConfig(false);
+          setCurrentShootInspectionConfigData(null);
+        }}
         title="Configure Shoot Inspection Block"
         size="xl"
       >
-        <ShootInspectionConfig
-          onSave={handleShootInspectionSave}
-          onCancel={() => setShowShootInspectionConfig(false)}
-        />
+        {currentShootInspectionConfigData && (
+          <ShootInspectionConfig
+            initialData={currentShootInspectionConfigData}
+            onSave={handleShootInspectionSave}
+            onCancel={() => {
+              setShowShootInspectionConfig(false);
+              setCurrentShootInspectionConfigData(null);
+            }}
+          />
+        )}
       </Modal>
     </div>
   );

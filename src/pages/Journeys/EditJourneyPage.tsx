@@ -31,6 +31,8 @@ export default function EditJourneyPage() {
   const [showShootInspectionConfig, setShowShootInspectionConfig] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [editingBlock, setEditingBlock] = useState<JourneyBlock | null>(null);
+  const [currentShootInspectionConfigData, setCurrentShootInspectionConfigData] = useState<ShootInspectionData | null>(null);
 
   // Load journey data on component mount
   useEffect(() => {
@@ -132,22 +134,54 @@ export default function EditJourneyPage() {
     setHasUnsavedChanges(true);
   };
 
+  const editBlock = (block: JourneyBlock) => {
+    setEditingBlock(block);
+    
+    if (block.type === 'shootInspect') {
+      // Create shoot inspection data for editing
+      const shootInspectionData: ShootInspectionData = {
+        id: block.id,
+        name: block.name,
+        description: block.description || '',
+        config: [] // Initialize with empty config, will be populated from existing data
+      };
+      setCurrentShootInspectionConfigData(shootInspectionData);
+      setShowShootInspectionConfig(true);
+    } else {
+      // For other block types, open the appropriate modal
+      setBlockModal({ open: true, type: block.type === 'shootInspect' ? 'shootInspection' : block.type });
+    }
+  };
+
   const removeBlock = (blockId: string) => {
     setBlocks(blocks.filter(b => b.id !== blockId));
     setHasUnsavedChanges(true);
   };
 
   const handleShootInspectionSave = (config: ShootInspectionData) => {
-    const newBlock: JourneyBlock = {
-      id: `block-${Date.now()}`,
-      type: 'shootInspect',
-      name: config.name,
-      description: config.description,
-      configId: `shoot-inspect-${blocks.length + 1}`,
-      order: blocks.length + 1
-    };
-    setBlocks([...blocks, newBlock]);
+    if (editingBlock) {
+      // Update existing block
+      const updatedBlocks = blocks.map(block => 
+        block.id === editingBlock.id 
+          ? { ...block, name: config.name, description: config.description }
+          : block
+      );
+      setBlocks(updatedBlocks);
+      setEditingBlock(null);
+    } else {
+      // Create new block
+      const newBlock: JourneyBlock = {
+        id: `block-${Date.now()}`,
+        type: 'shootInspect',
+        name: config.name,
+        description: config.description,
+        configId: `shoot-inspect-${blocks.length + 1}`,
+        order: blocks.length + 1
+      };
+      setBlocks([...blocks, newBlock]);
+    }
     setShowShootInspectionConfig(false);
+    setCurrentShootInspectionConfigData(null);
     setHasUnsavedChanges(true);
   };
 
@@ -429,7 +463,13 @@ export default function EditJourneyPage() {
                               )}
                             </div>
                             <div className="flex items-center gap-2">
-                              <Button variant="secondary" size="sm">Edit</Button>
+                              <Button 
+                                variant="secondary" 
+                                size="sm"
+                                onClick={() => editBlock(block)}
+                              >
+                                Edit
+                              </Button>
                               <Button 
                                 variant="danger" 
                                 size="sm"
@@ -531,14 +571,25 @@ export default function EditJourneyPage() {
       {/* Shoot Inspection Config Modal */}
       <Modal
         isOpen={showShootInspectionConfig}
-        onClose={() => setShowShootInspectionConfig(false)}
-        title="Configure Shoot Inspection Block"
+        onClose={() => {
+          setShowShootInspectionConfig(false);
+          setEditingBlock(null);
+          setCurrentShootInspectionConfigData(null);
+        }}
+        title={editingBlock ? "Edit Shoot Inspection Block" : "Configure Shoot Inspection Block"}
         size="xl"
       >
-        <ShootInspectionConfig
-          onSave={handleShootInspectionSave}
-          onCancel={() => setShowShootInspectionConfig(false)}
-        />
+        {currentShootInspectionConfigData && (
+          <ShootInspectionConfig
+            initialData={currentShootInspectionConfigData}
+            onSave={handleShootInspectionSave}
+            onCancel={() => {
+              setShowShootInspectionConfig(false);
+              setEditingBlock(null);
+              setCurrentShootInspectionConfigData(null);
+            }}
+          />
+        )}
       </Modal>
     </div>
   );
