@@ -6,7 +6,7 @@ import Modal from '../../components/UI/Modal';
 import Input from '../../components/UI/Input';
 import { mockUsers } from '../../data/mockData';
 import { User } from '../../types';
-import { Edit, Trash2, Plus, Search, Filter, X } from 'lucide-react';
+import { Edit, Trash2, Plus, Search, Filter, X, Mail } from 'lucide-react';
 
 export default function UsersPage() {
   const [users] = useState<User[]>(mockUsers);
@@ -85,12 +85,21 @@ export default function UsersPage() {
           <button
             onClick={() => setEditModal({ open: true, user: row })}
             className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+            title="Edit User"
           >
             <Edit size={16} />
           </button>
           <button
+            onClick={() => handleSendPasswordReset(row)}
+            className="p-2 text-orange-600 hover:bg-orange-100 rounded-lg transition-colors"
+            title="Send Password Reset Email"
+          >
+            <Mail size={16} />
+          </button>
+          <button
             onClick={() => {/* Handle delete */}}
             className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+            title="Delete User"
           >
             <Trash2 size={16} />
           </button>
@@ -98,6 +107,13 @@ export default function UsersPage() {
       ),
     },
   ];
+
+  const handleSendPasswordReset = (user: User) => {
+    // In a real app, this would send a password reset email
+    console.log('Sending password reset email to:', user.email);
+    // You could show a toast notification here
+    alert(`Password reset email sent to ${user.email}`);
+  };
 
   const CreateUserModal = () => (
     <Modal
@@ -107,6 +123,7 @@ export default function UsersPage() {
       size="md"
     >
       <div className="space-y-4">
+        <Input label="Name" placeholder="John Doe" />
         <Input label="Email" type="email" placeholder="john@example.com" />
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
@@ -123,7 +140,11 @@ export default function UsersPage() {
             <option value="FleetMax Leasing">FleetMax Leasing</option>
           </select>
         </div>
-        <Input label="Password" type="password" />
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <p className="text-sm text-blue-800">
+            <strong>📧 Password Setup:</strong> The user will receive an email with instructions to set their password after account creation.
+          </p>
+        </div>
         <div className="flex gap-3 justify-end pt-4">
           <Button variant="secondary" onClick={() => setCreateModal(false)}>
             Cancel
