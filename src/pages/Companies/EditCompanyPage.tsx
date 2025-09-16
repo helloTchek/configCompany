@@ -1,1120 +1,901 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Header from '../../components/Layout/Header';
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
 import Tabs from '../../components/UI/Tabs';
-import { ArrowLeft, Save, Plus, Trash2, Upload, Download } from 'lucide-react';
-import { mockCompanies } from '../../data/mockData';
+import { ArrowLeft, Save, Upload, Plus, Trash2 } from 'lucide-react';
 
-interface ChaseUpMessage {
-  id: string;
-  name: string;
-  activationDate: string;
-  maxSendings: number;
-  utcHour: number;
-  utcMinute: number;
-  delayDays: number;
-  delayMinutes: number;
-  recipients: Array<{
-    id: string;
-    type: 'email' | 'sms';
-    address: string;
-    enabled: boolean;
-  }>;
-  templates: {
-    [language: string]: {
-      email?: {
-        subject: string;
-        htmlContent: string;
-        enabled: boolean;
-      };
-      sms?: {
-        content: string;
-        enabled: boolean;
-      };
-    };
+// Move tab components outside to prevent re-creation on every render
+const GeneralSettingsTab = ({ 
+  formData, 
+  errors, 
+  handleCompanyNameChange, 
+  handleLogoUrlChange, 
+  handleFieldChange, 
+  handleInputChange 
+}) => (
+  <div className="space-y-6">
+    {/* General Settings */}
+    <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">General Settings</h3>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Input
+          label="Company Name"
+          value={formData.companyName}
+          onChange={handleCompanyNameChange}
+          placeholder="Enter company name"
+          error={errors.companyName}
+          required
+        />
+        <Input
+          label="Company Code"
+          value={formData.companyCode}
+          onChange={(e) => handleFieldChange('companyCode', e.target.value)}
+          placeholder="Company code"
+        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Contract Type
+          </label>
+          <select 
+            value={formData.contractType}
+            onChange={(e) => handleFieldChange('contractType', e.target.value)}
+            className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="">Select contract type</option>
+            <option value="Client">Client</option>
+            <option value="Prospect">Prospect</option>
+            <option value="Test">Test</option>
+            <option value="Demo">Demo</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Business Sector
+          </label>
+          <select 
+            value={formData.businessSector}
+            onChange={(e) => handleFieldChange('businessSector', e.target.value)}
+            className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="">Select business sector</option>
+            <option value="Insurance">Insurance</option>
+            <option value="Leasing">Leasing</option>
+            <option value="Rental">Rental</option>
+            <option value="Fleet Management">Fleet Management</option>
+            <option value="Automotive">Automotive</option>
+          </select>
+        </div>
+        <Input
+          label="Logo URL"
+          value={formData.logoUrl}
+          onChange={handleLogoUrlChange}
+          placeholder="https://example.com/logo.png"
+          error={errors.logoUrl}
+          required
+        />
+        <div className="flex items-end">
+          <Button variant="secondary" className="flex items-center gap-2">
+            <Upload size={16} />
+            Upload Logo
+          </Button>
+        </div>
+        <Input
+          label="Retention Period (months)"
+          type="number"
+          value={formData.retentionPeriod}
+          onChange={(e) => handleFieldChange('retentionPeriod', parseInt(e.target.value) || 24)}
+        />
+        <Input
+          label="Max API Requests"
+          value={formData.maxApiRequests}
+          onChange={(e) => handleFieldChange('maxApiRequests', parseInt(e.target.value) || 0)}
+          type="number"
+          error={errors.maxApiRequests}
+          required
+        />
+        <Input
+          label="Expiration Date"
+          value={formData.expirationDate}
+          onChange={(e) => handleFieldChange('expirationDate', e.target.value)}
+          type="date"
+          required
+        />
+      </div>
+
+      <div className="mt-6">
+        <div className="flex items-center gap-2">
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={formData.disableFastTrack}
+              onChange={(e) => handleFieldChange('disableFastTrack', e.target.checked)}
+              className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+            />
+            <span className="ml-2 text-sm text-gray-700">Disable Fast Track</span>
+          </label>
+          <div className="relative group">
+            <div className="w-4 h-4 rounded-full bg-gray-400 text-white text-xs flex items-center justify-center cursor-help">
+              ?
+            </div>
+            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+              If checked, inspections will appear as completed as soon as received
+              <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-6 space-y-4">
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-sm font-medium text-gray-700">Styles</label>
+            <div className="flex gap-2">
+              <Button variant="secondary" size="sm" className="flex items-center gap-1">
+                <Upload size={14} />
+                Upload JSON
+              </Button>
+            </div>
+          </div>
+          <textarea
+            rows={4}
+            value={formData.styles}
+            onChange={(e) => handleFieldChange('styles', e.target.value)}
+            className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+          />
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-sm font-medium text-gray-700">Report Settings</label>
+            <div className="flex gap-2">
+              <Button variant="secondary" size="sm" className="flex items-center gap-1">
+                <Upload size={14} />
+                Upload JSON
+              </Button>
+            </div>
+          </div>
+          <textarea
+            rows={4}
+            value={formData.reportSettings}
+            onChange={(e) => handleFieldChange('reportSettings', e.target.value)}
+            className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+          />
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-sm font-medium text-gray-700">Config Modules</label>
+            <div className="flex gap-2">
+              <Button variant="secondary" size="sm" className="flex items-center gap-1">
+                <Upload size={14} />
+                Upload JSON
+              </Button>
+            </div>
+          </div>
+          <textarea
+            rows={4}
+            value={formData.configModules}
+            onChange={(e) => handleFieldChange('configModules', e.target.value)}
+            className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+          />
+        </div>
+      </div>
+    </div>
+
+    {/* API Configuration */}
+    <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">API Configuration</h3>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <label className="flex items-center">
+          <input
+            type="checkbox"
+            checked={formData.enableMileageCapture}
+            onChange={(e) => handleFieldChange('enableMileageCapture', e.target.checked)}
+            className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+          />
+          <span className="ml-2 text-sm text-gray-700">Enable Mileage Capture</span>
+        </label>
+        <label className="flex items-center">
+          <input
+            type="checkbox"
+            checked={formData.enableBlurDetection}
+            onChange={(e) => handleFieldChange('enableBlurDetection', e.target.checked)}
+            className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+          />
+          <span className="ml-2 text-sm text-gray-700">Blur License plates</span>
+        </label>
+        <label className="flex items-center">
+          <input
+            type="checkbox"
+            checked={formData.enableVinScanning}
+            onChange={(e) => handleFieldChange('enableVinScanning', e.target.checked)}
+            className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+          />
+          <span className="ml-2 text-sm text-gray-700">Enable VIN Scanning</span>
+        </label>
+        <label className="flex items-center">
+          <input
+            type="checkbox"
+            checked={formData.enableBrandModelDetection}
+            onChange={(e) => handleFieldChange('enableBrandModelDetection', e.target.checked)}
+            className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+          />
+          <span className="ml-2 text-sm text-gray-700">Enable Brand & Model Detection</span>
+        </label>
+        <label className="flex items-center">
+          <input
+            type="checkbox"
+            checked={formData.enableInteriorDamageDetection}
+            onChange={(e) => handleFieldChange('enableInteriorDamageDetection', e.target.checked)}
+            className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+          />
+          <span className="ml-2 text-sm text-gray-700">Enable Interior Damage Detection</span>
+        </label>
+        <label className="flex items-center">
+          <input
+            type="checkbox"
+            checked={formData.enableDashboardWarningLightsDetection}
+            onChange={(e) => handleFieldChange('enableDashboardWarningLightsDetection', e.target.checked)}
+            className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+          />
+          <span className="ml-2 text-sm text-gray-700">Enable Dashboard Warning Lights Detection</span>
+        </label>
+        <label className="flex items-center">
+          <input
+            type="checkbox"
+            checked={formData.enableBrandModelColorRecognition}
+            onChange={(e) => handleFieldChange('enableBrandModelColorRecognition', e.target.checked)}
+            className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+          />
+          <span className="ml-2 text-sm text-gray-700">Enable Brand, Model & Color Recognition</span>
+        </label>
+      </div>
+    </div>
+
+    {/* Hub Configuration */}
+    <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">Hub Configuration</h3>
+      <div className="space-y-4">
+        <label className="flex items-center">
+          <input
+            type="checkbox"
+            checked={formData.showStartInstantInspection}
+            onChange={(e) => handleFieldChange('showStartInstantInspection', e.target.checked)}
+            className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+          />
+          <span className="ml-2 text-sm text-gray-700">Show Start Instant Inspection</span>
+        </label>
+        <label className="flex items-center">
+          <input
+            type="checkbox"
+            checked={formData.showSendInspectionLink}
+            onChange={(e) => handleFieldChange('showSendInspectionLink', e.target.checked)}
+            className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+          />
+          <span className="ml-2 text-sm text-gray-700">Show Send Inspection Link</span>
+        </label>
+      </div>
+    </div>
+
+    {/* Validation */}
+    <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">Validation</h3>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <label className="flex items-center lg:col-span-2">
+          <input
+            type="checkbox"
+            checked={formData.iaValidation}
+            onChange={(e) => handleFieldChange('iaValidation', e.target.checked)}
+            className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+          />
+          <span className="ml-2 text-sm text-gray-700">IA Validation (Joelle model)</span>
+        </label>
+      </div>
+    </div>
+  </div>
+);
+
+const EventsWebhooksTab = ({ 
+  selectedLanguage, 
+  setSelectedLanguage, 
+  handleInputChange, 
+  languages, 
+  events, 
+  variables 
+}) => {
+  // State to track which field is currently focused
+  const [focusedField, setFocusedField] = useState(null);
+  const fieldRefs = useRef({});
+
+  const [eventCompanyEmailStates, setEventCompanyEmailStates] = useState(() => {
+    // Initialize all events with Company Email Address checked by default
+    const initialStates = {};
+    events.forEach(event => {
+      initialStates[event.key] = true;
+    });
+    return initialStates;
+  });
+
+  // State to store templates for each language and event
+  const [templates, setTemplates] = useState(() => {
+    const initialTemplates = {};
+    events.forEach(event => {
+      initialTemplates[event.key] = {};
+      languages.forEach(lang => {
+        initialTemplates[event.key][lang.code] = {
+          email: {
+            subject: '',
+            htmlContent: '',
+            enabled: true
+          },
+          sms: {
+            content: '',
+            enabled: true
+          }
+        };
+      });
+    });
+    return initialTemplates;
+  });
+  const handleCompanyEmailToggle = (eventKey, isChecked) => {
+    setEventCompanyEmailStates(prev => ({
+      ...prev,
+      [eventKey]: isChecked
+    }));
   };
-}
 
-const languages = ['en', 'fr', 'de', 'it', 'es', 'nl', 'sv', 'no'];
+  const updateTemplate = (eventKey, language, templateType, field, value) => {
+    setTemplates(prev => ({
+      ...prev,
+      [eventKey]: {
+        ...prev[eventKey],
+        [language]: {
+          ...prev[eventKey][language],
+          [templateType]: {
+            ...prev[eventKey][language][templateType],
+            [field]: value
+          }
+        }
+      }
+    }));
+    handleInputChange();
+  };
 
-const variables = [
-  { key: '{{customerName}}', description: 'Customer Name' },
-  { key: '{{customerEmail}}', description: 'Customer Email' },
-  { key: '{{customerPhone}}', description: 'Customer Phone' },
-  { key: '{{inspectionId}}', description: 'Inspection ID' },
-  { key: '{{inspectionLink}}', description: 'Inspection Link' },
-  { key: '{{vehicleMake}}', description: 'Vehicle Make' },
-  { key: '{{vehicleModel}}', description: 'Vehicle Model' },
-  { key: '{{licensePlate}}', description: 'License Plate' },
-  { key: '{{companyName}}', description: 'Company Name' },
-  { key: '{{agentName}}', description: 'Agent Name' },
-  { key: '{{inspectionDate}}', description: 'Inspection Date' },
-  { key: '{{trackingUrl}}', description: 'Tracking URL' }
-];
+  const handleVariableClick = (variableKey) => {
+    if (focusedField && fieldRefs.current[focusedField]) {
+      const field = fieldRefs.current[focusedField];
+      const start = field.selectionStart;
+      const end = field.selectionEnd;
+      const currentValue = field.value;
+      const newValue = currentValue.substring(0, start) + variableKey + currentValue.substring(end);
+      
+      // Update the field value
+      field.value = newValue;
+      
+      // Trigger the onChange event to update state
+      const changeEvent = new Event('change', { bubbles: true });
+      const inputEvent = new Event('input', { bubbles: true });
+      field.dispatchEvent(changeEvent);
+      field.dispatchEvent(inputEvent);
+      
+      // Set cursor position after the inserted variable
+      setTimeout(() => {
+        field.focus();
+        field.setSelectionRange(start + variableKey.length, start + variableKey.length);
+      }, 0);
+    } else {
+      // Fallback to clipboard
+      navigator.clipboard.writeText(variableKey);
+    }
+  };
+
+  const handleFieldFocus = (fieldId) => {
+    setFocusedField(fieldId);
+  };
+
+  const handleFieldBlur = () => {
+    // Don't clear focus immediately - keep variables visible
+    // Only clear when another field is focused or user clicks outside
+  };
+
+  const assignFieldRef = useCallback((fieldId, ref) => {
+    if (ref) {
+      fieldRefs.current[fieldId] = ref;
+    } else {
+      delete fieldRefs.current[fieldId];
+    }
+  }, []);
+
+  return (
+  <div className="space-y-6">
+    {/* Global Settings */}
+    <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">Global Settings</h3>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Input
+          label="Sender Name (for all events)"
+          placeholder="Your Company Name"
+          onChange={handleInputChange}
+        />
+        <Input
+          label="Webhook URL"
+          placeholder="https://your-domain.com/webhook"
+          onChange={handleInputChange}
+        />
+      </div>
+    </div>
+
+    {/* Available Variables - Sticky when field is focused */}
+    {focusedField && (
+      <div className="sticky top-4 z-10 bg-white rounded-lg border-2 border-blue-200 shadow-lg p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-md font-semibold text-blue-900">📋 Available Variables</h3>
+          <span className="text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded">Click to insert</span>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-40 overflow-y-auto">
+          {variables.map((variable) => (
+            <button
+              key={variable.key}
+              onClick={() => handleVariableClick(variable.key)}
+              className="text-left p-2 bg-blue-50 hover:bg-blue-100 rounded border border-blue-200 text-sm font-mono transition-colors hover:shadow-sm"
+              title={`Click to insert ${variable.key}`}
+            >
+              <div className="font-medium text-blue-700">{variable.key}</div>
+              <div className="text-xs text-blue-500">{variable.name}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+    )}
+    {/* Events Configuration */}
+    <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-lg font-semibold text-gray-900">Events Configuration</h3>
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium text-gray-700">Language:</label>
+          <select
+            value={selectedLanguage}
+            onChange={(e) => setSelectedLanguage(e.target.value)}
+            className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            {languages.map((lang) => (
+              <option key={lang.code} value={lang.code}>
+                {lang.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="space-y-8">
+        {events.map((event) => (
+          <div key={event.key} className="border border-gray-200 rounded-lg p-6">
+            <h4 className="text-md font-semibold text-gray-900 mb-4">{event.name}</h4>
+            
+            {/* Recipients */}
+            <div className="mb-6">
+              <h5 className="text-sm font-medium text-gray-700 mb-3">Recipients</h5>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    defaultChecked={true}
+                    onChange={handleInputChange}
+                    className="rounded border-gray-300 text-blue-600 shadow-sm"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Customer Phone Number</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    defaultChecked={true}
+                    onChange={(e) => {
+                      handleInputChange();
+                      handleCompanyEmailToggle(event.key, e.target.checked);
+                    }}
+                    className="rounded border-gray-300 text-blue-600 shadow-sm"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Company Email Address</span>
+                </label>
+                {/* Company Email Address Field - shown when checkbox is checked */}
+                {eventCompanyEmailStates[event.key] && (
+                  <div className="col-span-2">
+                    <Input
+                      label="Company Email Address"
+                      type="email"
+                      placeholder="company@example.com"
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                )}
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    defaultChecked={false}
+                    onChange={handleInputChange}
+                    className="rounded border-gray-300 text-blue-600 shadow-sm"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Agent Email Address</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    defaultChecked={false}
+                    onChange={handleInputChange}
+                    className="rounded border-gray-300 text-blue-600 shadow-sm"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Webhook URL</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Message Content */}
+            <div className="space-y-4">
+              <h5 className="text-sm font-medium text-gray-700">Message Content</h5>
+              
+              {/* Email Template */}
+              <div className="border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h6 className="text-sm font-medium text-gray-700">Email Template</h6>
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={templates[event.key][selectedLanguage].email.enabled}
+                      onChange={(e) => updateTemplate(event.key, selectedLanguage, 'email', 'enabled', e.target.checked)}
+                      className="rounded border-gray-300 text-blue-600 shadow-sm"
+                    />
+                    <span className="ml-2 text-xs text-gray-600">Enabled</span>
+                  </label>
+                </div>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                    <input
+                      ref={(ref) => assignFieldRef(`${event.key}-${selectedLanguage}-email-subject`, ref)}
+                      type="text"
+                      value={templates[event.key][selectedLanguage].email.subject}
+                      onChange={(e) => {
+                        updateTemplate(event.key, selectedLanguage, 'email', 'subject', e.target.value);
+                      }}
+                      onFocus={() => handleFieldFocus(`${event.key}-${selectedLanguage}-email-subject`)}
+                      onBlur={() => {
+                        // Keep focus state for variables panel
+                      }}
+                      placeholder="Email subject"
+                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                        focusedField === `${event.key}-${selectedLanguage}-email-subject` ? 'border-blue-300 bg-blue-50' : 'border-gray-300'
+                      }`}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">HTML Content</label>
+                    <textarea
+                      ref={(ref) => assignFieldRef(`${event.key}-${selectedLanguage}-email-content`, ref)}
+                      rows={4}
+                      value={templates[event.key][selectedLanguage].email.htmlContent}
+                      onChange={(e) => {
+                        updateTemplate(event.key, selectedLanguage, 'email', 'htmlContent', e.target.value);
+                      }}
+                      onFocus={() => handleFieldFocus(`${event.key}-${selectedLanguage}-email-content`)}
+                      onBlur={() => {
+                        // Keep focus state for variables panel
+                      }}
+                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
+                        focusedField === `${event.key}-${selectedLanguage}-email-content` ? 'border-blue-300 bg-blue-50' : 'border-gray-300'
+                      }`}
+                      placeholder="HTML email content..."
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* SMS Template */}
+              <div className="border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h6 className="text-sm font-medium text-gray-700">SMS Template</h6>
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={templates[event.key][selectedLanguage].sms.enabled}
+                      onChange={(e) => updateTemplate(event.key, selectedLanguage, 'sms', 'enabled', e.target.checked)}
+                      className="rounded border-gray-300 text-blue-600 shadow-sm"
+                    />
+                    <span className="ml-2 text-xs text-gray-600">Enabled</span>
+                  </label>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Text Content</label>
+                  <textarea
+                    ref={(ref) => assignFieldRef(`${event.key}-${selectedLanguage}-sms-content`, ref)}
+                    rows={3}
+                    value={templates[event.key][selectedLanguage].sms.content}
+                    onChange={(e) => {
+                      updateTemplate(event.key, selectedLanguage, 'sms', 'content', e.target.value);
+                    }}
+                    onFocus={() => handleFieldFocus(`${event.key}-${selectedLanguage}-sms-content`)}
+                    onBlur={() => {
+                      // Keep focus state for variables panel
+                    }}
+                    className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
+                      focusedField === `${event.key}-${selectedLanguage}-sms-content` ? 'border-blue-300 bg-blue-50' : 'border-gray-300'
+                    }`}
+                    placeholder="SMS content (160 characters max)..."
+                    maxLength={160}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Character count: {templates[event.key][selectedLanguage].sms.content.length}/160</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    {/* Available Variables */}
+    {!focusedField ? (
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Available Variables</h3>
+        <p className="text-sm text-gray-600 mb-4">Focus on a template field above to see variables for easy insertion</p>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+          {variables.map((variable) => (
+            <button
+              key={variable.key}
+              onClick={() => handleVariableClick(variable.key)}
+              className="text-left p-2 bg-gray-50 hover:bg-gray-100 rounded border text-sm font-mono transition-colors"
+              title={`Click to copy ${variable.key}`}
+            >
+              <div className="font-medium text-blue-600">{variable.key}</div>
+              <div className="text-xs text-gray-500">{variable.name}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+    ) : (
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Available Variables</h3>
+          <button
+            onClick={() => setFocusedField(null)}
+            className="text-sm text-gray-500 hover:text-gray-700 px-2 py-1 rounded hover:bg-gray-100"
+          >
+            Hide Variables
+          </button>
+        </div>
+        <p className="text-sm text-gray-600 mb-4">Click any variable to insert it at cursor position</p>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-60 overflow-y-auto">
+          {variables.map((variable) => (
+            <button
+              key={variable.key}
+              onClick={() => handleVariableClick(variable.key)}
+              className="text-left p-2 bg-blue-50 hover:bg-blue-100 rounded border border-blue-200 text-sm font-mono transition-colors hover:shadow-sm"
+              title={`Click to insert ${variable.key}`}
+            >
+              <div className="font-medium text-blue-700">{variable.key}</div>
+              <div className="text-xs text-blue-500">{variable.name}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+    )}
+  </div>
+  );
+};
+
+const HierarchyTab = ({ handleInputChange, formData, handleFieldChange }) => (
+  <div className="space-y-6">
+    <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">Company Hierarchy</h3>
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Parent Company (optional)</label>
+          <select 
+            value={formData.parentCompany || ''}
+            onChange={(e) => handleFieldChange('parentCompany', e.target.value)}
+            className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="">None - This will be a root company</option>
+            <option value="1">AutoCorp Insurance</option>
+            <option value="2">FleetMax Leasing</option>
+          </select>
+          <p className="text-sm text-gray-500 mt-1">Select a parent company to create a hierarchical structure</p>
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 export default function EditCompanyPage() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('general-settings');
-  const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [activeTab, setActiveTab] = useState('general');
+  const [selectedLanguage, setSelectedLanguage] = useState('en');
+  const [companyEmailEnabled, setCompanyEmailEnabled] = useState({});
   
-  // General Settings
+  // Initialize form data with existing company data (mock data for now)
   const [formData, setFormData] = useState({
-    name: '',
-    identifier: '',
-    companyCode: '',
+    companyName: 'AutoCorp Insurance',
+    companyCode: 'AUTOCORP',
     contractType: 'Client',
     businessSector: 'Insurance',
-    logoUrl: '',
+    logoUrl: 'https://images.pexels.com/photos/164686/pexels-photo-164686.jpeg?auto=compress&cs=tinysrgb&w=100',
     retentionPeriod: 24,
+    maxApiRequests: 5000,
+    expirationDate: '2025-12-31',
     disableFastTrack: false,
     enableMileageCapture: true,
     enableBlurDetection: true,
     enableVinScanning: true,
     enableBrandModelDetection: true,
-    iaValidation: false,
+    enableBrandModelColorRecognition: true,
+    enableInteriorDamageDetection: false,
+    enableDashboardWarningLightsDetection: false,
+    showStartInstantInspection: true,
+    showSendInspectionLink: true,
     humanValidationEnabled: true,
     validationPriority: 3,
     maxValidationDelay: 60,
     minTaskProcessingDuration: 5,
-    showStartInstantInspection: true,
-    showSendInspectionLink: true,
-    parentCompany: ''
+    iaValidation: false,
+    parentCompany: '',
+    styles: '{"report":{"backgroundColor":"#252387","costsBackgroundColor":"#6A68D4","costsTextColor":"#000000","costsInfoColor":"#252387","topRightHorizontalBarColor":"#252387","borderColor":"#6a68d4"},"shootInspect":{"overlayColor":"#1adf6c"},"globalTheme":{"primaryColor":"#323276","primaryTextColor":"#ffffff","accentColor":"#1adf6c","accentTextColor":"ffffff","dominantColor":"#151841","dominantTextColor":"#ffffff","isDarkTheme":true}}',
+    reportSettings: '{"picturesPreSelected":"true","showDamage":"true","showGallery":"true","showNewDamage":"true","showState":"true","oldDamages":true,"checkDamages":true,"isCarDealership":true,"showWatermark":false,"prefix":"","selectorSens":"clockwise","selectorSvgColor":"repairSeverity","selectorSvg":"renault"}',
+    configModules: '{"fastTrack":{"canWearAndTear":true,"deletedStatusEnabled":false,"validatedStatusEnabled":true,"wearAndTearStatusEnabled":true,"editionMode":true,"zoomConfig":{"minDamageCropMargin":0.3,"regularWidthMargin":1.4,"regularHeightMargin":1.4,"strokeWidthScale":5}},"shootInspect":{"autoFinalizationEnabled":false,"autoFinalizationThreshold":2},"global":{"modelIA":"codeter_ensembling"},"endInspect":{"npsEnabled":true,"npsDelay":3000}}'
   });
-
-  // API Configuration
-  const [apiConfig, setApiConfig] = useState({
-    apiToken: '',
-    currentRequests: 0,
-    maxRequests: 5000,
-    expiryDate: '2025-12-31',
-    decisionTree: ''
-  });
-
-  // Events & Webhooks
-  const [webhookUrl, setWebhookUrl] = useState('');
-  const [eventConfigs, setEventConfigs] = useState({
-    selfInspectionCreation: {
-      enabled: false,
-      recipients: {
-        customerPhone: { enabled: false, address: '{{customerPhone}}' },
-        companyEmail: { enabled: false, address: 'company@example.com' },
-        agentEmail: { enabled: false, address: 'agent@example.com' }
-      },
-      templates: languages.reduce((acc, lang) => ({
-        ...acc,
-        [lang]: {
-          email: { subject: 'Vehicle Inspection Created', htmlContent: 'Your inspection has been created.', enabled: true },
-          sms: { content: 'Your vehicle inspection is ready.', enabled: false }
-        }
-      }), {})
-    },
-    automatedChaseUp: {
-      enabled: false,
-      recipients: {
-        customerPhone: { enabled: false, address: '{{customerPhone}}' },
-        companyEmail: { enabled: false, address: 'company@example.com' },
-        agentEmail: { enabled: false, address: 'agent@example.com' }
-      },
-      templates: languages.reduce((acc, lang) => ({
-        ...acc,
-        [lang]: {
-          email: { subject: 'Reminder: Complete your inspection', htmlContent: 'Please complete your vehicle inspection.', enabled: true },
-          sms: { content: 'Reminder: Complete your inspection {{inspectionLink}}', enabled: false }
-        }
-      }), {})
-    },
-    manualChaseUp: {
-      enabled: false,
-      recipients: {
-        customerPhone: { enabled: false, address: '{{customerPhone}}' },
-        companyEmail: { enabled: false, address: 'company@example.com' },
-        agentEmail: { enabled: false, address: 'agent@example.com' }
-      },
-      templates: languages.reduce((acc, lang) => ({
-        ...acc,
-        [lang]: {
-          email: { subject: 'Manual Reminder', htmlContent: 'Manual reminder to complete inspection.', enabled: true },
-          sms: { content: 'Manual reminder: {{inspectionLink}}', enabled: false }
-        }
-      }), {})
-    },
-    inspectionFinished: {
-      enabled: false,
-      recipients: {
-        customerPhone: { enabled: false, address: '{{customerPhone}}' },
-        companyEmail: { enabled: false, address: 'company@example.com' },
-        agentEmail: { enabled: false, address: 'agent@example.com' }
-      },
-      templates: languages.reduce((acc, lang) => ({
-        ...acc,
-        [lang]: {
-          email: { subject: 'Inspection Completed', htmlContent: 'Your vehicle inspection has been completed.', enabled: true },
-          sms: { content: 'Your inspection is complete.', enabled: false }
-        }
-      }), {})
-    },
-    damageReviewFinished: {
-      enabled: false,
-      recipients: {
-        customerPhone: { enabled: false, address: '{{customerPhone}}' },
-        companyEmail: { enabled: false, address: 'company@example.com' },
-        agentEmail: { enabled: false, address: 'agent@example.com' }
-      },
-      templates: languages.reduce((acc, lang) => ({
-        ...acc,
-        [lang]: {
-          email: { subject: 'Damage Review Complete', htmlContent: 'Damage review has been completed.', enabled: true },
-          sms: { content: 'Damage review complete.', enabled: false }
-        }
-      }), {})
-    },
-    shareUpdatedReport: {
-      enabled: false,
-      recipients: {
-        customerPhone: { enabled: false, address: '{{customerPhone}}' },
-        companyEmail: { enabled: false, address: 'company@example.com' },
-        agentEmail: { enabled: false, address: 'agent@example.com' }
-      },
-      templates: languages.reduce((acc, lang) => ({
-        ...acc,
-        [lang]: {
-          email: { subject: 'Updated Report Available', htmlContent: 'Your updated report is available.', enabled: true },
-          sms: { content: 'Updated report available.', enabled: false }
-        }
-      }), {})
-    }
-  });
-
-  // Automated Chase-up Messages (separate tab)
-  const [chaseUpGlobalConfig, setChaseUpGlobalConfig] = useState({
-    activationDate: new Date().toISOString().split('T')[0],
-    utcHour: 9,
-    utcMinute: 0
-  });
-  const [chaseUpMessages, setChaseUpMessages] = useState<ChaseUpMessage[]>([
-    {
-      id: '1',
-      name: 'First Reminder',
-      maxSendings: 3,
-      delayDays: 1,
-      delayMinutes: 0,
-      webhookEnabled: false,
-      recipients: {
-        customer: {
-          enabled: true,
-          config: { type: 'email', address: '{{customerEmail}}' },
-          templates: languages.reduce((acc, lang) => ({
-            ...acc,
-            [lang]: {
-              email: { subject: 'Reminder: Complete your inspection', htmlContent: 'Dear {{customerName}}, please complete your inspection.', enabled: true },
-              sms: { content: 'Hi {{customerName}}, please complete your inspection: {{inspectionLink}}', enabled: false }
-            }
-          }), {})
-        },
-        agent: {
-          enabled: false,
-          config: { type: 'email', address: 'agent@example.com' },
-          templates: languages.reduce((acc, lang) => ({
-            ...acc,
-            [lang]: {
-              email: { subject: 'Customer Reminder Sent', htmlContent: 'A reminder has been sent to {{customerName}}.', enabled: true },
-              sms: { content: 'Reminder sent to {{customerName}}', enabled: false }
-            }
-          }), {})
-        },
-        companyEmailAddress: {
-          enabled: false,
-          config: { type: 'email', address: 'company@example.com' },
-          templates: languages.reduce((acc, lang) => ({
-            ...acc,
-            [lang]: {
-              email: { subject: 'Reminder Activity', htmlContent: 'Reminder sent for inspection {{inspectionId}}.', enabled: true },
-              sms: { content: 'Reminder activity for {{inspectionId}}', enabled: false }
-            }
-          }), {})
-        }
-      }
-    }
-  ]);
-
-  interface ChaseUpMessage {
-    id: string;
-    name: string;
-    maxSendings: number;
-    delayDays: number;
-    delayMinutes: number;
-    webhookEnabled: boolean;
-    recipients: {
-      customer: {
-        enabled: boolean;
-        config: { type: 'email' | 'sms'; address: string };
-        templates: {
-          [language: string]: {
-            email: { subject: string; htmlContent: string; enabled: boolean };
-            sms: { content: string; enabled: boolean };
-          }
-        }
-      };
-      agent: {
-        enabled: boolean;
-        config: { type: 'email' | 'sms'; address: string };
-        templates: {
-          [language: string]: {
-            email: { subject: string; htmlContent: string; enabled: boolean };
-            sms: { content: string; enabled: boolean };
-          }
-        }
-      };
-      companyEmailAddress: {
-        enabled: boolean;
-        config: { type: 'email' | 'sms'; address: string };
-        templates: {
-          [language: string]: {
-            email: { subject: string; htmlContent: string; enabled: boolean };
-            sms: { content: string; enabled: boolean };
-          }
-        }
-      };
-    }
-  }
-
-  // Report Settings & Config Modules
-  const [reportSettings, setReportSettings] = useState('');
-  const [configModules, setConfigModules] = useState('');
-
+  
   const [errors, setErrors] = useState({
-    name: '',
-    identifier: '',
-    companyCode: ''
+    companyName: '',
+    logoUrl: '',
+    maxApiRequests: ''
   });
 
-  useEffect(() => {
-    // Load company data
-    const company = mockCompanies.find(c => c.id === id);
-    if (company) {
-      setFormData({
-        name: company.name,
-        identifier: company.identifier,
-        companyCode: company.companyCode,
-        contractType: company.contractType,
-        businessSector: company.businessSector,
-        logoUrl: company.logoUrl || '',
-        retentionPeriod: company.retentionPeriod,
-        disableFastTrack: company.disableFastTrack,
-        enableMileageCapture: true,
-        enableBlurDetection: true,
-        enableVinScanning: true,
-        enableBrandModelDetection: true,
-        iaValidation: false,
-        humanValidationEnabled: true,
-        validationPriority: 3,
-        maxValidationDelay: 60,
-        minTaskProcessingDuration: 5,
-        showStartInstantInspection: true,
-        showSendInspectionLink: true,
-        parentCompany: company.parentCompany || ''
-      });
+  const handleInputChange = () => {
+    setHasUnsavedChanges(true);
+  };
 
-      setApiConfig({
-        apiToken: company.apiToken,
-        currentRequests: company.currentApiRequests,
-        maxRequests: company.maxApiRequests,
-        expiryDate: company.requestsExpiryDate,
-        decisionTree: ''
-      });
-
-      setReportSettings(company.reportSettings || '');
-      setConfigModules(company.configModules || '');
-    } else {
-      navigate('/companies');
-      return;
-    }
-    setLoading(false);
-  }, [id, navigate]);
-
-  const handleInputChange = (field: string, value: string | number | boolean) => {
+  const handleFieldChange = (field: string, value: string | number | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setErrors(prev => ({ ...prev, [field]: '' }));
+    setHasUnsavedChanges(true);
   };
 
-  const handleApiConfigChange = (field: string, value: string | number) => {
-    setApiConfig(prev => ({ ...prev, [field]: value }));
+  const handleLogoUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleFieldChange('logoUrl', e.target.value);
   };
 
-  const addChaseUpMessage = () => {
-    const newMessage: ChaseUpMessage = {
-      id: Date.now().toString(),
-      name: `Reminder ${chaseUpMessages.length + 1}`,
-      activationDate: new Date().toISOString().split('T')[0],
-      maxSendings: 3,
-      utcHour: 9,
-      utcMinute: 0,
-      delayDays: chaseUpMessages.length === 0 ? 1 : 3,
-      delayMinutes: 0,
-      recipients: [
-        { id: '1', type: 'email', address: '{{customerEmail}}', enabled: true }
-      ],
-      templates: languages.reduce((acc, lang) => ({
-        ...acc,
-        [lang]: {
-          email: {
-            subject: 'Reminder: Complete your vehicle inspection',
-            htmlContent: 'Dear {{customerName}},\n\nThis is a reminder to complete your vehicle inspection.\n\nInspection Link: {{inspectionLink}}\n\nBest regards,\n{{companyName}}',
-            enabled: true
-          },
-          sms: {
-            content: 'Hi {{customerName}}, please complete your vehicle inspection: {{inspectionLink}}',
-            enabled: false
-          }
-        }
-      }), {})
-    };
-    setChaseUpMessages([...chaseUpMessages, newMessage]);
-  };
-
-  const removeChaseUpMessage = (id: string) => {
-    if (chaseUpMessages.length > 1) {
-      setChaseUpMessages(chaseUpMessages.filter(msg => msg.id !== id));
-    }
-  };
-
-  const updateChaseUpMessage = (id: string, field: string, value: any) => {
-    setChaseUpMessages(messages =>
-      messages.map(msg =>
-        msg.id === id ? { ...msg, [field]: value } : msg
-      )
-    );
-  };
-
-  const updateChaseUpTemplate = (messageId: string, language: string, type: 'email' | 'sms', field: string, value: any) => {
-    setChaseUpMessages(messages =>
-      messages.map(msg =>
-        msg.id === messageId
-          ? {
-              ...msg,
-              templates: {
-                ...msg.templates,
-                [language]: {
-                  ...msg.templates[language],
-                  [type]: {
-                    ...msg.templates[language]?.[type],
-                    [field]: value
-                  }
-                }
-              }
-            }
-          : msg
-      )
-    );
-  };
-
-  const insertVariable = (variable: string) => {
-    if (focusedField) {
-      const element = document.querySelector(`[data-field="${focusedField}"]`) as HTMLTextAreaElement;
-      if (element) {
-        const start = element.selectionStart;
-        const end = element.selectionEnd;
-        const currentValue = element.value;
-        const newValue = currentValue.substring(0, start) + variable + currentValue.substring(end);
-        
-        // Update the appropriate state
-        if (focusedField.includes('chaseup-')) {
-          const [, messageId, language, type, field] = focusedField.split('-');
-          updateChaseUpTemplate(messageId, language, type as 'email' | 'sms', field, newValue);
-        }
-        
-        // Set cursor position after the inserted variable
-        setTimeout(() => {
-          element.focus();
-          element.setSelectionRange(start + variable.length, start + variable.length);
-        }, 0);
-      }
-    }
+  const handleCompanyNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleFieldChange('companyName', e.target.value);
   };
 
   const validateForm = () => {
     const newErrors = {
-      name: '',
-      identifier: '',
-      companyCode: ''
+      companyName: '',
+      logoUrl: '',
+      maxApiRequests: ''
     };
 
-    if (!formData.name.trim()) {
-      newErrors.name = 'Company name is required';
+    if (!formData.companyName.trim()) {
+      newErrors.companyName = 'Company name is required';
     }
 
-    if (!formData.identifier.trim()) {
-      newErrors.identifier = 'Company identifier is required';
+    if (!formData.logoUrl.trim()) {
+      newErrors.logoUrl = 'Logo URL is required';
+    } else if (!/^https?:\/\/.+/.test(formData.logoUrl)) {
+      newErrors.logoUrl = 'Please enter a valid URL';
     }
 
-    if (!formData.companyCode.trim()) {
-      newErrors.companyCode = 'Company code is required';
+    if (!formData.maxApiRequests || formData.maxApiRequests <= 0) {
+      newErrors.maxApiRequests = 'Max API requests must be greater than 0';
     }
 
     setErrors(newErrors);
-    return !newErrors.name && !newErrors.identifier && !newErrors.companyCode;
+    return !newErrors.companyName && !newErrors.logoUrl && !newErrors.maxApiRequests;
   };
-
+  
   const handleSave = () => {
     if (!validateForm()) {
-      setActiveTab('general-settings');
       return;
     }
 
-    const updatedCompany = {
-      id,
-      ...formData,
-      apiConfig,
-      chaseUpMessages,
-      webhookUrl,
-      reportSettings,
-      configModules,
-      updatedAt: new Date().toISOString()
-    };
-
-    console.log('Updating company:', updatedCompany);
+    console.log('Saving company changes...', formData);
+    setHasUnsavedChanges(false);
+    // Navigate back to companies list after save
     navigate('/companies');
   };
 
-  if (loading) {
-    return (
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header title="Loading..." />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading company...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Static data arrays
+  const languages = [
+    { code: 'en', name: 'English' },
+    { code: 'fr', name: 'Français' },
+    { code: 'de', name: 'Deutsch' },
+    { code: 'it', name: 'Italiano' },
+    { code: 'es', name: 'Español' },
+    { code: 'nl', name: 'Nederlands' },
+    { code: 'sv', name: 'Svenska' },
+    { code: 'no', name: 'Norsk' }
+  ];
+
+  const events = [
+    { key: 'selfInspectionCreation', name: 'Self Inspection Creation' },
+    { key: 'automatedChaseUp', name: 'Automated Chase-up Message' },
+    { key: 'manualChaseUp', name: 'Manual Chase-up Message' },
+    { key: 'inspectionFinished', name: 'Inspection Finished Message' },
+    { key: 'damageReviewFinished', name: 'Damage Review Finished Message' },
+    { key: 'shareUpdatedReport', name: 'Share Updated Report Message' }
+  ];
+
+  const variables = [
+    { key: '##clientLastName##', name: 'Client Last Name' },
+    { key: '##clientFirstName##', name: 'Client First Name' },
+    { key: '##clientMail##', name: 'Client Email' },
+    { key: '##clientPhone##', name: 'Client Phone' },
+    { key: '##clientLanguage##', name: 'Client Language' },
+    { key: '##personInCharge##', name: 'Person In Charge' },
+    { key: '##notes##', name: 'Notes' },
+    { key: '##date##', name: 'Date' },
+    { key: '##dateFirstPicture##', name: 'Date First Picture' },
+    { key: '##vehicleMileage##', name: 'Vehicle Mileage' },
+    { key: '##customerLastName##', name: 'Customer Last Name' },
+    { key: '##customerFirstName##', name: 'Customer First Name' },
+    { key: '##customerLocale##', name: 'Customer Locale' },
+    { key: '##customerPhone##', name: 'Customer Phone' },
+    { key: '##customerMail##', name: 'Customer Email' },
+    { key: '##customerVIN##', name: 'Customer VIN' },
+    { key: '##customerImmat##', name: 'Customer Registration' },
+    { key: '##companyName##', name: 'Company Name' },
+    { key: '##immat##', name: 'Registration Number' },
+    { key: '##vin##', name: 'VIN Number' },
+    { key: '##reporturl##', name: 'Report URL' },
+    { key: '##reporturlWithoutCosts##', name: 'Report URL Without Costs' },
+    { key: '##fasttrackurl##', name: 'Fast Track URL' },
+    { key: '##tradeinSSO##', name: 'Trade-in SSO' },
+    { key: '##editreporturl##', name: 'Edit Report URL' },
+    { key: '##agentEmailAddress##', name: 'Agent Email Address' }
+  ];
 
   const tabs = [
     {
-      key: 'general-settings',
+      key: 'general',
       label: 'General Settings',
-      content: (
-        <div className="space-y-6">
-          {/* Basic Information */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Input
-                label="Company Name"
-                value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
-                error={errors.name}
-                required
-              />
-
-              <Input
-                label="Company Identifier"
-                value={formData.identifier}
-                onChange={(e) => handleInputChange('identifier', e.target.value)}
-                error={errors.identifier}
-                required
-              />
-
-              <Input
-                label="Company Code"
-                value={formData.companyCode}
-                onChange={(e) => handleInputChange('companyCode', e.target.value)}
-                error={errors.companyCode}
-                required
-              />
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Contract Type</label>
-                <select
-                  value={formData.contractType}
-                  onChange={(e) => handleInputChange('contractType', e.target.value)}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="Client">Client</option>
-                  <option value="Prospect">Prospect</option>
-                  <option value="Test">Test</option>
-                  <option value="Demo">Demo</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Business Sector</label>
-                <select
-                  value={formData.businessSector}
-                  onChange={(e) => handleInputChange('businessSector', e.target.value)}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="Insurance">Insurance</option>
-                  <option value="Leasing">Leasing</option>
-                  <option value="Rental">Rental</option>
-                  <option value="Fleet Management">Fleet Management</option>
-                  <option value="Automotive">Automotive</option>
-                </select>
-              </div>
-
-              <Input
-                label="Logo URL"
-                value={formData.logoUrl}
-                onChange={(e) => handleInputChange('logoUrl', e.target.value)}
-                placeholder="https://example.com/logo.png"
-              />
-
-              <Input
-                label="Retention Period (months)"
-                type="number"
-                value={formData.retentionPeriod}
-                onChange={(e) => handleInputChange('retentionPeriod', parseInt(e.target.value) || 24)}
-                min="1"
-                max="120"
-              />
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Parent Company</label>
-                <select
-                  value={formData.parentCompany}
-                  onChange={(e) => handleInputChange('parentCompany', e.target.value)}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">None (Root Company)</option>
-                  <option value="1">AutoCorp Insurance</option>
-                  <option value="2">FleetMax Leasing</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Processing Configuration */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Processing Configuration</h3>
-            <div className="space-y-4">
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={formData.disableFastTrack}
-                  onChange={(e) => handleInputChange('disableFastTrack', e.target.checked)}
-                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
-                />
-                <span className="ml-2 text-sm text-gray-700">Disable Fast Track</span>
-              </label>
-
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={formData.enableMileageCapture}
-                  onChange={(e) => handleInputChange('enableMileageCapture', e.target.checked)}
-                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
-                />
-                <span className="ml-2 text-sm text-gray-700">Enable Mileage Capture</span>
-              </label>
-
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={formData.enableBlurDetection}
-                  onChange={(e) => handleInputChange('enableBlurDetection', e.target.checked)}
-                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
-                />
-                <span className="ml-2 text-sm text-gray-700">Blur License Plates</span>
-              </label>
-
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={formData.enableVinScanning}
-                  onChange={(e) => handleInputChange('enableVinScanning', e.target.checked)}
-                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
-                />
-                <span className="ml-2 text-sm text-gray-700">Enable VIN Scanning</span>
-              </label>
-
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={formData.enableBrandModelDetection}
-                  onChange={(e) => handleInputChange('enableBrandModelDetection', e.target.checked)}
-                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
-                />
-                <span className="ml-2 text-sm text-gray-700">Enable Brand & Model Detection</span>
-              </label>
-            </div>
-          </div>
-
-          {/* Validation Settings */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Validation Settings</h3>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={formData.iaValidation}
-                  onChange={(e) => handleInputChange('iaValidation', e.target.checked)}
-                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
-                />
-                <span className="ml-2 text-sm text-gray-700">IA Validation (Joelle model)</span>
-              </label>
-
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={formData.humanValidationEnabled}
-                  onChange={(e) => handleInputChange('humanValidationEnabled', e.target.checked)}
-                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
-                />
-                <span className="ml-2 text-sm text-gray-700">Human Validation Enabled</span>
-              </label>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Validation Priority (0-5)</label>
-                <select
-                  value={formData.validationPriority}
-                  onChange={(e) => handleInputChange('validationPriority', parseInt(e.target.value))}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value={0}>0 - Lowest Priority</option>
-                  <option value={1}>1 - Very Low Priority</option>
-                  <option value={2}>2 - Low Priority</option>
-                  <option value={3}>3 - Medium Priority</option>
-                  <option value={4}>4 - High Priority</option>
-                  <option value={5}>5 - Highest Priority</option>
-                </select>
-              </div>
-
-              <Input
-                label="Max Validation Delay (minutes)"
-                type="number"
-                value={formData.maxValidationDelay}
-                onChange={(e) => handleInputChange('maxValidationDelay', parseInt(e.target.value) || 60)}
-                min="1"
-                max="1440"
-              />
-
-              <Input
-                label="Min Task Processing Duration (minutes)"
-                type="number"
-                value={formData.minTaskProcessingDuration}
-                onChange={(e) => handleInputChange('minTaskProcessingDuration', parseInt(e.target.value) || 5)}
-                min="1"
-                max="60"
-              />
-            </div>
-          </div>
-
-          {/* Hub Configuration */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Hub Configuration</h3>
-            <div className="space-y-4">
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={formData.showStartInstantInspection}
-                  onChange={(e) => handleInputChange('showStartInstantInspection', e.target.checked)}
-                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
-                />
-                <span className="ml-2 text-sm text-gray-700">Show Start Instant Inspection</span>
-              </label>
-
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={formData.showSendInspectionLink}
-                  onChange={(e) => handleInputChange('showSendInspectionLink', e.target.checked)}
-                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
-                />
-                <span className="ml-2 text-sm text-gray-700">Show Send Inspection Link</span>
-              </label>
-            </div>
-          </div>
-        </div>
-      )
+      content: <GeneralSettingsTab 
+        formData={formData}
+        errors={errors}
+        handleCompanyNameChange={handleCompanyNameChange}
+        handleLogoUrlChange={handleLogoUrlChange}
+        handleFieldChange={handleFieldChange}
+        handleInputChange={handleInputChange}
+      />
     },
     {
-      key: 'events-webhooks',
+      key: 'events',
       label: 'Events & Webhooks',
-      content: (
-        <div className="space-y-6">
-          {/* Webhook URL */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Webhook Configuration</h3>
-            <Input
-              label="Webhook URL"
-              value={webhookUrl}
-              onChange={(e) => setWebhookUrl(e.target.value)}
-              placeholder="https://your-domain.com/webhook"
-            />
-          </div>
-
-          {/* Automated Chase-up Messages */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">Automated Chase-up Messages</h3>
-                <p className="text-sm text-gray-600">Configure multiple reminder sequences</p>
-              </div>
-              <Button onClick={addChaseUpMessage} className="flex items-center gap-2">
-                <Plus size={16} />
-                Add Reminder
-              </Button>
-            </div>
-
-            <div className="space-y-6">
-              {chaseUpMessages.map((message, index) => (
-                <div key={message.id} className="border border-gray-200 rounded-lg p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-medium text-gray-900">Reminder #{index + 1}</h4>
-                    {chaseUpMessages.length > 1 && (
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        onClick={() => removeChaseUpMessage(message.id)}
-                      >
-                        <Trash2 size={16} />
-                      </Button>
-                    )}
-                  </div>
-
-                  {/* General Settings */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    <Input
-                      label="Reminder Name"
-                      value={message.name}
-                      onChange={(e) => updateChaseUpMessage(message.id, 'name', e.target.value)}
-                    />
-
-                    <Input
-                      label="Activation Date"
-                      type="date"
-                      value={message.activationDate}
-                      onChange={(e) => updateChaseUpMessage(message.id, 'activationDate', e.target.value)}
-                    />
-
-                    <Input
-                      label="Max Sendings"
-                      type="number"
-                      min="1"
-                      max="10"
-                      value={message.maxSendings}
-                      onChange={(e) => updateChaseUpMessage(message.id, 'maxSendings', parseInt(e.target.value) || 1)}
-                    />
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">UTC Sending Time</label>
-                      <div className="flex gap-2">
-                        <select
-                          value={message.utcHour}
-                          onChange={(e) => updateChaseUpMessage(message.id, 'utcHour', parseInt(e.target.value))}
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                          {Array.from({ length: 24 }, (_, i) => (
-                            <option key={i} value={i}>{i.toString().padStart(2, '0')}</option>
-                          ))}
-                        </select>
-                        <select
-                          value={message.utcMinute}
-                          onChange={(e) => updateChaseUpMessage(message.id, 'utcMinute', parseInt(e.target.value))}
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                          <option value={0}>00</option>
-                          <option value={15}>15</option>
-                          <option value={30}>30</option>
-                          <option value={45}>45</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Delay Configuration */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <Input
-                      label={index === 0 ? "Delay from inspection completion (days)" : "Delay from previous reminder (days)"}
-                      type="number"
-                      min="0"
-                      value={message.delayDays}
-                      onChange={(e) => updateChaseUpMessage(message.id, 'delayDays', parseInt(e.target.value) || 0)}
-                    />
-
-                    <Input
-                      label="Additional delay (minutes)"
-                      type="number"
-                      min="0"
-                      max="1439"
-                      value={message.delayMinutes}
-                      onChange={(e) => updateChaseUpMessage(message.id, 'delayMinutes', parseInt(e.target.value) || 0)}
-                    />
-                  </div>
-
-                  {/* Recipients */}
-                  <div className="mb-6">
-                    <h5 className="font-medium text-gray-900 mb-3">Recipients</h5>
-                    <div className="space-y-2">
-                      {message.recipients.map((recipient) => (
-                        <div key={recipient.id} className="flex items-center gap-4">
-                          <select
-                            value={recipient.type}
-                            onChange={(e) => {
-                              const newRecipients = message.recipients.map(r =>
-                                r.id === recipient.id ? { ...r, type: e.target.value as 'email' | 'sms' } : r
-                              );
-                              updateChaseUpMessage(message.id, 'recipients', newRecipients);
-                            }}
-                            className="px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          >
-                            <option value="email">Email</option>
-                            <option value="sms">SMS</option>
-                          </select>
-                          <input
-                            type="text"
-                            value={recipient.address}
-                            onChange={(e) => {
-                              const newRecipients = message.recipients.map(r =>
-                                r.id === recipient.id ? { ...r, address: e.target.value } : r
-                              );
-                              updateChaseUpMessage(message.id, 'recipients', newRecipients);
-                            }}
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder={recipient.type === 'email' ? 'email@example.com or {{customerEmail}}' : 'Phone number or {{customerPhone}}'}
-                          />
-                          <label className="flex items-center">
-                            <input
-                              type="checkbox"
-                              checked={recipient.enabled}
-                              onChange={(e) => {
-                                const newRecipients = message.recipients.map(r =>
-                                  r.id === recipient.id ? { ...r, enabled: e.target.checked } : r
-                                );
-                                updateChaseUpMessage(message.id, 'recipients', newRecipients);
-                              }}
-                              className="rounded border-gray-300 text-blue-600 shadow-sm"
-                            />
-                            <span className="ml-2 text-sm text-gray-700">Enabled</span>
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Templates */}
-                  <div>
-                    <h5 className="font-medium text-gray-900 mb-3">Message Templates</h5>
-                    <div className="space-y-4">
-                      {languages.map((language) => (
-                        <div key={language} className="border border-gray-200 rounded-lg p-4">
-                          <h6 className="font-medium text-gray-800 mb-3 uppercase">{language}</h6>
-                          
-                          {/* Email Template */}
-                          <div className="mb-4">
-                            <div className="flex items-center justify-between mb-2">
-                              <label className="text-sm font-medium text-gray-700">Email Template</label>
-                              <label className="flex items-center">
-                                <input
-                                  type="checkbox"
-                                  checked={message.templates[language]?.email?.enabled || false}
-                                  onChange={(e) => updateChaseUpTemplate(message.id, language, 'email', 'enabled', e.target.checked)}
-                                  className="rounded border-gray-300 text-blue-600 shadow-sm"
-                                />
-                                <span className="ml-2 text-sm text-gray-700">Enabled</span>
-                              </label>
-                            </div>
-                            <Input
-                              label="Subject"
-                              value={message.templates[language]?.email?.subject || ''}
-                              onChange={(e) => updateChaseUpTemplate(message.id, language, 'email', 'subject', e.target.value)}
-                              className="mb-2"
-                            />
-                            <textarea
-                              rows={4}
-                              value={message.templates[language]?.email?.htmlContent || ''}
-                              onChange={(e) => updateChaseUpTemplate(message.id, language, 'email', 'htmlContent', e.target.value)}
-                              onFocus={() => setFocusedField(`chaseup-${message.id}-${language}-email-htmlContent`)}
-                              onBlur={() => setFocusedField(null)}
-                              data-field={`chaseup-${message.id}-${language}-email-htmlContent`}
-                              className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                              placeholder="Email content..."
-                            />
-                          </div>
-
-                          {/* SMS Template */}
-                          <div>
-                            <div className="flex items-center justify-between mb-2">
-                              <label className="text-sm font-medium text-gray-700">SMS Template</label>
-                              <label className="flex items-center">
-                                <input
-                                  type="checkbox"
-                                  checked={message.templates[language]?.sms?.enabled || false}
-                                  onChange={(e) => updateChaseUpTemplate(message.id, language, 'sms', 'enabled', e.target.checked)}
-                                  className="rounded border-gray-300 text-blue-600 shadow-sm"
-                                />
-                                <span className="ml-2 text-sm text-gray-700">Enabled</span>
-                              </label>
-                            </div>
-                            <textarea
-                              rows={3}
-                              value={message.templates[language]?.sms?.content || ''}
-                              onChange={(e) => updateChaseUpTemplate(message.id, language, 'sms', 'content', e.target.value)}
-                              onFocus={() => setFocusedField(`chaseup-${message.id}-${language}-sms-content`)}
-                              onBlur={() => setFocusedField(null)}
-                              data-field={`chaseup-${message.id}-${language}-sms-content`}
-                              className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                              placeholder="SMS content..."
-                            />
-                            <p className="text-xs text-gray-500 mt-1">
-                              Character count: {(message.templates[language]?.sms?.content || '').length}/160
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Variables Panel */}
-          {focusedField && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h4 className="font-medium text-blue-900 mb-3">Available Variables</h4>
-              <p className="text-sm text-blue-700 mb-3">Click any variable to insert it into the focused field:</p>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                {variables.map((variable) => (
-                  <button
-                    key={variable.key}
-                    onClick={() => insertVariable(variable.key)}
-                    className="text-left p-2 bg-white border border-blue-200 rounded hover:bg-blue-100 transition-colors"
-                  >
-                    <div className="font-mono text-xs text-blue-800">{variable.key}</div>
-                    <div className="text-xs text-blue-600">{variable.description}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )
+      content: <EventsWebhooksTab 
+        selectedLanguage={selectedLanguage}
+        setSelectedLanguage={setSelectedLanguage}
+        handleInputChange={handleInputChange}
+        languages={languages}
+        events={events}
+        variables={variables}
+        companyEmailEnabled={companyEmailEnabled}
+        setCompanyEmailEnabled={setCompanyEmailEnabled}
+      />
     },
     {
-      key: 'api-configuration',
-      label: 'API Configuration',
-      content: (
-        <div className="space-y-6">
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">API Settings</h3>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Input
-                label="API Token"
-                value={apiConfig.apiToken}
-                onChange={(e) => handleApiConfigChange('apiToken', e.target.value)}
-                placeholder="Generated automatically"
-                disabled
-              />
-
-              <Input
-                label="Current API Requests"
-                type="number"
-                value={apiConfig.currentRequests}
-                onChange={(e) => handleApiConfigChange('currentRequests', parseInt(e.target.value) || 0)}
-                min="0"
-              />
-
-              <Input
-                label="Max API Requests"
-                type="number"
-                value={apiConfig.maxRequests}
-                onChange={(e) => handleApiConfigChange('maxRequests', parseInt(e.target.value) || 5000)}
-                min="1"
-              />
-
-              <Input
-                label="Expiry Date"
-                type="date"
-                value={apiConfig.expiryDate}
-                onChange={(e) => handleApiConfigChange('expiryDate', e.target.value)}
-              />
-            </div>
-
-            <div className="mt-6">
-              <Input
-                label="Decision Tree Configuration"
-                multiline
-                rows={8}
-                value={apiConfig.decisionTree}
-                onChange={(e) => handleApiConfigChange('decisionTree', e.target.value)}
-                placeholder='{"rules": [], "conditions": []}'
-              />
-            </div>
-          </div>
-        </div>
-      )
-    },
-    {
-      key: 'report-settings',
-      label: 'Report Settings',
-      content: (
-        <div className="space-y-6">
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Report Configuration</h3>
-              <div className="flex gap-2">
-                <Button variant="secondary" size="sm" className="flex items-center gap-1">
-                  <Upload size={14} />
-                  Upload JSON
-                </Button>
-                <Button variant="secondary" size="sm" className="flex items-center gap-1">
-                  <Download size={14} />
-                  Download JSON
-                </Button>
-              </div>
-            </div>
-            <Input
-              multiline
-              rows={12}
-              value={reportSettings}
-              onChange={(e) => setReportSettings(e.target.value)}
-              placeholder='{"picturesPreSelected": true, "showDamage": true, "showGallery": true}'
-            />
-          </div>
-        </div>
-      )
-    },
-    {
-      key: 'config-modules',
-      label: 'Config Modules',
-      content: (
-        <div className="space-y-6">
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Module Configuration</h3>
-              <div className="flex gap-2">
-                <Button variant="secondary" size="sm" className="flex items-center gap-1">
-                  <Upload size={14} />
-                  Upload JSON
-                </Button>
-                <Button variant="secondary" size="sm" className="flex items-center gap-1">
-                  <Download size={14} />
-                  Download JSON
-                </Button>
-              </div>
-            </div>
-            <Input
-              multiline
-              rows={12}
-              value={configModules}
-              onChange={(e) => setConfigModules(e.target.value)}
-              placeholder='{"fastTrack": {"canWearAndTear": true}, "shootInspect": {"autoFinalizationEnabled": false}}'
-            />
-          </div>
-        </div>
-      )
+      key: 'hierarchy',
+      label: 'Hierarchy',
+      content: <HierarchyTab 
+        handleInputChange={handleInputChange}
+        formData={formData}
+        handleFieldChange={handleFieldChange}
+      />
     }
   ];
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      <Header title="Edit Company" />
+      <Header title={`Edit Company: ${formData.companyName}`} />
       
       <div className="flex-1 overflow-y-auto p-6">
         <div className="mb-6">
@@ -1136,13 +917,14 @@ export default function EditCompanyPage() {
           />
 
           {/* Save Buttons */}
-          <div className="flex gap-4 justify-end sticky bottom-0 bg-white py-4 border-t border-gray-200 mt-6">
+          <div className="flex gap-4 justify-end sticky bottom-0 bg-white py-4 border-t border-gray-200 mt-8">
             <Button variant="secondary" onClick={() => navigate('/companies')}>
               Cancel
             </Button>
             <Button 
               className="flex items-center gap-2" 
               onClick={handleSave}
+              disabled={!hasUnsavedChanges}
             >
               <Save size={16} />
               Save Changes
