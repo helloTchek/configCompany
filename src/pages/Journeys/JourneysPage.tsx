@@ -20,6 +20,7 @@ export default function JourneysPage() {
   });
   const [duplicateModal, setDuplicateModal] = useState<{ open: boolean; journey?: InspectionJourney }>({ open: false });
   const [duplicateName, setDuplicateName] = useState('');
+  const [deleteModal, setDeleteModal] = useState<{ open: boolean; journey?: InspectionJourney }>({ open: false });
 
   const clearFilters = () => {
     setFilters({
@@ -51,6 +52,28 @@ export default function JourneysPage() {
   const handleDuplicate = (journey: InspectionJourney) => {
     setDuplicateName(`${journey.name} (Copy)`);
     setDuplicateModal({ open: true, journey });
+  };
+
+  const handleDelete = (journey: InspectionJourney) => {
+    setDeleteModal({ open: true, journey });
+  };
+
+  const confirmDelete = () => {
+    if (!deleteModal.journey) return;
+
+    // In a real app, this would make an API call to delete the journey
+    console.log('Deleting journey:', deleteModal.journey);
+    
+    // Remove from mock journeys array (in real app this would be handled by API)
+    const index = mockJourneys.findIndex(j => j.id === deleteModal.journey!.id);
+    if (index > -1) {
+      mockJourneys.splice(index, 1);
+    }
+    
+    setDeleteModal({ open: false });
+    
+    // Refresh the page to show updated list
+    window.location.reload();
   };
 
   const confirmDuplicate = () => {
@@ -128,7 +151,7 @@ export default function JourneysPage() {
             <Copy size={16} />
           </button>
           <button
-            onClick={() => {/* Handle delete */}}
+            onClick={() => handleDelete(row)}
             className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
             title="Delete"
           >
@@ -288,6 +311,35 @@ export default function JourneysPage() {
               disabled={!duplicateName.trim()}
             >
               Duplicate Journey
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Delete Modal */}
+      <Modal
+        isOpen={deleteModal.open}
+        onClose={() => setDeleteModal({ open: false })}
+        title="Delete Journey"
+        size="md"
+      >
+        <div className="space-y-4">
+          <p className="text-gray-600">
+            Are you sure you want to delete <strong>{deleteModal.journey?.name}</strong>? 
+            This action cannot be undone.
+          </p>
+          <div className="flex gap-3 justify-end pt-4">
+            <Button
+              variant="secondary"
+              onClick={() => setDeleteModal({ open: false })}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              onClick={confirmDelete}
+            >
+              Delete Journey
             </Button>
           </div>
         </div>
