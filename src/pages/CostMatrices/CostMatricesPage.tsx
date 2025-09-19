@@ -1,204 +1,153 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/Layout/Header';
-import Table from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
 import { mockCostMatrices } from '../../data/mockData';
 import { CostMatrix } from '../../types';
-import { Edit, Upload, Download, Plus, Search, Filter, X } from 'lucide-react';
+import { Edit, Download, Copy, Trash2, Plus, Eye } from 'lucide-react';
 
 export default function CostMatricesPage() {
   const navigate = useNavigate();
   const [matrices] = useState<CostMatrix[]>(mockCostMatrices);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState({
-    currency: '',
-    company: ''
-  });
 
-  const clearFilters = () => {
-    setFilters({
-      currency: '',
-      company: ''
-    });
-    setSearchTerm('');
+  const handleDownloadTemplate = () => {
+    // Create CSV template
+    const csvContent = "Part Type,Location,Severity,Cost\nFront Bumper,Front,Minor,450\nDoor Panel,Side,Major,850";
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'cost-matrix-template.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
   };
 
-  const hasActiveFilters = searchTerm || Object.values(filters).some(filter => filter !== '');
+  const handleDuplicate = (matrix: CostMatrix) => {
+    console.log('Duplicating matrix:', matrix);
+    // In real app, would create a copy
+  };
 
-  // Filter and search logic
-  const filteredMatrices = matrices.filter(matrix => {
-    // Search filter
-    const matchesSearch = !searchTerm || 
-      matrix.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      matrix.currency.toLowerCase().includes(searchTerm.toLowerCase());
-
-    // Currency filter
-    const matchesCurrency = !filters.currency || matrix.currency === filters.currency;
-
-    // Company filter
-    const matchesCompany = !filters.company || matrix.company === filters.company;
-
-    return matchesSearch && matchesCurrency && matchesCompany;
-  });
-
-  const columns = [
-    { key: 'company', label: 'Company', sortable: true },
-    { key: 'currency', label: 'Currency', sortable: true,
-      render: (value: string) => (
-        <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
-          {value}
-        </span>
-      )
-    },
-    { key: 'tax', label: 'Tax Rate (%)', sortable: true,
-      render: (value: number) => `${value}%`
-    },
-    { key: 'parts', label: 'Parts Count', sortable: true,
-      render: (value: any[]) => value.length
-    },
-    {
-      key: 'actions',
-      label: 'Actions',
-      render: (_: any, row: CostMatrix) => (
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => navigate(`/cost-matrices/${row.id}/edit`)}
-            className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-            title="Edit"
-          >
-            <Edit size={16} />
-          </button>
-          <button
-            className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
-            title="Download CSV"
-          >
-            <Download size={16} />
-          </button>
-          <button
-            className="p-2 text-orange-600 hover:bg-orange-100 rounded-lg transition-colors"
-            title="Upload CSV"
-          >
-            <Upload size={16} />
-          </button>
-        </div>
-      ),
-    },
-  ];
+  const handleDelete = (matrix: CostMatrix) => {
+    if (confirm(`Are you sure you want to delete the cost matrix for ${matrix.company}?`)) {
+      console.log('Deleting matrix:', matrix);
+      // In real app, would delete the matrix
+    }
+  };
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      <Header title="Cost Matrices" />
+      <Header title="Repair Costs Management" />
       
       <div className="flex-1 overflow-y-auto p-6">
         <div className="mb-6 flex justify-between items-center">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">Repair Cost Management</h2>
-            <p className="text-sm text-gray-600">Manage repair costs by part types, locations, and severities</p>
+            <h2 className="text-xl font-semibold text-gray-900">Repair Costs Management</h2>
+            <p className="text-sm text-gray-600">Manage cost matrices for vehicle repair estimates</p>
           </div>
-          <Button
-            onClick={() => navigate('/cost-matrices/new')}
-            className="flex items-center gap-2"
-          >
-            <Plus size={16} />
-            Create New Matrix
-          </Button>
-        </div>
-
-        {/* Search and Filters */}
-        <div className="mb-6 space-y-4">
-          {/* Search Bar */}
-          <div className="flex gap-4">
-            <div className="relative flex-1 max-w-md">
-              <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search cost matrices..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-              {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm('')}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  <X size={16} />
-                </button>
-              )}
-            </div>
+          <div className="flex gap-3">
             <Button
               variant="secondary"
-              onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-2 ${hasActiveFilters ? 'bg-blue-50 text-blue-700 border-blue-200' : ''}`}
+              onClick={handleDownloadTemplate}
+              className="flex items-center gap-2"
             >
-              <Filter size={16} />
-              Filters
-              {hasActiveFilters && (
-                <span className="bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {Object.values(filters).filter(f => f !== '').length + (searchTerm ? 1 : 0)}
-                </span>
-              )}
+              <Download size={16} />
+              Download Template
+            </Button>
+            <Button
+              onClick={() => navigate('/cost-matrices/new')}
+              className="flex items-center gap-2"
+            >
+              <Plus size={16} />
+              Create Matrix
             </Button>
           </div>
-          {/* Filters Panel */}
-          {showFilters && (
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
-                  <select
-                    value={filters.currency}
-                    onChange={(e) => setFilters(prev => ({ ...prev, currency: e.target.value }))}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">All Currencies</option>
-                    <option value="EUR">EUR</option>
-                    <option value="USD">USD</option>
-                    <option value="GBP">GBP</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
-                  <select
-                    value={filters.company}
-                    onChange={(e) => setFilters(prev => ({ ...prev, company: e.target.value }))}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">All Companies</option>
-                    <option value="AutoCorp Insurance">AutoCorp Insurance</option>
-                    <option value="FleetMax Leasing">FleetMax Leasing</option>
-                  </select>
-                </div>
-              </div>
-              {hasActiveFilters && (
-                <div className="mt-4 flex justify-between items-center">
-                  <span className="text-sm text-gray-600">
-                    Showing {filteredMatrices.length} of {matrices.length} cost matrices
-                  </span>
-                  <Button variant="secondary" size="sm" onClick={clearFilters}>
-                    Clear All Filters
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
+        {/* Cost Matrices Section */}
         <div className="bg-white rounded-lg border border-gray-200">
-          <Table columns={columns} data={filteredMatrices} />
-          
-          {filteredMatrices.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              <p>No cost matrices found matching your criteria.</p>
-              {hasActiveFilters && (
-                <Button variant="secondary" onClick={clearFilters} className="mt-2">
-                  Clear Filters
-                </Button>
-              )}
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h3 className="text-lg font-medium text-gray-900">Cost Matrices</h3>
+            <p className="text-sm text-gray-600">Select and manage your repair cost matrices</p>
+          </div>
+
+          <div className="p-6">
+            <div className="overflow-x-auto">
+              <table className="min-w-full">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 text-sm">MATRIX</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 text-sm">CURRENCY & TAX</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 text-sm">ENTRIES</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 text-sm">STATUS</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 text-sm">LAST UPDATED</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 text-sm">ACTIONS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {matrices.map((matrix) => (
+                    <tr key={matrix.id} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="py-4 px-4">
+                        <div>
+                          <div className="font-medium text-gray-900">{matrix.company.toUpperCase()}</div>
+                          <div className="text-sm text-gray-600">Standard cost matrix for this company</div>
+                        </div>
+                      </td>
+                      <td className="py-4 px-4">
+                        <div>
+                          <div className="font-medium text-gray-900">{matrix.currency}</div>
+                          <div className="text-sm text-gray-600">Tax: {matrix.tax}%</div>
+                        </div>
+                      </td>
+                      <td className="py-4 px-4">
+                        <div className="font-medium text-gray-900">{matrix.parts.length}</div>
+                        <div className="text-sm text-gray-600">Cost entries</div>
+                      </td>
+                      <td className="py-4 px-4">
+                        <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+                          Active
+                        </span>
+                      </td>
+                      <td className="py-4 px-4">
+                        <div className="text-sm text-gray-900">14/01/2024</div>
+                      </td>
+                      <td className="py-4 px-4">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => navigate(`/cost-matrices/${matrix.id}/view`)}
+                            className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                            title="View"
+                          >
+                            <Eye size={16} />
+                          </button>
+                          <button
+                            onClick={() => navigate(`/cost-matrices/${matrix.id}/edit`)}
+                            className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                            title="Edit"
+                          >
+                            <Edit size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDuplicate(matrix)}
+                            className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
+                            title="Duplicate"
+                          >
+                            <Copy size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(matrix)}
+                            className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>

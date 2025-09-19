@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Header from '../../components/Layout/Header';
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
-import { ArrowLeft, Save, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Save, Plus, Trash2, Download, Upload } from 'lucide-react';
 import { mockCostMatrices } from '../../data/mockData';
 
 interface CostPart {
@@ -13,6 +13,13 @@ interface CostPart {
   severity: 'Minor' | 'Moderate' | 'Major' | 'Severe';
   cost: number;
 }
+
+const severityColors = {
+  'Minor': 'bg-green-100 text-green-800',
+  'Moderate': 'bg-yellow-100 text-yellow-800', 
+  'Major': 'bg-orange-100 text-orange-800',
+  'Severe': 'bg-red-100 text-red-800'
+};
 
 export default function EditCostMatrixPage() {
   const navigate = useNavigate();
@@ -29,6 +36,9 @@ export default function EditCostMatrixPage() {
     currency: '',
     tax: ''
   });
+  const [filterByPart, setFilterByPart] = useState('');
+  const [filterByLocation, setFilterByLocation] = useState('');
+  const [filterBySeverity, setFilterBySeverity] = useState('');
 
   useEffect(() => {
     // Load cost matrix data
@@ -118,6 +128,48 @@ export default function EditCostMatrixPage() {
     navigate('/cost-matrices');
   };
 
+  const handleDownloadCsv = () => {
+    const csvContent = [
+      'Part Type,Location,Severity,Cost',
+      ...parts.map(part => `${part.partType},${part.location},${part.severity},${part.cost}`)
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${formData.company.toLowerCase().replace(/\s+/g, '-')}-cost-matrix.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const handleUploadCsv = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.csv';
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const csv = e.target?.result as string;
+          // Parse CSV and update parts
+          console.log('Uploading CSV:', csv);
+        };
+        reader.readAsText(file);
+      }
+    };
+    input.click();
+  };
+
+  // Filter parts based on search criteria
+  const filteredParts = parts.filter(part => {
+    const matchesPart = !filterByPart || part.partType.toLowerCase().includes(filterByPart.toLowerCase());
+    const matchesLocation = !filterByLocation || part.location.toLowerCase().includes(filterByLocation.toLowerCase());
+    const matchesSeverity = !filterBySeverity || part.severity === filterBySeverity;
+    return matchesPart && matchesLocation && matchesSeverity;
+  });
+
   if (loading) {
     return (
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -134,7 +186,7 @@ export default function EditCostMatrixPage() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      <Header title="Edit Cost Matrix" />
+      <Header title={formData.company.toUpperCase()} />
       
       <div className="flex-1 overflow-y-auto p-6">
         <div className="mb-6">
@@ -148,10 +200,200 @@ export default function EditCostMatrixPage() {
           </Button>
         </div>
 
-        <div className="max-w-4xl mx-auto space-y-6">
-          {/* Basic Information */}
+        <div className="max-w-7xl mx-auto space-y-6">
+          {/* Header with company info */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">{formData.company.toUpperCase()}</h2>
+                <p className="text-gray-600">Edit repair costs and matrix settings</p>
+              </div>
+              <div className="flex items-center gap-4 text-sm">
+                <div className="text-center">
+                  <div className="font-semibold text-gray-900">{formData.tax}%</div>
+                  <div className="text-gray-600">Tax Rate</div>
+                </div>
+                <div className="text-center">
+                  <div className="font-semibold text-gray-900">{formData.currency}</div>
+                  <div className="text-gray-600">Currency</div>
+                </div>
+                <div className="text-center">
+                  <div className="font-semibold text-gray-900">{parts.length}</div>
+                  <div className="text-gray-600">Entries</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                variant="secondary"
+                onClick={handleDownloadCsv}
+                className="flex items-center gap-2"
+                size="sm"
+              >
+                <Download size={16} />
+                Download CSV
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={handleUploadCsv}
+                className="flex items-center gap-2"
+                size="sm"
+              >
+                <Upload size={16} />
+                Upload CSV
+              </Button>
+            </div>
+          </div>
+
+          {/* Filters */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Vehicle Part</label>
+                <input
+                  type="text"
+                  placeholder="Search vehicle parts..."
+                  value={filterByPart}
+                  onChange={(e) => setFilterByPart(e.target.value)}
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Location</label>
+                <input
+                  type="text"
+                  placeholder="Search locations..."
+                  value={filterByLocation}
+                  onChange={(e) => setFilterByLocation(e.target.value)}
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Severity Type</label>
+                <select
+                  value={filterBySeverity}
+                  onChange={(e) => setFilterBySeverity(e.target.value)}
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">All severity types...</option>
+                  <option value="Minor">Minor</option>
+                  <option value="Moderate">Moderate</option>
+                  <option value="Major">Major</option>
+                  <option value="Severe">Severe</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Parts Table */}
+          <div className="bg-white rounded-lg border border-gray-200">
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-medium text-gray-900">Cost Entries</h3>
+                <p className="text-sm text-gray-600">Showing {filteredParts.length} of {parts.length} entries</p>
+              </div>
+              <Button
+                onClick={addPart}
+                className="flex items-center gap-2"
+                size="sm"
+              >
+                <Plus size={16} />
+                Add Entry
+              </Button>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="min-w-full">
+                <thead>
+                  <tr className="border-b border-gray-200 bg-gray-50">
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 text-sm">VEHICLE PART</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 text-sm">VEHICLE PART LOCATION</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 text-sm">SEVERITY TYPE</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 text-sm">COST</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700 text-sm">ACTIONS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredParts.map((part) => (
+                    <tr key={part.id} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="py-3 px-4">
+                        <input
+                          type="text"
+                          value={part.partType}
+                          onChange={(e) => updatePart(part.id, 'partType', e.target.value)}
+                          className="block w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Part type"
+                        />
+                      </td>
+                      <td className="py-3 px-4">
+                        <select
+                          value={part.location}
+                          onChange={(e) => updatePart(part.id, 'location', e.target.value)}
+                          className="block w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          <option value="">Select location</option>
+                          <option value="FRONT">FRONT</option>
+                          <option value="REAR">REAR</option>
+                          <option value="LEFT">LEFT</option>
+                          <option value="RIGHT">RIGHT</option>
+                          <option value="TOP">TOP</option>
+                          <option value="INTERIOR">INTERIOR</option>
+                        </select>
+                      </td>
+                      <td className="py-3 px-4">
+                        <select
+                          value={part.severity}
+                          onChange={(e) => updatePart(part.id, 'severity', e.target.value as CostPart['severity'])}
+                          className="block w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          <option value="Minor">Minor</option>
+                          <option value="Moderate">Moderate</option>
+                          <option value="Major">Major</option>
+                          <option value="Severe">Severe</option>
+                        </select>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            value={part.cost}
+                            onChange={(e) => updatePart(part.id, 'cost', parseFloat(e.target.value) || 0)}
+                            className="block w-20 px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                            min="0"
+                            step="0.01"
+                          />
+                          <span className="text-sm text-gray-600">{formData.currency}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <button
+                          onClick={() => removePart(part.id)}
+                          className="p-1 text-red-600 hover:bg-red-100 rounded transition-colors"
+                          title="Remove"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {filteredParts.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                <p>No cost entries found.</p>
+                <Button onClick={addPart} className="mt-2" size="sm">
+                  Add First Entry
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Basic Settings */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Matrix Settings</h3>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
@@ -195,89 +437,6 @@ export default function EditCostMatrixPage() {
                 step="0.1"
                 error={errors.tax}
               />
-            </div>
-          </div>
-
-          {/* Cost Parts */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Cost Parts</h3>
-              <Button
-                onClick={addPart}
-                className="flex items-center gap-2"
-                size="sm"
-              >
-                <Plus size={16} />
-                Add Part
-              </Button>
-            </div>
-
-            <div className="space-y-4">
-              {parts.map((part, index) => (
-                <div key={part.id} className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-medium text-gray-900">Part {index + 1}</h4>
-                    {parts.length > 1 && (
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        onClick={() => removePart(part.id)}
-                      >
-                        <Trash2 size={16} />
-                      </Button>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <Input
-                      label="Part Type"
-                      value={part.partType}
-                      onChange={(e) => updatePart(part.id, 'partType', e.target.value)}
-                      placeholder="e.g., Front Bumper"
-                    />
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                      <select
-                        value={part.location}
-                        onChange={(e) => updatePart(part.id, 'location', e.target.value)}
-                        className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      >
-                        <option value="">Select Location</option>
-                        <option value="Front">Front</option>
-                        <option value="Rear">Rear</option>
-                        <option value="Left">Left</option>
-                        <option value="Right">Right</option>
-                        <option value="Roof">Roof</option>
-                        <option value="Interior">Interior</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Severity</label>
-                      <select
-                        value={part.severity}
-                        onChange={(e) => updatePart(part.id, 'severity', e.target.value as CostPart['severity'])}
-                        className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      >
-                        <option value="Minor">Minor</option>
-                        <option value="Moderate">Moderate</option>
-                        <option value="Major">Major</option>
-                        <option value="Severe">Severe</option>
-                      </select>
-                    </div>
-
-                    <Input
-                      label="Cost"
-                      type="number"
-                      value={part.cost}
-                      onChange={(e) => updatePart(part.id, 'cost', parseFloat(e.target.value) || 0)}
-                      min="0"
-                      step="0.01"
-                    />
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
 

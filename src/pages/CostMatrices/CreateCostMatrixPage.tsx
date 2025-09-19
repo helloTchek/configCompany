@@ -3,33 +3,22 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../../components/Layout/Header';
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
-import { ArrowLeft, Save, Plus, Trash2 } from 'lucide-react';
-
-interface CostPart {
-  id: string;
-  partType: string;
-  location: string;
-  severity: 'Minor' | 'Moderate' | 'Major' | 'Severe';
-  cost: number;
-}
+import Modal from '../../components/UI/Modal';
+import { ArrowLeft, Save, Download, X } from 'lucide-react';
 
 export default function CreateCostMatrixPage() {
   const navigate = useNavigate();
+  const [showModal, setShowModal] = useState(true);
   const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    duplicateFrom: '',
     company: '',
     currency: 'EUR',
     tax: 20,
   });
-  const [parts, setParts] = useState<CostPart[]>([
-    {
-      id: '1',
-      partType: 'Front Bumper',
-      location: 'Front',
-      severity: 'Minor',
-      cost: 450
-    }
-  ]);
   const [errors, setErrors] = useState({
+    name: '',
     company: '',
     currency: '',
     tax: ''
@@ -40,33 +29,29 @@ export default function CreateCostMatrixPage() {
     setErrors(prev => ({ ...prev, [field]: '' }));
   };
 
-  const addPart = () => {
-    const newPart: CostPart = {
-      id: `part-${Date.now()}`,
-      partType: '',
-      location: '',
-      severity: 'Minor',
-      cost: 0
-    };
-    setParts([...parts, newPart]);
-  };
-
-  const removePart = (partId: string) => {
-    setParts(parts.filter(part => part.id !== partId));
-  };
-
-  const updatePart = (partId: string, field: keyof CostPart, value: string | number) => {
-    setParts(parts.map(part => 
-      part.id === partId ? { ...part, [field]: value } : part
-    ));
+  const handleDownloadTemplate = () => {
+    // Create CSV template
+    const csvContent = "Part Type,Location,Severity,Cost\nFront Bumper,Front,Minor,450\nDoor Panel,Side,Major,850\nRear Bumper,Rear,Moderate,620";
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'cost-matrix-template.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
   };
 
   const validateForm = () => {
     const newErrors = {
+      name: '',
       company: '',
       currency: '',
       tax: ''
     };
+
+    if (!formData.name.trim()) {
+      newErrors.name = 'Matrix name is required';
+    }
 
     if (!formData.company.trim()) {
       newErrors.company = 'Company is required';
@@ -81,25 +66,49 @@ export default function CreateCostMatrixPage() {
     }
 
     setErrors(newErrors);
-    return !newErrors.company && !newErrors.currency && !newErrors.tax;
+    return !newErrors.name && !newErrors.company && !newErrors.currency && !newErrors.tax;
   };
 
-  const handleSave = () => {
+  const handleCreateMatrix = () => {
     if (!validateForm()) {
       return;
     }
 
     const newMatrix = {
       id: `matrix-${Date.now()}`,
-      ...formData,
-      parts: parts.filter(part => part.partType && part.location),
+      company: formData.company,
+      currency: formData.currency,
+      tax: formData.tax,
+      parts: formData.duplicateFrom ? [] : [], // Would copy from existing if duplicating
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
 
     console.log('Creating cost matrix:', newMatrix);
-    navigate('/cost-matrices');
+    
+    // Navigate to edit page for the new matrix
+    navigate(`/cost-matrices/${newMatrix.id}/edit`);
   };
+
+  if (!showModal) {
+    return (
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header title="Create Cost Matrix" />
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="mb-6">
+            <Button
+              variant="secondary"
+              onClick={() => navigate('/cost-matrices')}
+              className="flex items-center gap-2 mb-4"
+            >
+              <ArrowLeft size={16} />
+              Back to Cost Matrices
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
@@ -117,153 +126,136 @@ export default function CreateCostMatrixPage() {
           </Button>
         </div>
 
-        <div className="max-w-4xl mx-auto space-y-6">
-          {/* Basic Information */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
-                <select
-                  value={formData.company}
-                  onChange={(e) => handleInputChange('company', e.target.value)}
-                  className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    errors.company ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                >
-                  <option value="">Select Company</option>
-                  <option value="AutoCorp Insurance">AutoCorp Insurance</option>
-                  <option value="FleetMax Leasing">FleetMax Leasing</option>
-                </select>
-                {errors.company && <p className="text-sm text-red-600 mt-1">{errors.company}</p>}
-              </div>
+        {/* Create Matrix Modal */}
+        <Modal
+          isOpen={showModal}
+          onClose={() => navigate('/cost-matrices')}
+          title="Create New Cost Matrix"
+          size="md"
+        >
+          <div className="space-y-6">
+            {/* Matrix Name */}
+            <div>
+              <label className="block text-sm font-medium text-gray-900 mb-2">Matrix Name</label>
+              <Input
+                placeholder="e.g. PREMIUM_MATRIX"
+                value={formData.name}
+                onChange={(e) => handleInputChange('name', e.target.value)}
+                error={errors.name}
+              />
+            </div>
 
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-medium text-gray-900 mb-2">Description</label>
+              <textarea
+                rows={3}
+                value={formData.description}
+                onChange={(e) => handleInputChange('description', e.target.value)}
+                placeholder="Brief description of this cost matrix"
+                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              />
+            </div>
+
+            {/* Duplicate from existing matrix */}
+            <div>
+              <label className="block text-sm font-medium text-gray-900 mb-2">Duplicate from existing matrix (optional)</label>
+              <select
+                value={formData.duplicateFrom}
+                onChange={(e) => handleInputChange('duplicateFrom', e.target.value)}
+                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Create empty matrix</option>
+                <option value="1">AutoCorp Insurance - Standard Matrix</option>
+                <option value="2">FleetMax Leasing - Premium Matrix</option>
+              </select>
+            </div>
+
+            {/* Company */}
+            <div>
+              <label className="block text-sm font-medium text-gray-900 mb-2">Company</label>
+              <select
+                value={formData.company}
+                onChange={(e) => handleInputChange('company', e.target.value)}
+                className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  errors.company ? 'border-red-500' : 'border-gray-300'
+                }`}
+              >
+                <option value="">Select Company</option>
+                <option value="AutoCorp Insurance">AutoCorp Insurance</option>
+                <option value="FleetMax Leasing">FleetMax Leasing</option>
+              </select>
+              {errors.company && <p className="text-sm text-red-600 mt-1">{errors.company}</p>}
+            </div>
+
+            {/* Currency and Tax */}
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2">Currency</label>
                 <select
                   value={formData.currency}
                   onChange={(e) => handleInputChange('currency', e.target.value)}
-                  className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    errors.currency ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="EUR">EUR</option>
-                  <option value="USD">USD</option>
-                  <option value="GBP">GBP</option>
+                  <option value="EUR">EUR (€)</option>
+                  <option value="USD">USD ($)</option>
+                  <option value="GBP">GBP (£)</option>
                 </select>
-                {errors.currency && <p className="text-sm text-red-600 mt-1">{errors.currency}</p>}
               </div>
-
-              <Input
-                label="Tax Rate (%)"
-                type="number"
-                value={formData.tax}
-                onChange={(e) => handleInputChange('tax', parseFloat(e.target.value) || 0)}
-                min="0"
-                max="100"
-                step="0.1"
-                error={errors.tax}
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-2">Tax Rate (%)</label>
+                <Input
+                  type="number"
+                  value={formData.tax}
+                  onChange={(e) => handleInputChange('tax', parseFloat(e.target.value) || 0)}
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  error={errors.tax}
+                />
+              </div>
             </div>
-          </div>
 
-          {/* Cost Parts */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Cost Parts</h3>
+            {/* Template Download */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0">
+                  <span className="text-blue-600">💡</span>
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-sm font-medium text-blue-900 mb-1">Need a starting template?</h4>
+                  <p className="text-sm text-blue-800 mb-3">
+                    Download our default template to get started with common vehicle parts and repair costs.
+                  </p>
+                  <Button
+                    variant="secondary"
+                    onClick={handleDownloadTemplate}
+                    className="flex items-center gap-2"
+                    size="sm"
+                  >
+                    <Download size={16} />
+                    Download Template
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Buttons */}
+            <div className="flex gap-3 justify-end pt-4 border-t border-gray-200">
               <Button
-                onClick={addPart}
-                className="flex items-center gap-2"
-                size="sm"
+                variant="secondary"
+                onClick={() => navigate('/cost-matrices')}
               >
-                <Plus size={16} />
-                Add Part
+                Cancel
+              </Button>
+              <Button
+                onClick={handleCreateMatrix}
+              >
+                Create Matrix
               </Button>
             </div>
-
-            <div className="space-y-4">
-              {parts.map((part, index) => (
-                <div key={part.id} className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-medium text-gray-900">Part {index + 1}</h4>
-                    {parts.length > 1 && (
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        onClick={() => removePart(part.id)}
-                      >
-                        <Trash2 size={16} />
-                      </Button>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <Input
-                      label="Part Type"
-                      value={part.partType}
-                      onChange={(e) => updatePart(part.id, 'partType', e.target.value)}
-                      placeholder="e.g., Front Bumper"
-                    />
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                      <select
-                        value={part.location}
-                        onChange={(e) => updatePart(part.id, 'location', e.target.value)}
-                        className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      >
-                        <option value="">Select Location</option>
-                        <option value="Front">Front</option>
-                        <option value="Rear">Rear</option>
-                        <option value="Left">Left</option>
-                        <option value="Right">Right</option>
-                        <option value="Roof">Roof</option>
-                        <option value="Interior">Interior</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Severity</label>
-                      <select
-                        value={part.severity}
-                        onChange={(e) => updatePart(part.id, 'severity', e.target.value as CostPart['severity'])}
-                        className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      >
-                        <option value="Minor">Minor</option>
-                        <option value="Moderate">Moderate</option>
-                        <option value="Major">Major</option>
-                        <option value="Severe">Severe</option>
-                      </select>
-                    </div>
-
-                    <Input
-                      label="Cost"
-                      type="number"
-                      value={part.cost}
-                      onChange={(e) => updatePart(part.id, 'cost', parseFloat(e.target.value) || 0)}
-                      min="0"
-                      step="0.01"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
-
-          {/* Save Buttons */}
-          <div className="flex gap-4 justify-end sticky bottom-0 bg-white py-4 border-t border-gray-200">
-            <Button variant="secondary" onClick={() => navigate('/cost-matrices')}>
-              Cancel
-            </Button>
-            <Button 
-              className="flex items-center gap-2" 
-              onClick={handleSave}
-            >
-              <Save size={16} />
-              Create Cost Matrix
-            </Button>
-          </div>
-        </div>
+        </Modal>
       </div>
     </div>
   );
