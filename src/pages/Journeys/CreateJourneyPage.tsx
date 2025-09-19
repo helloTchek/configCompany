@@ -387,16 +387,6 @@ export default function CreateJourneyPage() {
           {/* JSON Import/Export */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Journey Configuration</h3>
-            <div className="flex gap-4 mb-4">
-              <Button variant="secondary" className="flex items-center gap-2">
-                <Upload size={16} />
-                Import JSON
-              </Button>
-              <Button variant="secondary" className="flex items-center gap-2">
-                <Download size={16} />
-                Export JSON
-              </Button>
-            </div>
             <textarea
               rows={8}
               placeholder="Journey JSON configuration will appear here..."
