@@ -17,36 +17,36 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
 
   const navigation = [
     { 
-      name: t('common:navigation.companies'), 
+      name: t('navigation.companies'), 
       href: '/companies', 
       icon: Building2,
       permission: PERMISSIONS.COMPANIES.VIEW
     },
     { 
-      name: t('common:navigation.users'), 
+      name: t('navigation.users'), 
       href: '/users', 
       icon: Users,
       permission: PERMISSIONS.USERS.VIEW
     },
     { 
-      name: t('common:navigation.workflows'), 
+      name: t('navigation.workflows'), 
       href: '/journeys', 
       icon: Route,
       permission: PERMISSIONS.WORKFLOWS.VIEW
     },
     { 
-      name: t('common:navigation.costs'), 
+      name: t('navigation.costs'), 
       href: '/cost-matrices', 
       icon: DollarSign,
       permission: PERMISSIONS.COSTS.VIEW
     },
     { 
-      name: 'Sorting Rules', 
+      name: t('navigation.sortingRules'), 
       href: '/sorting-rules', 
       icon: Filter 
     },
     { 
-      name: 'Automated Chase-up Rules', 
+      name: t('navigation.chaseupRules'), 
       href: '/chaseup-rules', 
       icon: Route 
     },

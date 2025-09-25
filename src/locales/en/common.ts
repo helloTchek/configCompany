@@ -88,15 +88,12 @@ export const common = {
     configuration: 'Configuration'
   },
   navigation: {
-    dashboard: 'Dashboard',
     companies: 'Companies',
     users: 'Users',
-    apiTokens: 'API Tokens',
-    settings: 'Settings',
-    events: 'Events & Webhooks',
-    costs: 'Cost Matrices',
     workflows: 'Workflows',
-    shootInspect: 'Shoot Inspect',
+    costs: 'Cost Matrices',
+    sortingRules: 'Sorting Rules',
+    chaseupRules: 'Automated Chase-up Rules',
     profile: 'Profile',
     help: 'Help',
     documentation: 'Documentation'

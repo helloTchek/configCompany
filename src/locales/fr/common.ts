@@ -88,15 +88,12 @@ export const common = {
     configuration: 'Configuration'
   },
   navigation: {
-    dashboard: 'Tableau de bord',
     companies: 'Entreprises',
     users: 'Utilisateurs',
-    apiTokens: 'Jetons API',
-    settings: 'Paramètres',
-    events: 'Événements et Webhooks',
-    costs: 'Matrices de coûts',
     workflows: 'Flux de travail',
-    shootInspect: 'Inspection photo',
+    costs: 'Matrices de coûts',
+    sortingRules: 'Règles de tri',
+    chaseupRules: 'Règles de relance automatisées',
     profile: 'Profil',
     help: 'Aide',
     documentation: 'Documentation'
