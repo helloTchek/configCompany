@@ -11,6 +11,97 @@ import { mockChaseupRules } from '../../data/mockData';
 import { ChaseupRule } from '../../types';
 import { CreditCard as Edit, Copy, Trash2, Plus, Search, ListFilter as Filter, X } from 'lucide-react';
 
+const ChaseupRulesSection = ({ companyName, hasChaseupRules, chaseupRulesCount, navigate }) => {
+  return (
+    <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="flex justify-between items-start mb-6">
+        <div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Automated Chase-up Rules</h3>
+            <p className="text-sm text-gray-600">Manage automated reminder rules for this company</p>
+          </div>
+          <div className="flex items-center gap-3">
+            {hasChaseupRules && (
+              <span className="px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded-full">
+                {chaseupRulesCount} Active Rule{chaseupRulesCount !== 1 ? 's' : ''}
+              </span>
+            )}
+            <Button
+              onClick={() => navigate('/chaseup-rules/new')}
+              className="flex items-center gap-2"
+              size="sm"
+            >
+              <Plus size={16} />
+              Create New Rule
+            </Button>
+          </div>
+        </div>
+
+        {hasChaseupRules ? (
+          <div className="space-y-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0">
+                  <span className="text-blue-600">✓</span>
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-sm font-medium text-blue-900 mb-1">Chase-up Rules Configured</h4>
+                  <p className="text-sm text-blue-800 mb-3">
+                    This company has {chaseupRulesCount} automated chase-up rule{chaseupRulesCount !== 1 ? 's' : ''} configured.
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="secondary"
+                      onClick={() => navigate(`/chaseup-rules?company=${encodeURIComponent(companyName)}`)}
+                      className="flex items-center gap-2"
+                      size="sm"
+                    >
+                      View Rules
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      onClick={() => navigate('/chaseup-rules/new')}
+                      className="flex items-center gap-2"
+                      size="sm"
+                    >
+                      <Plus size={16} />
+                      Add Rule
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0">
+                <span className="text-yellow-600">⚠️</span>
+              </div>
+              <div className="flex-1">
+                <h4 className="text-sm font-medium text-yellow-900 mb-1">No Chase-up Rules</h4>
+                <p className="text-sm text-yellow-800 mb-3">
+                  This company doesn't have any automated chase-up rules configured. 
+                  Consider creating rules to automatically follow up on pending inspections.
+                </p>
+                <Button
+                  onClick={() => navigate('/chaseup-rules/new')}
+                  className="flex items-center gap-2"
+                  size="sm"
+                >
+                  <Plus size={16} />
+                  Create First Rule
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+
 export default function ChaseupRulesPage() {
   const navigate = useNavigate();
   const [rules, setRules] = useState<ChaseupRule[]>([...mockChaseupRules]);
