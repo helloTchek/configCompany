@@ -13,6 +13,8 @@ import Modal from '../../components/UI/Modal';
 import Input from '../../components/UI/Input';
 import { mockChaseupRules } from '../../data/mockData';
 import { ChaseupRule } from '../../types';
+
+const hasChaseupRules = (companyName: string) => {
     return mockChaseupRules.some(rule => rule.company === companyName);
   };
 
@@ -20,7 +22,7 @@ import { CreditCard as Edit, Copy, Trash2, Plus, Search, ListFilter as Filter, X
 
 export default function ChaseupRulesPage() {
   const navigate = useNavigate();
-  const [rules] = useState<ChaseupRule[]>(mockChaseupRules);
+  const [rules, setRules] = useState<ChaseupRule[]>(mockChaseupRules);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
@@ -137,13 +139,13 @@ export default function ChaseupRulesPage() {
     { 
       key: 'chaseupRules', 
       label: 'Chase-up Rules',
-      render: (_: any, row: Company) => {
-        const hasRules = hasChaseupRules(row.name);
+      render: (_: any, row: ChaseupRule) => {
+        const hasRules = hasChaseupRules(row.company);
         return (
           <div className="flex items-center gap-2">
             {hasRules ? (
               <button
-                onClick={() => navigate(`/chaseup-rules?company=${encodeURIComponent(row.name)}`)}
+                onClick={() => navigate(`/chaseup-rules?company=${encodeURIComponent(row.company)}`)}
                 className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full hover:bg-green-200 transition-colors"
                 title="View chase-up rules for this company"
               >
