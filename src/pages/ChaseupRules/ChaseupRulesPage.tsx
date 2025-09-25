@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../../components/Layout/Header';
 import Table from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
+import Modal from '../../components/UI/Modal';
+import Input from '../../components/UI/Input';
 import { mockChaseupRules } from '../../data/mockData';
 import { ChaseupRule } from '../../types';
 import { Edit, Copy, Trash2, Plus, Search, Filter, X } from 'lucide-react';
@@ -17,6 +19,9 @@ export default function ChaseupRulesPage() {
     company: '',
     maxSendings: ''
   });
+  const [duplicateModal, setDuplicateModal] = useState<{ open: boolean; rule?: ChaseupRule }>({ open: false });
+  const [duplicateName, setDuplicateName] = useState('');
+  const [deleteModal, setDeleteModal] = useState<{ open: boolean; rule?: ChaseupRule }>({ open: false });
 
   const clearFilters = () => {
     setFilters({
@@ -47,6 +52,59 @@ export default function ChaseupRulesPage() {
 
     return matchesSearch && matchesType && matchesCompany && matchesMaxSendings;
   });
+
+  const handleDuplicate = (rule: ChaseupRule) => {
+    setDuplicateName(`${rule.company} - Copy`);
+    setDuplicateModal({ open: true, rule });
+  };
+
+  const handleDelete = (rule: ChaseupRule) => {
+    setDeleteModal({ open: true, rule });
+  };
+
+  const confirmDelete = () => {
+    if (!deleteModal.rule) return;
+
+    // In a real app, this would make an API call to delete the rule
+    console.log('Deleting chase-up rule:', deleteModal.rule);
+    
+    // Remove from mock rules array (in real app this would be handled by API)
+    const index = mockChaseupRules.findIndex(r => r.id === deleteModal.rule!.id);
+    if (index > -1) {
+      mockChaseupRules.splice(index, 1);
+    }
+    
+    setDeleteModal({ open: false });
+    
+    // Refresh the page to show updated list
+    window.location.reload();
+  };
+
+  const confirmDuplicate = () => {
+    if (!duplicateModal.rule || !duplicateName.trim()) {
+      return;
+    }
+
+    const duplicatedRule: ChaseupRule = {
+      ...duplicateModal.rule,
+      id: `chaseup-rule-${Date.now()}`,
+      company: duplicateName,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    // In a real app, this would make an API call to create the rule
+    console.log('Duplicating chase-up rule:', duplicatedRule);
+    
+    // Add to mock rules array (in real app this would be handled by API)
+    mockChaseupRules.push(duplicatedRule);
+    
+    setDuplicateModal({ open: false });
+    setDuplicateName('');
+    
+    // Refresh the page to show the new rule
+    window.location.reload();
+  };
 
   const columns = [
     { key: 'company', label: 'Company', sortable: true },
@@ -97,14 +155,14 @@ export default function ChaseupRulesPage() {
             <Edit size={16} />
           </button>
           <button
-            onClick={() => {/* Handle duplicate */}}
+            onClick={() => handleDuplicate(row)}
             className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
             title="Duplicate"
           >
             <Copy size={16} />
           </button>
           <button
-            onClick={() => {/* Handle delete */}}
+            onClick={() => handleDelete(row)}
             className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
             title="Delete"
           >
@@ -245,6 +303,77 @@ export default function ChaseupRulesPage() {
           )}
         </div>
       </div>
+
+      {/* Duplicate Modal */}
+      <Modal
+        isOpen={duplicateModal.open}
+        onClose={() => setDuplicateModal({ open: false })}
+        title="Duplicate Chase-up Rule"
+        size="md"
+      >
+        <div className="space-y-4">
+          <p className="text-gray-600">
+            Create a copy of the chase-up rule for <strong>{duplicateModal.rule?.company}</strong>
+          </p>
+          <Input
+            label="New Company Name"
+            value={duplicateName}
+            onChange={(e) => setDuplicateName(e.target.value)}
+            placeholder="Enter company name for the duplicated rule"
+          />
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <p className="text-sm text-blue-800">
+              <strong>Note:</strong> All settings, delays, and message templates will be copied to the new rule.
+            </p>
+          </div>
+          <div className="flex gap-3 justify-end pt-4">
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setDuplicateModal({ open: false });
+                setDuplicateName('');
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmDuplicate}
+              disabled={!duplicateName.trim()}
+            >
+              Duplicate Rule
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Delete Modal */}
+      <Modal
+        isOpen={deleteModal.open}
+        onClose={() => setDeleteModal({ open: false })}
+        title="Delete Chase-up Rule"
+        size="md"
+      >
+        <div className="space-y-4">
+          <p className="text-gray-600">
+            Are you sure you want to delete the chase-up rule for <strong>{deleteModal.rule?.company}</strong>? 
+            This action cannot be undone.
+          </p>
+          <div className="flex gap-3 justify-end pt-4">
+            <Button
+              variant="secondary"
+              onClick={() => setDeleteModal({ open: false })}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              onClick={confirmDelete}
+            >
+              Delete Rule
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
