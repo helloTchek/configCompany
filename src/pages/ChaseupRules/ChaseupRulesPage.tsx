@@ -5,17 +5,13 @@ import Table from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
 import Modal from '../../components/UI/Modal';
 import Input from '../../components/UI/Input';
-import Modal from '../../components/UI/Modal';
-import Input from '../../components/UI/Input';
-import Modal from '../../components/UI/Modal';
-import Input from '../../components/UI/Input';
 import { mockChaseupRules } from '../../data/mockData';
 import { ChaseupRule } from '../../types';
 import { CreditCard as Edit, Copy, Trash2, Plus, Search, ListFilter as Filter, X } from 'lucide-react';
 
 export default function ChaseupRulesPage() {
   const navigate = useNavigate();
-  const [rules] = useState<ChaseupRule[]>(mockChaseupRules);
+  const [rules, setRules] = useState<ChaseupRule[]>([...mockChaseupRules]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
