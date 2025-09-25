@@ -5,20 +5,22 @@ import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
 import { ArrowLeft, Save, Plus, Trash2, Download, Upload } from 'lucide-react';
 import { mockCostMatrices } from '../../data/mockData';
-
-interface CostPart {
-  id: string;
-  partType: string;
-  location: string;
-  severity: 'Minor' | 'Moderate' | 'Major' | 'Severe';
-  cost: number;
-}
+import { CostMatrixPart } from '../../types';
 
 const severityColors = {
-  'Minor': 'bg-green-100 text-green-800',
-  'Moderate': 'bg-yellow-100 text-yellow-800', 
-  'Major': 'bg-orange-100 text-orange-800',
-  'Severe': 'bg-red-100 text-red-800'
+  'SEV1': 'bg-green-100 text-green-800',
+  'SEV2': 'bg-yellow-100 text-yellow-800', 
+  'SEV3': 'bg-orange-100 text-orange-800',
+  'SEV4': 'bg-red-100 text-red-800',
+  'SEV5': 'bg-red-200 text-red-900'
+};
+
+const severityLabels = {
+  'SEV1': '1',
+  'SEV2': '2',
+  'SEV3': '3',
+  'SEV4': '4',
+  'SEV5': '5'
 };
 
 export default function EditCostMatrixPage() {
@@ -30,7 +32,7 @@ export default function EditCostMatrixPage() {
     currency: 'EUR',
     tax: 20,
   });
-  const [parts, setParts] = useState<CostPart[]>([]);
+  const [parts, setParts] = useState<CostMatrixPart[]>([]);
   const [errors, setErrors] = useState({
     company: '',
     currency: '',
@@ -50,11 +52,8 @@ export default function EditCostMatrixPage() {
         tax: matrix.tax,
       });
       setParts(matrix.parts.map((part, index) => ({
-        id: `part-${index}`,
-        partType: part.partType,
-        location: part.location,
-        severity: part.severity,
-        cost: part.cost
+        ...part,
+        id: `part-${index}`
       })));
     } else {
       navigate('/cost-matrices');
@@ -69,12 +68,23 @@ export default function EditCostMatrixPage() {
   };
 
   const addPart = () => {
-    const newPart: CostPart = {
+    const newPart: CostMatrixPart = {
       id: `part-${Date.now()}`,
-      partType: '',
-      location: '',
-      severity: 'Minor',
-      cost: 0
+      partTypeCode: 'carbody',
+      partCode: '',
+      locationCode: '',
+      partNameEn: '',
+      locationEn: '',
+      conditionLabelEn: '',
+      severity: 'SEV1',
+      repairTypeEn: '',
+      costBeforeTax: 0,
+      partNameFr: '',
+      locationFr: '',
+      conditionLabelFr: '',
+      repairTypeFr: '',
+      conditionCode: '',
+      repairCode: ''
     };
     setParts([...parts, newPart]);
   };
@@ -83,7 +93,7 @@ export default function EditCostMatrixPage() {
     setParts(parts.filter(part => part.id !== partId));
   };
 
-  const updatePart = (partId: string, field: keyof CostPart, value: string | number) => {
+  const updatePart = (partId: string, field: keyof CostMatrixPart, value: string | number) => {
     setParts(parts.map(part => 
       part.id === partId ? { ...part, [field]: value } : part
     ));
@@ -120,7 +130,7 @@ export default function EditCostMatrixPage() {
     const updatedMatrix = {
       id,
       ...formData,
-      parts: parts.filter(part => part.partType && part.location),
+      parts: parts.filter(part => part.partNameEn && part.locationEn),
       updatedAt: new Date().toISOString()
     };
 
@@ -129,9 +139,43 @@ export default function EditCostMatrixPage() {
   };
 
   const handleDownloadCsv = () => {
+    const headers = [
+      'Part Type code',
+      '3-letter part code',
+      'Location code',
+      'Part name (EN)',
+      'Location (EN)',
+      'Condition label (EN)',
+      'Severity (1 to 5)',
+      'Repair type (EN)',
+      'COST BEFORE TAX',
+      'Part name (FR)',
+      'Location (FR)',
+      'Condition label (FR)',
+      'Réparation (FR)',
+      'Condition code',
+      'Repair code'
+    ];
+
     const csvContent = [
-      'Part Type,Location,Severity,Cost',
-      ...parts.map(part => `${part.partType},${part.location},${part.severity},${part.cost}`)
+      headers.join(','),
+      ...parts.map(part => [
+        part.partTypeCode,
+        part.partCode,
+        part.locationCode,
+        part.partNameEn,
+        part.locationEn,
+        part.conditionLabelEn,
+        part.severity,
+        part.repairTypeEn,
+        part.costBeforeTax,
+        part.partNameFr,
+        part.locationFr,
+        part.conditionLabelFr,
+        part.repairTypeFr,
+        part.conditionCode,
+        part.repairCode
+      ].join(','))
     ].join('\n');
     
     const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -153,8 +197,34 @@ export default function EditCostMatrixPage() {
         const reader = new FileReader();
         reader.onload = (e) => {
           const csv = e.target?.result as string;
-          // Parse CSV and update parts
-          console.log('Uploading CSV:', csv);
+          const lines = csv.split('\n');
+          const headers = lines[0].split(',');
+          
+          const newParts: CostMatrixPart[] = [];
+          for (let i = 1; i < lines.length; i++) {
+            const values = lines[i].split(',');
+            if (values.length >= 15) {
+              newParts.push({
+                id: `part-${Date.now()}-${i}`,
+                partTypeCode: values[0] || '',
+                partCode: values[1] || '',
+                locationCode: values[2] || '',
+                partNameEn: values[3] || '',
+                locationEn: values[4] || '',
+                conditionLabelEn: values[5] || '',
+                severity: values[6] || 'SEV1',
+                repairTypeEn: values[7] || '',
+                costBeforeTax: parseFloat(values[8]) || 0,
+                partNameFr: values[9] || '',
+                locationFr: values[10] || '',
+                conditionLabelFr: values[11] || '',
+                repairTypeFr: values[12] || '',
+                conditionCode: values[13] || '',
+                repairCode: values[14] || ''
+              });
+            }
+          }
+          setParts(newParts);
         };
         reader.readAsText(file);
       }
@@ -164,8 +234,12 @@ export default function EditCostMatrixPage() {
 
   // Filter parts based on search criteria
   const filteredParts = parts.filter(part => {
-    const matchesPart = !filterByPart || part.partType.toLowerCase().includes(filterByPart.toLowerCase());
-    const matchesLocation = !filterByLocation || part.location.toLowerCase().includes(filterByLocation.toLowerCase());
+    const matchesPart = !filterByPart || 
+      part.partNameEn.toLowerCase().includes(filterByPart.toLowerCase()) ||
+      part.partNameFr.toLowerCase().includes(filterByPart.toLowerCase());
+    const matchesLocation = !filterByLocation || 
+      part.locationEn.toLowerCase().includes(filterByLocation.toLowerCase()) ||
+      part.locationFr.toLowerCase().includes(filterByLocation.toLowerCase());
     const matchesSeverity = !filterBySeverity || part.severity === filterBySeverity;
     return matchesPart && matchesLocation && matchesSeverity;
   });
@@ -277,10 +351,11 @@ export default function EditCostMatrixPage() {
                   className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">All severity types...</option>
-                  <option value="Minor">Minor</option>
-                  <option value="Moderate">Moderate</option>
-                  <option value="Major">Major</option>
-                  <option value="Severe">Severe</option>
+                  <option value="SEV1">SEV1 (Minor)</option>
+                  <option value="SEV2">SEV2 (Light)</option>
+                  <option value="SEV3">SEV3 (Moderate)</option>
+                  <option value="SEV4">SEV4 (Major)</option>
+                  <option value="SEV5">SEV5 (Severe)</option>
                 </select>
               </div>
             </div>
@@ -318,47 +393,65 @@ export default function EditCostMatrixPage() {
                   {filteredParts.map((part) => (
                     <tr key={part.id} className="border-b border-gray-100 hover:bg-gray-50">
                       <td className="py-3 px-4">
-                        <input
-                          type="text"
-                          value={part.partType}
-                          onChange={(e) => updatePart(part.id, 'partType', e.target.value)}
-                          className="block w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="Part type"
-                        />
+                        <div className="space-y-1">
+                          <input
+                            type="text"
+                            value={part.partNameEn}
+                            onChange={(e) => updatePart(part.id, 'partNameEn', e.target.value)}
+                            className="block w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Part name (EN)"
+                          />
+                          <input
+                            type="text"
+                            value={part.partCode}
+                            onChange={(e) => updatePart(part.id, 'partCode', e.target.value)}
+                            className="block w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="3-letter code"
+                          />
+                        </div>
                       </td>
                       <td className="py-3 px-4">
-                        <select
-                          value={part.location}
-                          onChange={(e) => updatePart(part.id, 'location', e.target.value)}
-                          className="block w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                          <option value="">Select location</option>
-                          <option value="FRONT">FRONT</option>
-                          <option value="REAR">REAR</option>
-                          <option value="LEFT">LEFT</option>
-                          <option value="RIGHT">RIGHT</option>
-                          <option value="TOP">TOP</option>
-                          <option value="INTERIOR">INTERIOR</option>
-                        </select>
+                        <div className="space-y-1">
+                          <input
+                            type="text"
+                            value={part.locationEn}
+                            onChange={(e) => updatePart(part.id, 'locationEn', e.target.value)}
+                            className="block w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Location (EN)"
+                          />
+                          <input
+                            type="text"
+                            value={part.locationCode}
+                            onChange={(e) => updatePart(part.id, 'locationCode', e.target.value)}
+                            className="block w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Location code"
+                          />
+                        </div>
                       </td>
                       <td className="py-3 px-4">
-                        <select
-                          value={part.severity}
-                          onChange={(e) => updatePart(part.id, 'severity', e.target.value as CostPart['severity'])}
-                          className="block w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                          <option value="Minor">Minor</option>
-                          <option value="Moderate">Moderate</option>
-                          <option value="Major">Major</option>
-                          <option value="Severe">Severe</option>
-                        </select>
+                        <div className="space-y-1">
+                          <select
+                            value={part.severity}
+                            onChange={(e) => updatePart(part.id, 'severity', e.target.value)}
+                            className="block w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                          >
+                            <option value="SEV1">SEV1</option>
+                            <option value="SEV2">SEV2</option>
+                            <option value="SEV3">SEV3</option>
+                            <option value="SEV4">SEV4</option>
+                            <option value="SEV5">SEV5</option>
+                          </select>
+                          <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${severityColors[part.severity]}`}>
+                            {severityLabels[part.severity]}
+                          </span>
+                        </div>
                       </td>
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2">
                           <input
                             type="number"
-                            value={part.cost}
-                            onChange={(e) => updatePart(part.id, 'cost', parseFloat(e.target.value) || 0)}
+                            value={part.costBeforeTax}
+                            onChange={(e) => updatePart(part.id, 'costBeforeTax', parseFloat(e.target.value) || 0)}
                             className="block w-20 px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                             min="0"
                             step="0.01"

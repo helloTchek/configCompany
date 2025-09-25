@@ -122,10 +122,21 @@ export interface CostMatrix {
 }
 
 export interface CostMatrixPart {
-  partType: string;
-  location: string;
+  partTypeCode: string;
+  partCode: string;
+  locationCode: string;
+  partNameEn: string;
+  locationEn: string;
+  conditionLabelEn: string;
   severity: string;
-  cost: number;
+  repairTypeEn: string;
+  costBeforeTax: number;
+  partNameFr: string;
+  locationFr: string;
+  conditionLabelFr: string;
+  repairTypeFr: string;
+  conditionCode: string;
+  repairCode: string;
 }
 
 export interface ChaseupRule {

@@ -30,8 +30,32 @@ export default function CreateCostMatrixPage() {
   };
 
   const handleDownloadTemplate = () => {
-    // Create CSV template
-    const csvContent = "Part Type,Location,Severity,Cost\nFront Bumper,Front,Minor,450\nDoor Panel,Side,Major,850\nRear Bumper,Rear,Moderate,620";
+    // Create CSV template with proper format
+    const headers = [
+      'Part Type code',
+      '3-letter part code', 
+      'Location code',
+      'Part name (EN)',
+      'Location (EN)',
+      'Condition label (EN)',
+      'Severity (1 to 5)',
+      'Repair type (EN)',
+      'COST BEFORE TAX',
+      'Part name (FR)',
+      'Location (FR)',
+      'Condition label (FR)',
+      'Réparation (FR)',
+      'Condition code',
+      'Repair code'
+    ];
+
+    const sampleData = [
+      'carbody,PRC,AV,Bumper,Front,scuffed,SEV1,Polish,450,PARE-CHOC,Avant,Éraflé,Polish,scuffed,polish',
+      'carbody,PRC,AV,Bumper,Front,damaged,SEV4,Sheet Metal Work and Painting,850,PARE-CHOC,Avant,Endommagé,Tôlerie Peinture,damaged,sheet_metal_work_and_painting',
+      'carbody,PRT,AVG,Door,Front Left,scratched,SEV3,Painting,320,PORTE,Avant Gauche,Rayé,Peinture,scratched,painting'
+    ];
+
+    const csvContent = [headers.join(','), ...sampleData].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
