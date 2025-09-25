@@ -7,6 +7,8 @@ import Modal from '../../components/UI/Modal';
 import Input from '../../components/UI/Input';
 import Modal from '../../components/UI/Modal';
 import Input from '../../components/UI/Input';
+import Modal from '../../components/UI/Modal';
+import Input from '../../components/UI/Input';
 import { mockChaseupRules } from '../../data/mockData';
 import { ChaseupRule } from '../../types';
 import { CreditCard as Edit, Copy, Trash2, Plus, Search, ListFilter as Filter, X } from 'lucide-react';
