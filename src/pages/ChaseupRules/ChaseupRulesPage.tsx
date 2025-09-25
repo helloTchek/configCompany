@@ -5,6 +5,8 @@ import Table from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
 import Modal from '../../components/UI/Modal';
 import Input from '../../components/UI/Input';
+import Modal from '../../components/UI/Modal';
+import Input from '../../components/UI/Input';
 import { mockChaseupRules } from '../../data/mockData';
 import { ChaseupRule } from '../../types';
 import { CreditCard as Edit, Copy, Trash2, Plus, Search, ListFilter as Filter, X } from 'lucide-react';
@@ -65,19 +67,9 @@ export default function ChaseupRulesPage() {
   const confirmDelete = () => {
     if (!deleteModal.rule) return;
 
-    // In a real app, this would make an API call to delete the rule
-    console.log('Deleting chase-up rule:', deleteModal.rule);
-    
-    // Remove from mock rules array (in real app this would be handled by API)
-    const index = mockChaseupRules.findIndex(r => r.id === deleteModal.rule!.id);
-    if (index > -1) {
-      mockChaseupRules.splice(index, 1);
-    }
+    setRules(prevRules => prevRules.filter(r => r.id !== deleteModal.rule!.id));
     
     setDeleteModal({ open: false });
-    
-    // Refresh the page to show updated list
-    window.location.reload();
   };
 
   const confirmDuplicate = () => {
@@ -93,17 +85,10 @@ export default function ChaseupRulesPage() {
       updatedAt: new Date().toISOString(),
     };
 
-    // In a real app, this would make an API call to create the rule
-    console.log('Duplicating chase-up rule:', duplicatedRule);
-    
-    // Add to mock rules array (in real app this would be handled by API)
-    mockChaseupRules.push(duplicatedRule);
+    setRules(prevRules => [...prevRules, duplicatedRule]);
     
     setDuplicateModal({ open: false });
     setDuplicateName('');
-    
-    // Refresh the page to show the new rule
-    window.location.reload();
   };
 
   const columns = [
