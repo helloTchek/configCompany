@@ -23,6 +23,39 @@ const severityLabels = {
   'SEV5': '5'
 };
 
+// Predefined vehicle parts with codes
+const vehicleParts = [
+  { code: 'PRC', nameEn: 'Bumper', nameFr: 'PARE-CHOC' },
+  { code: 'PRT', nameEn: 'Door', nameFr: 'PORTE' },
+  { code: 'JNA', nameEn: 'Aluminum rim', nameFr: 'JANTE ALLUMINIUM' },
+  { code: 'JNT', nameEn: 'Steel rim', nameFr: 'JANTE TOLE' },
+  { code: 'ENJ', nameEn: 'Hubcap', nameFr: 'ENJOLIVEUR' },
+  { code: 'RTR', nameEn: 'Mirror', nameFr: 'RÉTROVISEUR' },
+  { code: 'AIL', nameEn: 'Wing', nameFr: 'AILE' },
+  { code: 'CAP', nameEn: 'Hood', nameFr: 'CAPOT' },
+  { code: 'HAY', nameEn: 'Tailgate', nameFr: 'HAYON' },
+  { code: 'TOI', nameEn: 'Roof', nameFr: 'TOIT' },
+  { code: 'BAS', nameEn: 'Rocker panel', nameFr: 'BAS DE CAISSE' },
+  { code: 'GRI', nameEn: 'Grille', nameFr: 'GRILLE' },
+  { code: 'OPT', nameEn: 'Headlight', nameFr: 'OPTIQUE' },
+  { code: 'PLQ', nameEn: 'License plate', nameFr: 'PLAQUE' }
+];
+
+// Predefined locations with codes
+const vehicleLocations = [
+  { code: 'AV', nameEn: 'Front', nameFr: 'Avant' },
+  { code: 'AR', nameEn: 'Rear', nameFr: 'Arrière' },
+  { code: 'AVG', nameEn: 'Front Left', nameFr: 'Avant Gauche' },
+  { code: 'AVD', nameEn: 'Front Right', nameFr: 'Avant Droite' },
+  { code: 'ARG', nameEn: 'Rear Left', nameFr: 'Arrière Gauche' },
+  { code: 'ARD', nameEn: 'Rear Right', nameFr: 'Arrière Droite' },
+  { code: 'G', nameEn: 'Left', nameFr: 'Gauche' },
+  { code: 'D', nameEn: 'Right', nameFr: 'Droite' },
+  { code: 'C', nameEn: 'Center', nameFr: 'Centre' },
+  { code: 'SUP', nameEn: 'Top', nameFr: 'Supérieur' },
+  { code: 'INF', nameEn: 'Bottom', nameFr: 'Inférieur' }
+];
+
 export default function EditCostMatrixPage() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -71,16 +104,16 @@ export default function EditCostMatrixPage() {
     const newPart: CostMatrixPart = {
       id: `part-${Date.now()}`,
       partTypeCode: 'carbody',
-      partCode: '',
-      locationCode: '',
-      partNameEn: '',
-      locationEn: '',
+      partCode: vehicleParts[0].code,
+      locationCode: vehicleLocations[0].code,
+      partNameEn: vehicleParts[0].nameEn,
+      locationEn: vehicleLocations[0].nameEn,
       conditionLabelEn: '',
       severity: 'SEV1',
       repairTypeEn: '',
       costBeforeTax: 0,
-      partNameFr: '',
-      locationFr: '',
+      partNameFr: vehicleParts[0].nameFr,
+      locationFr: vehicleLocations[0].nameFr,
       conditionLabelFr: '',
       repairTypeFr: '',
       conditionCode: '',
@@ -394,41 +427,51 @@ export default function EditCostMatrixPage() {
                     <tr key={part.id} className="border-b border-gray-100 hover:bg-gray-50">
                       <td className="py-3 px-4">
                         <div className="space-y-1">
-                          <input
-                            type="text"
-                            value={`${part.partNameEn} (${part.partCode})`}
+                          <select
+                            value={part.partCode}
                             onChange={(e) => {
-                              // Extract just the name part, preserve the code
-                              const value = e.target.value;
-                              const codeMatch = value.match(/\(([^)]+)\)$/);
-                              const nameOnly = value.replace(/\s*\([^)]*\)$/, '');
-                              updatePart(part.id, 'partNameEn', nameOnly);
+                              const selectedPart = vehicleParts.find(p => p.code === e.target.value);
+                              if (selectedPart) {
+                                updatePart(part.id, 'partCode', selectedPart.code);
+                                updatePart(part.id, 'partNameEn', selectedPart.nameEn);
+                                updatePart(part.id, 'partNameFr', selectedPart.nameFr);
+                              }
                             }}
                             className="block w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Part name (EN)"
-                          />
+                          >
+                            {vehicleParts.map((vehiclePart) => (
+                              <option key={vehiclePart.code} value={vehiclePart.code}>
+                                {vehiclePart.nameEn} ({vehiclePart.code})
+                              </option>
+                            ))}
+                          </select>
                           <div className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded border">
-                            Code: {part.partCode}
+                            FR: {part.partNameFr}
                           </div>
                         </div>
                       </td>
                       <td className="py-3 px-4">
                         <div className="space-y-1">
-                          <input
-                            type="text"
-                            value={`${part.locationEn} (${part.locationCode})`}
+                          <select
+                            value={part.locationCode}
                             onChange={(e) => {
-                              // Extract just the name part, preserve the code
-                              const value = e.target.value;
-                              const codeMatch = value.match(/\(([^)]+)\)$/);
-                              const nameOnly = value.replace(/\s*\([^)]*\)$/, '');
-                              updatePart(part.id, 'locationEn', nameOnly);
+                              const selectedLocation = vehicleLocations.find(l => l.code === e.target.value);
+                              if (selectedLocation) {
+                                updatePart(part.id, 'locationCode', selectedLocation.code);
+                                updatePart(part.id, 'locationEn', selectedLocation.nameEn);
+                                updatePart(part.id, 'locationFr', selectedLocation.nameFr);
+                              }
                             }}
                             className="block w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Location (EN)"
-                          />
+                          >
+                            {vehicleLocations.map((location) => (
+                              <option key={location.code} value={location.code}>
+                                {location.nameEn} ({location.code})
+                              </option>
+                            ))}
+                          </select>
                           <div className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded border">
-                            Code: {part.locationCode}
+                            FR: {part.locationFr}
                           </div>
                         </div>
                       </td>
