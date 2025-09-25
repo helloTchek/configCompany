@@ -17,44 +17,38 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
 
   const navigation = [
     { 
-      name: t('navigation.companies'), 
+      name: t('common:navigation.companies'), 
       href: '/companies', 
       icon: Building2,
       permission: PERMISSIONS.COMPANIES.VIEW
     },
     { 
-      name: t('navigation.users'), 
+      name: t('common:navigation.users'), 
       href: '/users', 
       icon: Users,
       permission: PERMISSIONS.USERS.VIEW
     },
     { 
-      name: t('navigation.workflows'), 
+      name: t('common:navigation.workflows'), 
       href: '/journeys', 
       icon: Route,
       permission: PERMISSIONS.WORKFLOWS.VIEW
     },
     { 
-      name: t('navigation.costs'), 
+      name: t('common:navigation.costs'), 
       href: '/cost-matrices', 
       icon: DollarSign,
       permission: PERMISSIONS.COSTS.VIEW
     },
     { 
-      name: t('navigation.sortingRules'), 
+      name: t('common:navigation.sortingRules'), 
       href: '/sorting-rules', 
       icon: Filter 
     },
     { 
-      name: t('navigation.chaseupRules'), 
+      name: t('common:navigation.chaseupRules'), 
       href: '/chaseup-rules', 
       icon: Route 
-    },
-    { 
-      name: t('common:navigation.settings'), 
-      href: '/settings', 
-      icon: Settings,
-      permission: PERMISSIONS.SETTINGS.VIEW
     },
   ].filter(item => !item.permission || hasPermission(item.permission));
 
