@@ -2,17 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/auth/AuthContext';
-import { 
-  Building2, 
-  Users, 
-  Route, 
-  DollarSign, 
-  Filter, 
-  Settings,
-  Home,
-  ChevronDown,
-  ChevronRight
-} from 'lucide-react';
+import { Building2, Users, Route, DollarSign, ListFilter as Filter, Settings, Hop as Home, ChevronDown, ChevronRight } from 'lucide-react';
 import { PERMISSIONS } from '@/types/auth';
 
 interface SidebarProps {
@@ -59,6 +49,12 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       name: 'Automated Chase-up Rules', 
       href: '/chaseup-rules', 
       icon: Route 
+    },
+    { 
+      name: t('common:navigation.settings'), 
+      href: '/settings', 
+      icon: Settings,
+      permission: PERMISSIONS.SETTINGS.VIEW
     },
   ].filter(item => !item.permission || hasPermission(item.permission));
 
