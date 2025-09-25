@@ -25,6 +25,13 @@ export default function ChaseupRulesPage() {
   const [duplicateName, setDuplicateName] = useState('');
   const [deleteModal, setDeleteModal] = useState<{ open: boolean; rule?: ChaseupRule }>({ open: false });
 
+  // Show filters panel if company filter is pre-set from URL
+  React.useEffect(() => {
+    if (urlParams.get('company')) {
+      setShowFilters(true);
+    }
+  }, [urlParams]);
+
   const clearFilters = () => {
     setFilters({
       type: '',
