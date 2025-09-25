@@ -5,6 +5,8 @@ import Table from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
 import Modal from '../../components/UI/Modal';
 import Input from '../../components/UI/Input';
+import Modal from '../../components/UI/Modal';
+import Input from '../../components/UI/Input';
 import { mockChaseupRules } from '../../data/mockData';
 import { ChaseupRule } from '../../types';
 import { CreditCard as Edit, Copy, Trash2, Plus, Search, ListFilter as Filter, X } from 'lucide-react';
@@ -22,6 +24,13 @@ export default function ChaseupRulesPage() {
   const [duplicateModal, setDuplicateModal] = useState<{ open: boolean; rule?: ChaseupRule }>({ open: false });
   const [duplicateName, setDuplicateName] = useState('');
   const [deleteModal, setDeleteModal] = useState<{ open: boolean; rule?: ChaseupRule }>({ open: false });
+
+  // Show filters panel if company filter is pre-set from URL
+  React.useEffect(() => {
+    if (urlParams.get('company')) {
+      setShowFilters(true);
+    }
+  }, [urlParams]);
 
   const clearFilters = () => {
     setFilters({
