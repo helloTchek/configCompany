@@ -27,11 +27,6 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
 
   const navigation = [
     { 
-      name: t('common:navigation.dashboard'), 
-      href: '/', 
-      icon: Home 
-    },
-    { 
       name: t('common:navigation.companies'), 
       href: '/companies', 
       icon: Building2,
@@ -64,12 +59,6 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       name: 'Automated Chase-up Rules', 
       href: '/chaseup-rules', 
       icon: Route 
-    },
-    { 
-      name: t('common:navigation.settings'), 
-      href: '/settings', 
-      icon: Settings,
-      permission: PERMISSIONS.SETTINGS.VIEW
     },
   ].filter(item => !item.permission || hasPermission(item.permission));
 

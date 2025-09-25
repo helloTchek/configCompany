@@ -7,7 +7,6 @@ import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import LoginPage from '@/pages/auth/LoginPage';
 import UnauthorizedPage from '@/pages/auth/UnauthorizedPage';
-import Dashboard from './pages/Dashboard';
 import CompaniesPage from './pages/Companies/CompaniesPage';
 import EditCompanyPage from './pages/Companies/EditCompanyPage';
 import CreateCompanyPage from './pages/Companies/CreateCompanyPage';
@@ -51,7 +50,11 @@ function App() {
                 
                 <div className="flex-1 flex flex-col overflow-hidden">
                   <Routes>
-                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/" element={
+                      <ProtectedRoute requiredPermission={PERMISSIONS.COMPANIES.VIEW}>
+                        <CompaniesPage />
+                      </ProtectedRoute>
+                    } />
                     <Route path="/companies" element={
                       <ProtectedRoute requiredPermission={PERMISSIONS.COMPANIES.VIEW}>
                         <CompaniesPage />
