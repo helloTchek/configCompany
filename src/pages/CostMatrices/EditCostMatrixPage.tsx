@@ -396,36 +396,40 @@ export default function EditCostMatrixPage() {
                         <div className="space-y-1">
                           <input
                             type="text"
-                            value={part.partNameEn}
-                            onChange={(e) => updatePart(part.id, 'partNameEn', e.target.value)}
+                            value={`${part.partNameEn} (${part.partCode})`}
+                            onChange={(e) => {
+                              // Extract just the name part, preserve the code
+                              const value = e.target.value;
+                              const codeMatch = value.match(/\(([^)]+)\)$/);
+                              const nameOnly = value.replace(/\s*\([^)]*\)$/, '');
+                              updatePart(part.id, 'partNameEn', nameOnly);
+                            }}
                             className="block w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="Part name (EN)"
                           />
-                          <input
-                            type="text"
-                            value={part.partCode}
-                            onChange={(e) => updatePart(part.id, 'partCode', e.target.value)}
-                            className="block w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="3-letter code"
-                          />
+                          <div className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded border">
+                            Code: {part.partCode}
+                          </div>
                         </div>
                       </td>
                       <td className="py-3 px-4">
                         <div className="space-y-1">
                           <input
                             type="text"
-                            value={part.locationEn}
-                            onChange={(e) => updatePart(part.id, 'locationEn', e.target.value)}
+                            value={`${part.locationEn} (${part.locationCode})`}
+                            onChange={(e) => {
+                              // Extract just the name part, preserve the code
+                              const value = e.target.value;
+                              const codeMatch = value.match(/\(([^)]+)\)$/);
+                              const nameOnly = value.replace(/\s*\([^)]*\)$/, '');
+                              updatePart(part.id, 'locationEn', nameOnly);
+                            }}
                             className="block w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="Location (EN)"
                           />
-                          <input
-                            type="text"
-                            value={part.locationCode}
-                            onChange={(e) => updatePart(part.id, 'locationCode', e.target.value)}
-                            className="block w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Location code"
-                          />
+                          <div className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded border">
+                            Code: {part.locationCode}
+                          </div>
                         </div>
                       </td>
                       <td className="py-3 px-4">
