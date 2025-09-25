@@ -11,42 +11,42 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation('common');
   const { hasPermission } = useAuth();
   const location = useLocation();
 
   const navigation = [
     { 
-      name: t('common:navigation.companies'), 
+      name: t('navigation.companies'), 
       href: '/companies', 
       icon: Building2,
       permission: PERMISSIONS.COMPANIES.VIEW
     },
     { 
-      name: t('common:navigation.users'), 
+      name: t('navigation.users'), 
       href: '/users', 
       icon: Users,
       permission: PERMISSIONS.USERS.VIEW
     },
     { 
-      name: t('common:navigation.workflows'), 
+      name: t('navigation.workflows'), 
       href: '/journeys', 
       icon: Route,
       permission: PERMISSIONS.WORKFLOWS.VIEW
     },
     { 
-      name: t('common:navigation.costs'), 
+      name: t('navigation.costs'), 
       href: '/cost-matrices', 
       icon: DollarSign,
       permission: PERMISSIONS.COSTS.VIEW
     },
     { 
-      name: t('common:navigation.sortingRules'), 
+      name: t('navigation.sortingRules'), 
       href: '/sorting-rules', 
       icon: Filter 
     },
     { 
-      name: t('common:navigation.chaseupRules'), 
+      name: t('navigation.chaseupRules'), 
       href: '/chaseup-rules', 
       icon: Route 
     },
@@ -59,7 +59,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       <div className="p-4 border-b border-gray-700">
         <div className="flex items-center justify-between">
           {!isCollapsed && (
-            <h1 className="text-xl font-bold">{t('common:navigation.adminPanel', 'Admin Panel')}</h1>
+            <h1 className="text-xl font-bold">Admin Panel</h1>
           )}
           <button
             onClick={onToggle}
