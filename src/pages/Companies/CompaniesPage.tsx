@@ -7,7 +7,7 @@ import Modal from '../../components/UI/Modal';
 import Input from '../../components/UI/Input';
 import { mockCompanies } from '../../data/mockData';
 import { Company } from '../../types';
-import { CreditCard as Edit, Trash2, Copy, Plus, Upload, Search, ListFilter as Filter, X } from 'lucide-react';
+import { CreditCard as Edit, Archive, Copy, Plus, Upload, Search, ListFilter as Filter, X } from 'lucide-react';
 import { mockChaseupRules } from '../../data/mockData';
 
 export default function CompaniesPage() {
@@ -19,11 +19,12 @@ export default function CompaniesPage() {
     contractType: '',
     businessSector: '',
     parentCompany: '',
-    status: ''
+    status: '',
+    archived: 'active'
   });
   const [sortKey, setSortKey] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-  const [deleteModal, setDeleteModal] = useState<{ open: boolean; company?: Company }>({ open: false });
+  const [archiveModal, setArchiveModal] = useState<{ open: boolean; company?: Company }>({ open: false });
   const [duplicateModal, setDuplicateModal] = useState<{ open: boolean; company?: Company }>({ open: false });
   const [duplicateForm, setDuplicateForm] = useState({
     companyName: '',
@@ -45,13 +46,37 @@ export default function CompaniesPage() {
     }
   };
 
-  const handleDelete = (company: Company) => {
-    setDeleteModal({ open: true, company });
+  const handleArchive = (company: Company) => {
+    setArchiveModal({ open: true, company });
   };
 
-  const confirmDelete = () => {
-    // Handle delete logic here
-    setDeleteModal({ open: false });
+  const confirmArchive = () => {
+    if (!archiveModal.company) return;
+
+    // Archive the company
+    const companyIndex = mockCompanies.findIndex(c => c.id === archiveModal.company!.id);
+    if (companyIndex > -1) {
+      mockCompanies[companyIndex] = {
+        ...mockCompanies[companyIndex],
+        isArchived: true,
+        archivedAt: new Date().toISOString()
+      };
+    }
+
+    // Disable users from this company
+    mockUsers.forEach(user => {
+      if (user.company === archiveModal.company!.name) {
+        user.status = 'inactive';
+        user.isDisabled = true;
+        user.disabledReason = 'Company archived';
+      }
+    });
+
+    console.log('Archiving company:', archiveModal.company);
+    setArchiveModal({ open: false });
+    
+    // Refresh the page to show updated list
+    window.location.reload();
   };
 
   const handleDuplicate = (company: Company) => {
@@ -145,6 +170,11 @@ export default function CompaniesPage() {
 
   // Filter and search logic
   const filteredCompanies = companies.filter(company => {
+    // Archive filter
+    const matchesArchived = filters.archived === 'all' ||
+      (filters.archived === 'active' && !company.isArchived) ||
+      (filters.archived === 'archived' && company.isArchived);
+
     // Search filter
     const matchesSearch = !searchTerm || 
       company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -167,7 +197,7 @@ export default function CompaniesPage() {
       (filters.status === 'active' && company.currentApiRequests < company.maxApiRequests) ||
       (filters.status === 'limit-reached' && company.currentApiRequests >= company.maxApiRequests);
 
-    return matchesSearch && matchesContractType && matchesBusinessSector && matchesParentCompany && matchesStatus;
+    return matchesArchived && matchesSearch && matchesContractType && matchesBusinessSector && matchesParentCompany && matchesStatus;
   });
 
   const clearFilters = () => {
@@ -175,7 +205,8 @@ export default function CompaniesPage() {
       contractType: '',
       businessSector: '',
       parentCompany: '',
-      status: ''
+      status: '',
+      archived: 'active'
     });
     setSearchTerm('');
   };
@@ -188,7 +219,18 @@ export default function CompaniesPage() {
   };
 
   const columns = [
-    { key: 'name', label: 'Company Name', sortable: true },
+    { key: 'name', label: 'Company Name', sortable: true,
+      render: (value: string, row: Company) => (
+        <div className="flex items-center gap-2">
+          <span className={row.isArchived ? 'text-gray-500' : ''}>{value}</span>
+          {row.isArchived && (
+            <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">
+              Archived
+            </span>
+          )}
+        </div>
+      )
+    },
     { key: 'identifier', label: 'Identifier', sortable: true },
     { key: 'companyCode', label: 'Company ID', sortable: true },
     { 
@@ -249,10 +291,12 @@ export default function CompaniesPage() {
             <Copy size={16} />
           </button>
           <button
-            onClick={() => handleDelete(row)}
-            className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+            onClick={() => handleArchive(row)}
+            className="p-2 text-orange-600 hover:bg-orange-100 rounded-lg transition-colors"
+            title={row.isArchived ? "Company is archived" : "Archive company"}
+            disabled={row.isArchived}
           >
-            <Trash2 size={16} />
+            <Archive size={16} />
           </button>
         </div>
       ),
@@ -375,6 +419,19 @@ export default function CompaniesPage() {
                     <option value="limit-reached">Limit Reached</option>
                   </select>
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Company Status</label>
+                  <select
+                    value={filters.archived}
+                    onChange={(e) => setFilters(prev => ({ ...prev, archived: e.target.value }))}
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="active">Active Companies</option>
+                    <option value="archived">Archived Companies</option>
+                    <option value="all">All Companies</option>
+                  </select>
+                </div>
               </div>
 
               {hasActiveFilters && (
@@ -437,28 +494,35 @@ export default function CompaniesPage() {
       </div>
 
       <Modal
-        isOpen={deleteModal.open}
-        onClose={() => setDeleteModal({ open: false })}
-        title="Delete Company"
+        isOpen={archiveModal.open}
+        onClose={() => setArchiveModal({ open: false })}
+        title="Archive Company"
         size="sm"
       >
         <div className="space-y-4">
           <p className="text-gray-600">
-            Are you sure you want to delete <strong>{deleteModal.company?.name}</strong>? 
-            This action cannot be undone.
+            Are you sure you want to archive <strong>{archiveModal.company?.name}</strong>? 
+            This will disable all users from this company and hide it from the active companies list.
+          </p>
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+            <p className="text-sm text-orange-800">
+              <strong>Note:</strong> Archived companies can be restored later using the "Show archived companies" filter.
+            </p>
+          </div>
           </p>
           <div className="flex gap-3 justify-end">
             <Button
               variant="secondary"
-              onClick={() => setDeleteModal({ open: false })}
+              onClick={() => setArchiveModal({ open: false })}
             >
               Cancel
             </Button>
             <Button
-              variant="danger"
-              onClick={confirmDelete}
+              variant="secondary"
+              onClick={confirmArchive}
+              className="bg-orange-600 text-white hover:bg-orange-700"
             >
-              Delete Company
+              Archive Company
             </Button>
           </div>
         </div>

@@ -18,6 +18,8 @@ export interface Company {
   reportSettings?: string;
   configModules?: string;
   costSettings?: string[];
+  isArchived?: boolean;
+  archivedAt?: string;
 }
 
 export interface User {
@@ -27,6 +29,8 @@ export interface User {
   role: 'superadmin' | 'admin' | 'user';
   company: string;
   status: 'active' | 'inactive';
+  isDisabled?: boolean;
+  disabledReason?: string;
   lastLogin?: string;
 }
 

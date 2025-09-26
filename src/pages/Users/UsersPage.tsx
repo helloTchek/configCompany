@@ -67,11 +67,18 @@ export default function UsersPage() {
     { key: 'company', label: 'Company', sortable: true },
     { key: 'status', label: 'Status', sortable: true,
       render: (value: string) => (
-        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-          value === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-        }`}>
-          {value}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+            value === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+          }`}>
+            {value}
+          </span>
+          {row.isDisabled && (
+            <span className="px-2 py-1 text-xs font-medium rounded-full bg-orange-100 text-orange-800">
+              {row.disabledReason || 'Disabled'}
+            </span>
+          )}
+        </div>
       )
     },
     { key: 'lastLogin', label: 'Last Login',
