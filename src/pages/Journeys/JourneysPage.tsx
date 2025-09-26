@@ -130,13 +130,6 @@ export default function JourneysPage() {
       render: (_: any, row: InspectionJourney) => (
         <div className="flex items-center gap-2">
           <button
-            onClick={() => navigate(`/journeys/${row.id}/view`)}
-            className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-            title="View"
-          >
-            <Eye size={16} />
-          </button>
-          <button
             onClick={() => navigate(`/journeys/${row.id}/edit`)}
             className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
             title="Edit"
