@@ -717,10 +717,6 @@ export default function EditCompanyPage() {
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   const [companyEmailEnabled, setCompanyEmailEnabled] = useState({});
   
-  // Check if company has chase-up rules
-  const hasChaseupRules = mockChaseupRules.some(rule => rule.company === formData.companyName);
-  const chaseupRulesCount = mockChaseupRules.filter(rule => rule.company === formData.companyName).length;
-
   // Initialize form data with existing company data (mock data for now)
   const [formData, setFormData] = useState({
     companyName: 'AutoCorp Insurance',
@@ -752,6 +748,10 @@ export default function EditCompanyPage() {
     configModules: '{"fastTrack":{"canWearAndTear":true,"deletedStatusEnabled":false,"validatedStatusEnabled":true,"wearAndTearStatusEnabled":true,"editionMode":true,"zoomConfig":{"minDamageCropMargin":0.3,"regularWidthMargin":1.4,"regularHeightMargin":1.4,"strokeWidthScale":5}},"shootInspect":{"autoFinalizationEnabled":false,"autoFinalizationThreshold":2},"global":{"modelIA":"codeter_ensembling"},"endInspect":{"npsEnabled":true,"npsDelay":3000}}'
   });
   
+  // Check if company has chase-up rules (moved after formData initialization)
+  const hasChaseupRules = mockChaseupRules.some(rule => rule.company === formData.companyName);
+  const chaseupRulesCount = mockChaseupRules.filter(rule => rule.company === formData.companyName).length;
+
   const [errors, setErrors] = useState({
     companyName: '',
     logoUrl: '',
