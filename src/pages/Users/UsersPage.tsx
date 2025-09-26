@@ -6,7 +6,7 @@ import Modal from '../../components/UI/Modal';
 import Input from '../../components/UI/Input';
 import { mockUsers } from '../../data/mockData';
 import { User } from '../../types';
-import { Edit, Trash2, Plus, Search, Filter, X, Mail } from 'lucide-react';
+import { CreditCard as Edit, Trash2, Plus, Search, ListFilter as Filter, X, Mail } from 'lucide-react';
 
 export default function UsersPage() {
   const [users] = useState<User[]>(mockUsers);
