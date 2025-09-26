@@ -7,7 +7,7 @@ import Modal from '../../components/UI/Modal';
 import Input from '../../components/UI/Input';
 import { mockCompanies } from '../../data/mockData';
 import { Company } from '../../types';
-import { Edit, Trash2, Copy, Plus, Upload, Search, Filter, X } from 'lucide-react';
+import { CreditCard as Edit, Trash2, Copy, Plus, Upload, Search, ListFilter as Filter, X } from 'lucide-react';
 import { mockChaseupRules } from '../../data/mockData';
 
 export default function CompaniesPage() {
