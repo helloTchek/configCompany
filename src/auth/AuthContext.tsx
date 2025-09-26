@@ -132,6 +132,20 @@ const mockUsers: Record<string, AuthUser> = {
     createdAt: '2024-01-01T00:00:00Z',
     updatedAt: '2024-01-01T00:00:00Z',
   },
+   'userChildCompany@example.com': {
+    id: '3',
+    email: 'userChildCompany@example.com',
+    name: 'Child company User',
+    role: 'user',
+    companyId: '2',
+    companyName: 'FleetMax Leasing',
+    permissions: [
+      PERMISSIONS.COMPANIES.VIEW,
+      PERMISSIONS.WORKFLOWS.VIEW,
+    ],
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
 };
 
 interface AuthProviderProps {
