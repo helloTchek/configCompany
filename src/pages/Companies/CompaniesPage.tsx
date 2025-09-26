@@ -10,10 +10,11 @@ import { mockCompanies, mockUsers } from '../../data/mockData';
 import { Company } from '../../types';
 import { CreditCard as Edit, Archive, Copy, Plus, Upload, Search, ListFilter as Filter, X } from 'lucide-react';
 import { mockChaseupRules } from '../../data/mockData';
+import { PERMISSIONS } from '@/types/auth';
 
 export default function CompaniesPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const [companies] = useState<Company[]>(mockCompanies);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -293,12 +294,14 @@ export default function CompaniesPage() {
           >
             <Edit size={16} />
           </button>
-          <button
-            onClick={() => handleDuplicate(row)}
-            className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
-          >
-            <Copy size={16} />
-          </button>
+          {hasPermission(PERMISSIONS.COMPANIES.CREATE) && (
+            <button
+              onClick={() => handleDuplicate(row)}
+              className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
+            >
+              <Copy size={16} />
+            </button>
+          )}
           <button
             onClick={() => handleArchive(row)}
             className="p-2 text-orange-600 hover:bg-orange-100 rounded-lg transition-colors"
