@@ -20,6 +20,7 @@ export default function UsersPage() {
   const [createModal, setCreateModal] = useState(false);
   const [editModal, setEditModal] = useState<{ open: boolean; user?: User }>({ open: false });
   const [passwordResetModal, setPasswordResetModal] = useState<{ open: boolean; user?: User }>({ open: false });
+  const [passwordResetSuccessModal, setPasswordResetSuccessModal] = useState<{ open: boolean; user?: User }>({ open: false });
 
   const clearFilters = () => {
     setFilters({
@@ -125,10 +126,9 @@ export default function UsersPage() {
 
     // In a real app, this would send a password reset email
     console.log('Sending password reset email to:', passwordResetModal.user.email);
-    // You could show a toast notification here
-    alert(`Password reset email sent to ${passwordResetModal.user.email}`);
     
     setPasswordResetModal({ open: false });
+    setPasswordResetSuccessModal({ open: true, user: passwordResetModal.user });
   };
 
   const CreateUserModal = () => (
@@ -334,6 +334,51 @@ export default function UsersPage() {
               onClick={confirmPasswordReset}
             >
               Send Reset Email
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Password Reset Success Modal */}
+      <Modal
+        isOpen={passwordResetSuccessModal.open}
+        onClose={() => setPasswordResetSuccessModal({ open: false })}
+        title="Password Reset Email Sent"
+        size="md"
+      >
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+              <Mail size={24} className="text-green-600" />
+            </div>
+            <div>
+              <h4 className="text-lg font-medium text-gray-900">Email Sent Successfully</h4>
+              <p className="text-sm text-gray-600">
+                Password reset instructions have been sent to{' '}
+                <strong>{passwordResetSuccessModal.user?.email}</strong>
+              </p>
+            </div>
+          </div>
+          
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-start gap-2">
+              <span className="text-blue-600 text-lg">📧</span>
+              <div>
+                <p className="text-sm text-blue-800 font-medium mb-1">What happens next:</p>
+                <ul className="text-sm text-blue-700 space-y-1">
+                  <li>• The user will receive an email with a secure reset link</li>
+                  <li>• The link will expire in 24 hours for security</li>
+                  <li>• They can create a new password using the link</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-4">
+            <Button
+              onClick={() => setPasswordResetSuccessModal({ open: false })}
+            >
+              Got it
             </Button>
           </div>
         </div>
