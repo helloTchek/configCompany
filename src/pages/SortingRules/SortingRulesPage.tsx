@@ -8,7 +8,7 @@ import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
 import { mockSortingRules } from '../../data/mockData';
 import { SortingRule } from '../../types';
-import { Edit, Copy, Plus, Search, Filter, X } from 'lucide-react';
+import { CreditCard as Edit, Copy, Plus, Search, ListFilter as Filter, X } from 'lucide-react';
 
 export default function SortingRulesPage() {
   const navigate = useNavigate();
