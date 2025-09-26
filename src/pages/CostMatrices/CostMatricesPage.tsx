@@ -4,7 +4,9 @@ import Header from '../../components/Layout/Header';
 import Button from '../../components/UI/Button';
 import { mockCostMatrices } from '../../data/mockData';
 import { CostMatrix } from '../../types';
-import { Edit, Download, Copy, Trash2, Plus, Eimport { CreditCard as Edit, Download, Copy, Trash2, Plus, Eye } from 'lucide-react'{
+import { Edit, Download, Copy, Trash2, Plus, Eye } from 'lucide-react';
+
+export default function CostMatricesPage() {
   const navigate = useNavigate();
   const [matrices] = useState<CostMatrix[]>(mockCostMatrices);
 
