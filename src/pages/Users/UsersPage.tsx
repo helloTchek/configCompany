@@ -19,6 +19,7 @@ export default function UsersPage() {
   });
   const [createModal, setCreateModal] = useState(false);
   const [editModal, setEditModal] = useState<{ open: boolean; user?: User }>({ open: false });
+  const [passwordResetModal, setPasswordResetModal] = useState<{ open: boolean; user?: User }>({ open: false });
 
   const clearFilters = () => {
     setFilters({
@@ -116,10 +117,18 @@ export default function UsersPage() {
   ];
 
   const handleSendPasswordReset = (user: User) => {
+    setPasswordResetModal({ open: true, user });
+  };
+
+  const confirmPasswordReset = () => {
+    if (!passwordResetModal.user) return;
+
     // In a real app, this would send a password reset email
-    console.log('Sending password reset email to:', user.email);
+    console.log('Sending password reset email to:', passwordResetModal.user.email);
     // You could show a toast notification here
-    alert(`Password reset email sent to ${user.email}`);
+    alert(`Password reset email sent to ${passwordResetModal.user.email}`);
+    
+    setPasswordResetModal({ open: false });
   };
 
   const CreateUserModal = () => (
@@ -296,6 +305,39 @@ export default function UsersPage() {
       </div>
 
       <CreateUserModal />
+
+      {/* Password Reset Confirmation Modal */}
+      <Modal
+        isOpen={passwordResetModal.open}
+        onClose={() => setPasswordResetModal({ open: false })}
+        title="Send Password Reset Email"
+        size="md"
+      >
+        <div className="space-y-4">
+          <p className="text-gray-600">
+            Are you sure you want to send a password reset email to{' '}
+            <strong>{passwordResetModal.user?.email}</strong>?
+          </p>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <p className="text-sm text-blue-800">
+              <strong>📧 Note:</strong> The user will receive an email with instructions to reset their password.
+            </p>
+          </div>
+          <div className="flex gap-3 justify-end pt-4">
+            <Button
+              variant="secondary"
+              onClick={() => setPasswordResetModal({ open: false })}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmPasswordReset}
+            >
+              Send Reset Email
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
