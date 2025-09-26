@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '@/auth/AuthContext';
 import Header from '../../components/Layout/Header';
 import Table from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
@@ -12,6 +13,7 @@ import { Edit, Copy, Plus, Search, Filter, X } from 'lucide-react';
 export default function SortingRulesPage() {
   const navigate = useNavigate();
   const { t } = useTranslation(['sortingRules', 'common']);
+  const { user } = useAuth();
   const [rules] = useState<SortingRule[]>(mockSortingRules);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -33,7 +35,7 @@ export default function SortingRulesPage() {
   const hasActiveFilters = searchTerm || Object.values(filters).some(filter => filter !== '');
 
   // Filter and search logic
-  const filteredRules = rules.filter(rule => {
+  let filteredRules = rules.filter(rule => {
     // Search filter
     const matchesSearch = !searchTerm ||
       rule.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -55,6 +57,13 @@ export default function SortingRulesPage() {
 
     return matchesSearch && matchesType && matchesCompany && matchesPriority;
   });
+
+  // Apply company-based filtering for non-superAdmin users
+  if (user?.role !== 'superAdmin') {
+    filteredRules = filteredRules.filter(rule => 
+      rule.company === user?.companyName
+    );
+  }
 
   const columns = [
     { key: 'company', label: t('sortingRules:fields.company'), sortable: true },

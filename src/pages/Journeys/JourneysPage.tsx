@@ -36,7 +36,7 @@ export default function JourneysPage() {
   const hasActiveFilters = searchTerm || Object.values(filters).some(filter => filter !== '');
 
   // Filter and search logic
-  const filteredJourneys = journeys.filter(journey => {
+  let filteredJourneys = journeys.filter(journey => {
     // Search filter
     const matchesSearch = !searchTerm || 
       journey.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -51,6 +51,13 @@ export default function JourneysPage() {
 
     return matchesSearch && matchesStatus && matchesCompany;
   });
+
+  // Apply company-based filtering for non-superAdmin users
+  if (user?.role !== 'superAdmin') {
+    filteredJourneys = filteredJourneys.filter(journey => 
+      journey.companyId === user?.companyId
+    );
+  }
 
   const handleDuplicate = (journey: InspectionJourney) => {
     setDuplicateName(`${journey.name} (Copy)`);

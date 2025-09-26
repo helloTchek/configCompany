@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/auth/AuthContext';
 import Header from '../../components/Layout/Header';
 import Table from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
@@ -11,6 +12,7 @@ import { CreditCard as Edit, Copy, Trash2, Plus, Search, ListFilter as Filter, X
 
 export default function ChaseupRulesPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   // Check for company filter from URL params
   const urlParams = new URLSearchParams(window.location.search);
@@ -40,7 +42,7 @@ export default function ChaseupRulesPage() {
   const hasActiveFilters = searchTerm || Object.values(filters).some(filter => filter !== '');
 
   // Filter and search logic
-  const filteredRules = rules.filter(rule => {
+  let filteredRules = rules.filter(rule => {
     // Search filter
     const matchesSearch = !searchTerm ||
       rule.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -57,6 +59,13 @@ export default function ChaseupRulesPage() {
 
     return matchesSearch && matchesType && matchesCompany && matchesMaxSendings;
   });
+
+  // Apply company-based filtering for non-superAdmin users
+  if (user?.role !== 'superAdmin') {
+    filteredRules = filteredRules.filter(rule => 
+      rule.company === user?.companyName
+    );
+  }
 
   const handleDuplicate = (rule: ChaseupRule) => {
     setDuplicateName(`${rule.company} - Copy`);

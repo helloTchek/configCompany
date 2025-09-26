@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAuth } from '@/auth/AuthContext';
 import Header from '../../components/Layout/Header';
 import Table from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
@@ -9,6 +10,7 @@ import { User } from '../../types';
 import { CreditCard as Edit, Trash2, Plus, Search, ListFilter as Filter, X, Mail } from 'lucide-react';
 
 export default function UsersPage() {
+  const { user } = useAuth();
   const [users] = useState<User[]>(mockUsers);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -45,24 +47,31 @@ export default function UsersPage() {
   const hasActiveFilters = searchTerm || Object.values(filters).some(filter => filter !== '');
 
   // Filter and search logic
-  const filteredUsers = users.filter(user => {
+  let filteredUsers = users.filter(userItem => {
     // Search filter
     const matchesSearch = !searchTerm ||
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.company.toLowerCase().includes(searchTerm.toLowerCase());
+      userItem.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      userItem.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      userItem.company.toLowerCase().includes(searchTerm.toLowerCase());
 
     // Role filter
-    const matchesRole = !filters.role || user.role === filters.role;
+    const matchesRole = !filters.role || userItem.role === filters.role;
 
     // Status filter
-    const matchesStatus = !filters.status || user.status === filters.status;
+    const matchesStatus = !filters.status || userItem.status === filters.status;
 
     // Company filter
-    const matchesCompany = !filters.company || user.company === filters.company;
+    const matchesCompany = !filters.company || userItem.company === filters.company;
 
     return matchesSearch && matchesRole && matchesStatus && matchesCompany;
   });
+
+  // Apply company-based filtering for non-superAdmin users
+  if (user?.role !== 'superAdmin') {
+    filteredUsers = filteredUsers.filter(userItem => 
+      userItem.company === user?.companyName
+    );
+  }
 
   const columns = [
     { key: 'email', label: 'Email', sortable: true },

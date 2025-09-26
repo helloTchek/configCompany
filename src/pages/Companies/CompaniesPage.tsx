@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/auth/AuthContext';
 import Header from '../../components/Layout/Header';
 import Table from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
@@ -12,6 +13,7 @@ import { mockChaseupRules } from '../../data/mockData';
 
 export default function CompaniesPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [companies] = useState<Company[]>(mockCompanies);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -169,7 +171,7 @@ export default function CompaniesPage() {
   };
 
   // Filter and search logic
-  const filteredCompanies = companies.filter(company => {
+  let filteredCompanies = companies.filter(company => {
     // Archive filter
     const matchesArchived = filters.archived === 'all' ||
       (filters.archived === 'active' && !company.isArchived) ||
@@ -199,6 +201,13 @@ export default function CompaniesPage() {
 
     return matchesArchived && matchesSearch && matchesContractType && matchesBusinessSector && matchesParentCompany && matchesStatus;
   });
+
+  // Apply company-based filtering for non-superAdmin users
+  if (user?.role !== 'superAdmin') {
+    filteredCompanies = filteredCompanies.filter(company => 
+      company.id === user?.companyId || company.name === user?.companyName
+    );
+  }
 
   const clearFilters = () => {
     setFilters({
