@@ -7,7 +7,7 @@ import Modal from '../../components/UI/Modal';
 import Input from '../../components/UI/Input';
 import { mockJourneys } from '../../data/mockData';
 import { InspectionJourney } from '../../types';
-import { Edit, Eye, Copy, Trash2, Plus, Search, Filter, X } from 'lucide-react';
+import { CreditCard as Edit, Eye, Copy, Trash2, Plus, Search, ListFilter as Filter, X } from 'lucide-react';
 
 export default function JourneysPage() {
   const navigate = useNavigate();
