@@ -6,6 +6,9 @@ import Input from '../../components/UI/Input';
 import Tabs from '../../components/UI/Tabs';
 import { ArrowLeft, Save, Upload, Plus, Trash2 } from 'lucide-react';
 
+// Import chase-up rules data to check if rules exist
+import { mockChaseupRules } from '../../data/mockData';
+
 // Move tab components outside to prevent re-creation on every render
 const GeneralSettingsTab = ({ 
   formData, 
@@ -714,6 +717,10 @@ export default function EditCompanyPage() {
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   const [companyEmailEnabled, setCompanyEmailEnabled] = useState({});
   
+  // Check if company has chase-up rules
+  const hasChaseupRules = mockChaseupRules.some(rule => rule.company === formData.companyName);
+  const chaseupRulesCount = mockChaseupRules.filter(rule => rule.company === formData.companyName).length;
+
   // Initialize form data with existing company data (mock data for now)
   const [formData, setFormData] = useState({
     companyName: 'AutoCorp Insurance',
@@ -909,6 +916,52 @@ export default function EditCompanyPage() {
         </div>
 
         <div className="max-w-6xl mx-auto">
+          {/* Chase-up Rules Reminder */}
+          <div className={`mb-6 border rounded-lg p-4 ${
+            hasChaseupRules ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'
+          }`}>
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0">
+                <span className={hasChaseupRules ? 'text-green-600' : 'text-yellow-600'}>
+                  {hasChaseupRules ? '✅' : '⚠️'}
+                </span>
+              </div>
+              <div className="flex-1">
+                <h4 className={`text-sm font-medium mb-1 ${
+                  hasChaseupRules ? 'text-green-900' : 'text-yellow-900'
+                }`}>
+                  {hasChaseupRules ? 'Chase-up Rules Active' : 'No Chase-up Rules Configured'}
+                </h4>
+                <p className={`text-sm mb-3 ${
+                  hasChaseupRules ? 'text-green-800' : 'text-yellow-800'
+                }`}>
+                  {hasChaseupRules 
+                    ? `This company has ${chaseupRulesCount} automated chase-up rule${chaseupRulesCount > 1 ? 's' : ''} configured for timely follow-ups.`
+                    : 'Consider setting up automated chase-up rules to ensure timely follow-ups on pending inspections.'
+                  }
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="secondary"
+                    onClick={() => navigate(`/chaseup-rules?company=${encodeURIComponent(formData.companyName)}`)}
+                    size="sm"
+                  >
+                    {hasChaseupRules ? 'View Rules' : 'Create Rules'}
+                  </Button>
+                  {hasChaseupRules && (
+                    <Button
+                      variant="secondary"
+                      onClick={() => navigate('/chaseup-rules/new')}
+                      size="sm"
+                    >
+                      Add New Rule
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
           <Tabs
             tabs={tabs}
             activeTab={activeTab}

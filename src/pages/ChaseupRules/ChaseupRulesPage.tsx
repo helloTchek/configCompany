@@ -11,12 +11,17 @@ import { CreditCard as Edit, Copy, Trash2, Plus, Search, ListFilter as Filter, X
 
 export default function ChaseupRulesPage() {
   const navigate = useNavigate();
+  
+  // Check for company filter from URL params
+  const urlParams = new URLSearchParams(window.location.search);
+  const companyFromUrl = urlParams.get('company');
+  
   const [rules, setRules] = useState<ChaseupRule[]>([...mockChaseupRules]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(!!companyFromUrl);
   const [filters, setFilters] = useState({
     type: '',
-    company: '',
+    company: companyFromUrl || '',
     maxSendings: ''
   });
   const [duplicateModal, setDuplicateModal] = useState<{ open: boolean; rule?: ChaseupRule }>({ open: false });

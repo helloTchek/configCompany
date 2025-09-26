@@ -8,6 +8,7 @@ import Input from '../../components/UI/Input';
 import { mockCompanies } from '../../data/mockData';
 import { Company } from '../../types';
 import { Edit, Trash2, Copy, Plus, Upload, Search, Filter, X } from 'lucide-react';
+import { mockChaseupRules } from '../../data/mockData';
 
 export default function CompaniesPage() {
   const navigate = useNavigate();
@@ -181,6 +182,11 @@ export default function CompaniesPage() {
 
   const hasActiveFilters = searchTerm || Object.values(filters).some(filter => filter !== '');
 
+  // Helper function to check if company has chase-up rules
+  const hasChaseupRules = (companyName: string) => {
+    return mockChaseupRules.some(rule => rule.company === companyName);
+  };
+
   const columns = [
     { key: 'name', label: 'Company Name', sortable: true },
     { key: 'identifier', label: 'Identifier', sortable: true },
@@ -199,6 +205,32 @@ export default function CompaniesPage() {
     { key: 'requestsExpiryDate', label: 'Expiry Date', sortable: true },
     { key: 'parentCompany', label: 'Parent Company' },
     { key: 'childrenCount', label: 'Children', sortable: true },
+    {
+      key: 'chaseupRules',
+      label: 'Chase-up Rules',
+      render: (_: any, row: Company) => {
+        const hasRules = hasChaseupRules(row.name);
+        return (
+          <div className="flex items-center gap-2">
+            {hasRules ? (
+              <button
+                onClick={() => navigate(`/chaseup-rules?company=${encodeURIComponent(row.name)}`)}
+                className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full hover:bg-green-200 transition-colors"
+              >
+                ✓ Active
+              </button>
+            ) : (
+              <button
+                onClick={() => navigate('/chaseup-rules/new')}
+                className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full hover:bg-gray-200 transition-colors"
+              >
+                + Create
+              </button>
+            )}
+          </div>
+        );
+      },
+    },
     {
       key: 'actions',
       label: 'Actions',
@@ -357,6 +389,29 @@ export default function CompaniesPage() {
               )}
             </div>
           )}
+        </div>
+
+        {/* Chase-up Rules Reminder */}
+        <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0">
+              <span className="text-blue-600">💡</span>
+            </div>
+            <div className="flex-1">
+              <h4 className="text-sm font-medium text-blue-900 mb-1">Automated Chase-up Rules</h4>
+              <p className="text-sm text-blue-800 mb-3">
+                Don't forget to configure automated chase-up rules for your companies to ensure timely follow-ups on pending inspections.
+              </p>
+              <Button
+                variant="secondary"
+                onClick={() => navigate('/chaseup-rules')}
+                className="flex items-center gap-2"
+                size="sm"
+              >
+                Manage Chase-up Rules
+              </Button>
+            </div>
+          </div>
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200">
