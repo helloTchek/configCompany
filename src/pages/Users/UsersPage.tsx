@@ -66,7 +66,7 @@ export default function UsersPage() {
     },
     { key: 'company', label: 'Company', sortable: true },
     { key: 'status', label: 'Status', sortable: true,
-      render: (value: string) => (
+      render: (value: string, row: User) => (
         <div className="flex items-center gap-2">
           <span className={`px-2 py-1 text-xs font-medium rounded-full ${
             value === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
