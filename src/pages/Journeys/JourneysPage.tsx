@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/auth/AuthContext';
 import Header from '../../components/Layout/Header';
 import Table from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
 import Modal from '../../components/UI/Modal';
 import Input from '../../components/UI/Input';
-import { mockJourneys } from '../../data/mockData';
+import { mockJourneys, mockCompanies } from '../../data/mockData';
 import { InspectionJourney } from '../../types';
 import { CreditCard as Edit, Eye, Copy, Trash2, Plus, Search, ListFilter as Filter, X } from 'lucide-react';
 
 export default function JourneysPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [journeys] = useState<InspectionJourney[]>(mockJourneys);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -20,6 +22,7 @@ export default function JourneysPage() {
   });
   const [duplicateModal, setDuplicateModal] = useState<{ open: boolean; journey?: InspectionJourney }>({ open: false });
   const [duplicateName, setDuplicateName] = useState('');
+  const [duplicateCompany, setDuplicateCompany] = useState('');
   const [deleteModal, setDeleteModal] = useState<{ open: boolean; journey?: InspectionJourney }>({ open: false });
 
   const clearFilters = () => {
@@ -51,6 +54,7 @@ export default function JourneysPage() {
 
   const handleDuplicate = (journey: InspectionJourney) => {
     setDuplicateName(`${journey.name} (Copy)`);
+    setDuplicateCompany(user?.role === 'superAdmin' ? '' : journey.companyId);
     setDuplicateModal({ open: true, journey });
   };
 
@@ -77,7 +81,7 @@ export default function JourneysPage() {
   };
 
   const confirmDuplicate = () => {
-    if (!duplicateModal.journey || !duplicateName.trim()) {
+    if (!duplicateModal.journey || !duplicateName.trim() || (user?.role === 'superAdmin' && !duplicateCompany)) {
       return;
     }
 
@@ -85,6 +89,7 @@ export default function JourneysPage() {
       ...duplicateModal.journey,
       id: `journey-${Date.now()}`,
       name: duplicateName,
+      companyId: user?.role === 'superAdmin' ? duplicateCompany : duplicateModal.journey.companyId,
       blocks: duplicateModal.journey.blocks.map(block => ({
         ...block,
         id: `block-${Date.now()}-${Math.random()}`,
@@ -99,6 +104,7 @@ export default function JourneysPage() {
     
     setDuplicateModal({ open: false });
     setDuplicateName('');
+    setDuplicateCompany('');
     
     // Refresh the page or update state to show the new journey
     window.location.reload();
@@ -283,6 +289,23 @@ export default function JourneysPage() {
           <p className="text-gray-600">
             Create a copy of <strong>{duplicateModal.journey?.name}</strong>
           </p>
+          {user?.role === 'superAdmin' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
+              <select
+                value={duplicateCompany}
+                onChange={(e) => setDuplicateCompany(e.target.value)}
+                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Select Company</option>
+                {mockCompanies.map((company) => (
+                  <option key={company.id} value={company.id}>
+                    {company.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <Input
             label="New Journey Name"
             value={duplicateName}
@@ -295,13 +318,14 @@ export default function JourneysPage() {
               onClick={() => {
                 setDuplicateModal({ open: false });
                 setDuplicateName('');
+                setDuplicateCompany('');
               }}
             >
               Cancel
             </Button>
             <Button
               onClick={confirmDuplicate}
-              disabled={!duplicateName.trim()}
+              disabled={!duplicateName.trim() || (user?.role === 'superAdmin' && !duplicateCompany)}
             >
               Duplicate Journey
             </Button>

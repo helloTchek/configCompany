@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
+import { useAuth } from '@/auth/AuthContext';
 import Header from '../../components/Layout/Header';
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
@@ -9,6 +10,7 @@ import ShootInspectionConfig from '../../components/Journey/ShootInspectionConfi
 import { ArrowLeft, Plus, Upload, Download, GripVertical } from 'lucide-react';
 import { JourneyBlock } from '../../types';
 import { ShootInspectionData } from '../../types';
+import { mockCompanies } from '../../data/mockData';
 import onboardingData from '../../data/onboarding.json';
 
 const blockTypes = [
@@ -21,8 +23,10 @@ const blockTypes = [
 
 export default function CreateJourneyPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [journeyName, setJourneyName] = useState('');
   const [journeyDescription, setJourneyDescription] = useState('');
+  const [selectedCompany, setSelectedCompany] = useState('');
   const [blocks, setBlocks] = useState<JourneyBlock[]>([]);
   const [blockModal, setBlockModal] = useState<{ open: boolean; type?: string }>({ open: false });
   const [showShootInspectionConfig, setShowShootInspectionConfig] = useState(false);
@@ -31,6 +35,11 @@ export default function CreateJourneyPage() {
   const handleSave = () => {
     if (!journeyName.trim()) {
       alert('Please enter a journey name');
+      return;
+    }
+
+    if (user?.role === 'superAdmin' && !selectedCompany) {
+      alert('Please select a company');
       return;
     }
 
@@ -44,6 +53,7 @@ export default function CreateJourneyPage() {
       id: `journey-${Date.now()}`,
       name: journeyName,
       description: journeyDescription,
+      companyId: user?.role === 'superAdmin' ? selectedCompany : user?.companyId || '1',
       blocks: blocks,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -275,6 +285,23 @@ export default function CreateJourneyPage() {
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Journey Details</h3>
             <div className="grid grid-cols-1 gap-4">
+              {user?.role === 'superAdmin' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
+                  <select
+                    value={selectedCompany}
+                    onChange={(e) => setSelectedCompany(e.target.value)}
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Select Company</option>
+                    {mockCompanies.map((company) => (
+                      <option key={company.id} value={company.id}>
+                        {company.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <Input
                 label="Journey Name"
                 value={journeyName}
@@ -426,7 +453,7 @@ export default function CreateJourneyPage() {
             </Button>
             <Button 
               onClick={handleSave}
-              disabled={!journeyName || blocks.length === 0}
+              disabled={!journeyName || blocks.length === 0 || (user?.role === 'superAdmin' && !selectedCompany)}
             >
               Save Journey
             </Button>
