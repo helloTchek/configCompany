@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/auth/AuthContext';
 import Header from '../../components/Layout/Header';
 import Button from '../../components/UI/Button';
 import { mockCostMatrices } from '../../data/mockData';
@@ -8,7 +9,13 @@ import { Edit, Download, Copy, Trash2, Plus, Eye } from 'lucide-react';
 
 export default function CostMatricesPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [matrices] = useState<CostMatrix[]>(mockCostMatrices);
+
+  // Apply company-based filtering for non-superAdmin users
+  const filteredMatrices = user?.role === 'superAdmin' 
+    ? matrices 
+    : matrices.filter(matrix => matrix.company === user?.companyName);
 
   const handleDownloadTemplate = () => {
     // Create CSV template
@@ -84,7 +91,7 @@ export default function CostMatricesPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {matrices.map((matrix) => (
+                  {filteredMatrices.map((matrix) => (
                     <tr key={matrix.id} className="border-b border-gray-100 hover:bg-gray-50">
                       <td className="py-4 px-4">
                         <div>
