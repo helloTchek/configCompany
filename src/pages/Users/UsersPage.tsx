@@ -21,6 +21,17 @@ export default function UsersPage() {
   const [editModal, setEditModal] = useState<{ open: boolean; user?: User }>({ open: false });
   const [passwordResetModal, setPasswordResetModal] = useState<{ open: boolean; user?: User }>({ open: false });
   const [passwordResetSuccessModal, setPasswordResetSuccessModal] = useState<{ open: boolean; user?: User }>({ open: false });
+  const [editFormData, setEditFormData] = useState({
+    email: '',
+    role: '',
+    company: '',
+    status: 'active'
+  });
+  const [editErrors, setEditErrors] = useState({
+    email: '',
+    role: '',
+    company: ''
+  });
 
   const clearFilters = () => {
     setFilters({
@@ -92,7 +103,7 @@ export default function UsersPage() {
       render: (_: any, row: User) => (
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setEditModal({ open: true, user: row })}
+            onClick={() => handleEditUser(row)}
             className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
             title="Edit User"
           >
@@ -131,6 +142,61 @@ export default function UsersPage() {
     setPasswordResetSuccessModal({ open: true, user: passwordResetModal.user });
   };
 
+  const handleEditUser = (user: User) => {
+    setEditFormData({
+      email: user.email,
+      role: user.role,
+      company: user.company,
+      status: user.status
+    });
+    setEditErrors({
+      email: '',
+      role: '',
+      company: ''
+    });
+    setEditModal({ open: true, user });
+  };
+
+  const handleEditFormChange = (field: string, value: string) => {
+    setEditFormData(prev => ({ ...prev, [field]: value }));
+    setEditErrors(prev => ({ ...prev, [field]: '' }));
+  };
+
+  const validateEditForm = () => {
+    const newErrors = {
+      email: '',
+      role: '',
+      company: ''
+    };
+
+    if (!editFormData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editFormData.email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+
+    if (!editFormData.role) {
+      newErrors.role = 'Role is required';
+    }
+
+    if (!editFormData.company) {
+      newErrors.company = 'Company is required';
+    }
+
+    setEditErrors(newErrors);
+    return !newErrors.email && !newErrors.role && !newErrors.company;
+  };
+
+  const handleSaveEdit = () => {
+    if (!validateEditForm()) {
+      return;
+    }
+
+    // In a real app, this would make an API call to update the user
+    console.log('Updating user:', editFormData);
+    setEditModal({ open: false });
+  };
+
   const CreateUserModal = () => (
     <Modal
       isOpen={createModal}
@@ -139,7 +205,6 @@ export default function UsersPage() {
       size="md"
     >
       <div className="space-y-4">
-        <Input label="Name" placeholder="John Doe" />
         <Input label="Email" type="email" placeholder="john@example.com" />
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
@@ -379,6 +444,75 @@ export default function UsersPage() {
               onClick={() => setPasswordResetSuccessModal({ open: false })}
             >
               Got it
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Edit User Modal */}
+      <Modal
+        isOpen={editModal.open}
+        onClose={() => setEditModal({ open: false })}
+        title="Edit User"
+        size="md"
+      >
+        <div className="space-y-4">
+          <Input 
+            label="Email" 
+            type="email" 
+            value={editFormData.email}
+            onChange={(e) => handleEditFormChange('email', e.target.value)}
+            error={editErrors.email}
+            placeholder="john@example.com" 
+          />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+            <select 
+              value={editFormData.role}
+              onChange={(e) => handleEditFormChange('role', e.target.value)}
+              className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                editErrors.role ? 'border-red-500' : 'border-gray-300'
+              }`}
+            >
+              <option value="">Select role</option>
+              <option value="user">User</option>
+              <option value="admin">Admin</option>
+              <option value="superadmin">Super Admin</option>
+            </select>
+            {editErrors.role && <p className="text-sm text-red-600 mt-1">{editErrors.role}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
+            <select 
+              value={editFormData.company}
+              onChange={(e) => handleEditFormChange('company', e.target.value)}
+              className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                editErrors.company ? 'border-red-500' : 'border-gray-300'
+              }`}
+            >
+              <option value="">Select company</option>
+              <option value="AutoCorp Insurance">AutoCorp Insurance</option>
+              <option value="FleetMax Leasing">FleetMax Leasing</option>
+            </select>
+            {editErrors.company && <p className="text-sm text-red-600 mt-1">{editErrors.company}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <select 
+              value={editFormData.status}
+              onChange={(e) => handleEditFormChange('status', e.target.value)}
+              className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+          <div className="flex gap-3 justify-end pt-4">
+            <Button variant="secondary" onClick={() => setEditModal({ open: false })}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveEdit}>
+              Save Changes
             </Button>
           </div>
         </div>
