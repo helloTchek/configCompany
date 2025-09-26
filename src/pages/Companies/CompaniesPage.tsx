@@ -509,7 +509,6 @@ export default function CompaniesPage() {
               <strong>Note:</strong> Archived companies can be restored later using the "Show archived companies" filter.
             </p>
           </div>
-          </p>
           <div className="flex gap-3 justify-end">
             <Button
               variant="secondary"
