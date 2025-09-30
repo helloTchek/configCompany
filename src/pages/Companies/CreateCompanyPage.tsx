@@ -310,6 +310,9 @@ const EventsWebhooksTab = ({
     const initialTemplates = {};
     events.forEach(event => {
       initialTemplates[event.key] = {
+        webhook: {
+          enabled: false
+        },
         user: {
           enabled: false,
           sms: false,
@@ -616,6 +619,19 @@ const EventsWebhooksTab = ({
           <div key={event.key} className="border border-gray-200 rounded-lg p-6">
             <h4 className="text-md font-semibold text-gray-900 mb-4">{event.name}</h4>
             
+            {/* Webhook */}
+            <div className="mb-6">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={templates[event.key]?.webhook?.enabled || false}
+                  onChange={(e) => updateAddresseeConfig(event.key, 'webhook', 'enabled', e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 shadow-sm"
+                />
+                <span className="ml-2 text-sm text-gray-700">Enable Webhook</span>
+              </label>
+            </div>
+
             {/* Addressees */}
             <div className="space-y-6">
               {renderAddresseeConfig(event.key, 'user', 'User')}
