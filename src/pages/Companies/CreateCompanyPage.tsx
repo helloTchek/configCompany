@@ -177,24 +177,6 @@ const GeneralSettingsTab = ({
             className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
           />
         </div>
-
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="block text-sm font-medium text-gray-700">Decision Tree</label>
-            <div className="flex gap-2">
-              <Button variant="secondary" size="sm" className="flex items-center gap-1">
-                <Upload size={14} />
-                Upload JSON
-              </Button>
-            </div>
-          </div>
-          <textarea
-            rows={4}
-            onChange={handleInputChange}
-            defaultValue='{"withClassification": false, "tile": false, "sizeTile": 2000}'
-            className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
-          />
-        </div>
       </div>
     </div>
 
