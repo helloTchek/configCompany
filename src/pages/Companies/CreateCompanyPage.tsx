@@ -305,54 +305,84 @@ const EventsWebhooksTab = ({
   const [focusedField, setFocusedField] = useState(null);
   const fieldRefs = useRef({});
 
-  const [eventCompanyEmailStates, setEventCompanyEmailStates] = useState(() => {
-    // Initialize all events with Company Email Address checked by default
-    const initialStates = {};
-    events.forEach(event => {
-      initialStates[event.key] = true;
-    });
-    return initialStates;
-  });
-
-  // State to store templates for each language and event
+  // State to store templates for each event, addressee, medium, and language
   const [templates, setTemplates] = useState(() => {
     const initialTemplates = {};
     events.forEach(event => {
-      initialTemplates[event.key] = {};
-      languages.forEach(lang => {
-        initialTemplates[event.key][lang.code] = {
-          email: {
-            subject: '',
-            htmlContent: '',
-            enabled: true
-          },
-          sms: {
-            content: '',
-            enabled: true
-          }
-        };
+      initialTemplates[event.key] = {
+        user: {
+          enabled: false,
+          sms: false,
+          email: false,
+          templates: {}
+        },
+        customer: {
+          enabled: false,
+          sms: false,
+          email: false,
+          templates: {}
+        },
+        emailAddress: {
+          enabled: false,
+          address: '',
+          sms: false,
+          email: false,
+          templates: {}
+        },
+        agent: {
+          enabled: false,
+          address: '',
+          sms: false,
+          email: false,
+          templates: {}
+        }
+      };
+      
+      // Initialize templates for each addressee
+      ['user', 'customer', 'emailAddress', 'agent'].forEach(addressee => {
+        initialTemplates[event.key][addressee].templates = {};
+        languages.forEach(lang => {
+          initialTemplates[event.key][addressee].templates[lang.code] = {
+            email: { subject: '', content: '' },
+            sms: { content: '' }
+          };
+        });
       });
     });
     return initialTemplates;
   });
-  const handleCompanyEmailToggle = (eventKey, isChecked) => {
-    setEventCompanyEmailStates(prev => ({
-      ...prev,
-      [eventKey]: isChecked
-    }));
-  };
 
-  const updateTemplate = (eventKey, language, templateType, field, value) => {
+  const updateTemplate = (eventKey, addressee, language, templateType, field, value) => {
     setTemplates(prev => ({
       ...prev,
       [eventKey]: {
         ...prev[eventKey],
-        [language]: {
-          ...prev[eventKey][language],
-          [templateType]: {
-            ...prev[eventKey][language][templateType],
-            [field]: value
+        [addressee]: {
+          ...prev[eventKey][addressee],
+          templates: {
+            ...prev[eventKey][addressee].templates,
+            [language]: {
+              ...prev[eventKey][addressee].templates[language],
+              [templateType]: {
+                ...prev[eventKey][addressee].templates[language][templateType],
+                [field]: value
+              }
+            }
           }
+        }
+      }
+    }));
+    handleInputChange();
+  };
+
+  const updateAddresseeConfig = (eventKey, addressee, field, value) => {
+    setTemplates(prev => ({
+      ...prev,
+      [eventKey]: {
+        ...prev[eventKey],
+        [addressee]: {
+          ...prev[eventKey][addressee],
+          [field]: value
         }
       }
     }));
@@ -404,6 +434,135 @@ const EventsWebhooksTab = ({
     }
   }, []);
 
+  const renderAddresseeConfig = (eventKey, addressee, addresseeLabel) => {
+    const config = templates[eventKey][addressee];
+
+    return (
+      <div className="border border-gray-200 rounded-lg p-4">
+        <div className="flex items-center justify-between mb-4">
+          <h5 className="font-medium text-gray-900">{addresseeLabel}</h5>
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={config.enabled}
+              onChange={(e) => updateAddresseeConfig(eventKey, addressee, 'enabled', e.target.checked)}
+              className="rounded border-gray-300 text-blue-600 shadow-sm"
+            />
+            <span className="ml-2 text-sm text-gray-700">Enabled</span>
+          </label>
+        </div>
+
+        {config.enabled && (
+          <div className="space-y-4">
+            {(addressee === 'emailAddress' || addressee === 'agent') && (
+              <Input
+                label={addressee === 'emailAddress' ? 'Email Address' : 'Agent Email Address'}
+                type="email"
+                value={config.address}
+                onChange={(e) => updateAddresseeConfig(eventKey, addressee, 'address', e.target.value)}
+                placeholder={addressee === 'emailAddress' ? 'recipient@example.com' : 'agent@example.com'}
+              />
+            )}
+
+            <div className="flex gap-4">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={config.sms}
+                  onChange={(e) => updateAddresseeConfig(eventKey, addressee, 'sms', e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 shadow-sm"
+                />
+                <span className="ml-2 text-sm text-gray-700">SMS</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={config.email}
+                  onChange={(e) => updateAddresseeConfig(eventKey, addressee, 'email', e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 shadow-sm"
+                />
+                <span className="ml-2 text-sm text-gray-700">Email</span>
+              </label>
+            </div>
+
+            {(config.sms || config.email) && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium text-gray-700">Language:</label>
+                  <select
+                    value={selectedLanguage}
+                    onChange={(e) => setSelectedLanguage(e.target.value)}
+                    className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    {languages.map((lang) => (
+                      <option key={lang.code} value={lang.code}>
+                        {lang.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {config.email && (
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">Email Subject</label>
+                    <input
+                      ref={(ref) => assignFieldRef(`${eventKey}-${addressee}-email-subject-${selectedLanguage}`, ref)}
+                      type="text"
+                      value={config.templates[selectedLanguage]?.email.subject || ''}
+                      onChange={(e) => updateTemplate(eventKey, addressee, selectedLanguage, 'email', 'subject', e.target.value)}
+                      onFocus={() => handleFieldFocus(`${eventKey}-${addressee}-email-subject-${selectedLanguage}`)}
+                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                        focusedField === `${eventKey}-${addressee}-email-subject-${selectedLanguage}` ? 'border-blue-300 bg-blue-50' : 'border-gray-300'
+                      }`}
+                      placeholder="Email subject"
+                    />
+                  </div>
+                )}
+
+                {config.email && (
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">Email Content</label>
+                    <textarea
+                      ref={(ref) => assignFieldRef(`${eventKey}-${addressee}-email-content-${selectedLanguage}`, ref)}
+                      rows={4}
+                      value={config.templates[selectedLanguage]?.email.content || ''}
+                      onChange={(e) => updateTemplate(eventKey, addressee, selectedLanguage, 'email', 'content', e.target.value)}
+                      onFocus={() => handleFieldFocus(`${eventKey}-${addressee}-email-content-${selectedLanguage}`)}
+                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
+                        focusedField === `${eventKey}-${addressee}-email-content-${selectedLanguage}` ? 'border-blue-300 bg-blue-50' : 'border-gray-300'
+                      }`}
+                      placeholder="Email content..."
+                    />
+                  </div>
+                )}
+
+                {config.sms && (
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">SMS Content</label>
+                    <textarea
+                      ref={(ref) => assignFieldRef(`${eventKey}-${addressee}-sms-content-${selectedLanguage}`, ref)}
+                      rows={3}
+                      value={config.templates[selectedLanguage]?.sms.content || ''}
+                      onChange={(e) => updateTemplate(eventKey, addressee, selectedLanguage, 'sms', 'content', e.target.value)}
+                      onFocus={() => handleFieldFocus(`${eventKey}-${addressee}-sms-content-${selectedLanguage}`)}
+                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
+                        focusedField === `${eventKey}-${addressee}-sms-content-${selectedLanguage}` ? 'border-blue-300 bg-blue-50' : 'border-gray-300'
+                      }`}
+                      placeholder="SMS content (160 characters max)..."
+                      maxLength={160}
+                    />
+                    <p className="text-xs text-gray-500">
+                      Character count: {(config.templates[selectedLanguage]?.sms.content || '').length}/160
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
   return (
   <div className="space-y-6">
     {/* Global Settings */}
@@ -445,24 +604,11 @@ const EventsWebhooksTab = ({
         </div>
       </div>
     )}
+
     {/* Events Configuration */}
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-gray-900">Events Configuration</h3>
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-gray-700">Language:</label>
-          <select
-            value={selectedLanguage}
-            onChange={(e) => setSelectedLanguage(e.target.value)}
-            className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            {languages.map((lang) => (
-              <option key={lang.code} value={lang.code}>
-                {lang.name}
-              </option>
-            ))}
-          </select>
-        </div>
       </div>
 
       <div className="space-y-8">
@@ -470,167 +616,20 @@ const EventsWebhooksTab = ({
           <div key={event.key} className="border border-gray-200 rounded-lg p-6">
             <h4 className="text-md font-semibold text-gray-900 mb-4">{event.name}</h4>
             
-            {/* Recipients */}
-            <div className="mb-6">
-              <h5 className="text-sm font-medium text-gray-700 mb-3">Recipients</h5>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    defaultChecked={true}
-                    onChange={handleInputChange}
-                    className="rounded border-gray-300 text-blue-600 shadow-sm"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Customer Phone Number</span>
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    defaultChecked={true}
-                    onChange={(e) => {
-                      handleInputChange();
-                      handleCompanyEmailToggle(event.key, e.target.checked);
-                    }}
-                    className="rounded border-gray-300 text-blue-600 shadow-sm"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Company Email Address</span>
-                </label>
-                {/* Company Email Address Field - shown when checkbox is checked */}
-                {eventCompanyEmailStates[event.key] && (
-                  <div className="col-span-2">
-                    <Input
-                      label="Company Email Address"
-                      type="email"
-                      placeholder="company@example.com"
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                )}
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    defaultChecked={false}
-                    onChange={handleInputChange}
-                    className="rounded border-gray-300 text-blue-600 shadow-sm"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Agent Email Address</span>
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    defaultChecked={false}
-                    onChange={handleInputChange}
-                    className="rounded border-gray-300 text-blue-600 shadow-sm"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Webhook URL</span>
-                </label>
-              </div>
-            </div>
-
-            {/* Message Content */}
-            <div className="space-y-4">
-              <h5 className="text-sm font-medium text-gray-700">Message Content</h5>
-              
-              {/* Email Template */}
-              <div className="border border-gray-200 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h6 className="text-sm font-medium text-gray-700">Email Template</h6>
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={templates[event.key][selectedLanguage].email.enabled}
-                      onChange={(e) => updateTemplate(event.key, selectedLanguage, 'email', 'enabled', e.target.checked)}
-                      className="rounded border-gray-300 text-blue-600 shadow-sm"
-                    />
-                    <span className="ml-2 text-xs text-gray-600">Enabled</span>
-                  </label>
-                </div>
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
-                    <input
-                      ref={(ref) => assignFieldRef(`${event.key}-${selectedLanguage}-email-subject`, ref)}
-                      type="text"
-                      value={templates[event.key][selectedLanguage].email.subject}
-                      onChange={(e) => {
-                        updateTemplate(event.key, selectedLanguage, 'email', 'subject', e.target.value);
-                      }}
-                      onFocus={() => handleFieldFocus(`${event.key}-${selectedLanguage}-email-subject`)}
-                      onBlur={() => {
-                        // Keep focus state for variables panel
-                      }}
-                      placeholder="Email subject"
-                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                        focusedField === `${event.key}-${selectedLanguage}-email-subject` ? 'border-blue-300 bg-blue-50' : 'border-gray-300'
-                      }`}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">HTML Content</label>
-                    <textarea
-                      ref={(ref) => assignFieldRef(`${event.key}-${selectedLanguage}-email-content`, ref)}
-                      rows={4}
-                      value={templates[event.key][selectedLanguage].email.htmlContent}
-                      onChange={(e) => {
-                        updateTemplate(event.key, selectedLanguage, 'email', 'htmlContent', e.target.value);
-                      }}
-                      onFocus={() => handleFieldFocus(`${event.key}-${selectedLanguage}-email-content`)}
-                      onBlur={() => {
-                        // Keep focus state for variables panel
-                      }}
-                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
-                        focusedField === `${event.key}-${selectedLanguage}-email-content` ? 'border-blue-300 bg-blue-50' : 'border-gray-300'
-                      }`}
-                      placeholder="HTML email content..."
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* SMS Template */}
-              <div className="border border-gray-200 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h6 className="text-sm font-medium text-gray-700">SMS Template</h6>
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={templates[event.key][selectedLanguage].sms.enabled}
-                      onChange={(e) => updateTemplate(event.key, selectedLanguage, 'sms', 'enabled', e.target.checked)}
-                      className="rounded border-gray-300 text-blue-600 shadow-sm"
-                    />
-                    <span className="ml-2 text-xs text-gray-600">Enabled</span>
-                  </label>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Text Content</label>
-                  <textarea
-                    ref={(ref) => assignFieldRef(`${event.key}-${selectedLanguage}-sms-content`, ref)}
-                    rows={3}
-                    value={templates[event.key][selectedLanguage].sms.content}
-                    onChange={(e) => {
-                      updateTemplate(event.key, selectedLanguage, 'sms', 'content', e.target.value);
-                    }}
-                    onFocus={() => handleFieldFocus(`${event.key}-${selectedLanguage}-sms-content`)}
-                    onBlur={() => {
-                      // Keep focus state for variables panel
-                    }}
-                    className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
-                      focusedField === `${event.key}-${selectedLanguage}-sms-content` ? 'border-blue-300 bg-blue-50' : 'border-gray-300'
-                    }`}
-                    placeholder="SMS content (160 characters max)..."
-                    maxLength={160}
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Character count: {templates[event.key][selectedLanguage].sms.content.length}/160</p>
-                </div>
-              </div>
+            {/* Addressees */}
+            <div className="space-y-6">
+              {renderAddresseeConfig(event.key, 'user', 'User')}
+              {renderAddresseeConfig(event.key, 'customer', 'Customer')}
+              {renderAddresseeConfig(event.key, 'emailAddress', 'Email Address')}
+              {renderAddresseeConfig(event.key, 'agent', 'Agent')}
             </div>
           </div>
         ))}
       </div>
     </div>
 
-    {/* Available Variables */}
-    {!focusedField ? (
+    {/* Available Variables - Show when no field is focused */}
+    {!focusedField && (
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Available Variables</h3>
         <p className="text-sm text-gray-600 mb-4">Focus on a template field above to see variables for easy insertion</p>
@@ -644,32 +643,6 @@ const EventsWebhooksTab = ({
             >
               <div className="font-medium text-blue-600">{variable.key}</div>
               <div className="text-xs text-gray-500">{variable.name}</div>
-            </button>
-          ))}
-        </div>
-      </div>
-    ) : (
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Available Variables</h3>
-          <button
-            onClick={() => setFocusedField(null)}
-            className="text-sm text-gray-500 hover:text-gray-700 px-2 py-1 rounded hover:bg-gray-100"
-          >
-            Hide Variables
-          </button>
-        </div>
-        <p className="text-sm text-gray-600 mb-4">Click any variable to insert it at cursor position</p>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-60 overflow-y-auto">
-          {variables.map((variable) => (
-            <button
-              key={variable.key}
-              onClick={() => handleVariableClick(variable.key)}
-              className="text-left p-2 bg-blue-50 hover:bg-blue-100 rounded border border-blue-200 text-sm font-mono transition-colors hover:shadow-sm"
-              title={`Click to insert ${variable.key}`}
-            >
-              <div className="font-medium text-blue-700">{variable.key}</div>
-              <div className="text-xs text-blue-500">{variable.name}</div>
             </button>
           ))}
         </div>
