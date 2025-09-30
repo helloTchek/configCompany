@@ -610,7 +610,8 @@ export default function CompaniesPage() {
                     .filter(c => c.id !== duplicateModal.company?.id)
                     .map(c => (
                       <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
+                    ))
+                  }
                 </select>
               </div>
               <label className="flex items-center">
