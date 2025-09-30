@@ -619,6 +619,16 @@ export default function CompaniesPage() {
                   type="checkbox"
                   className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
                 />
+
+          {/* Decision Tree */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Decision Tree</label>
+            <textarea
+              rows={4}
+              defaultValue='{"withClassification": false, "tile": false, "sizeTile": 2000}'
+              className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+            />
+          </div>
                 <span className="ml-2 text-sm text-gray-700">Duplicate Children Companies</span>
               </label>
             </div>
