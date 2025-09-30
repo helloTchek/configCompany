@@ -1,22 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthContext';
 import Header from '../../components/Layout/Header';
 import Table from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
 import Modal from '../../components/UI/Modal';
-import Input from '../../components/UI/Input';
-import { mockCompanies, mockUsers } from '../../data/mockData';
+import { mockUsers } from '../../data/mockData';
 import { Company } from '../../types';
 import { CreditCard as Edit, Archive, Copy, Plus, Upload, Search, ListFilter as Filter, X } from 'lucide-react';
 import { mockChaseupRules } from '../../data/mockData';
 import { PERMISSIONS } from '@/types/auth';
+import { companiesApi, CompanyFilters } from '@/services/api/companies';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 export default function CompaniesPage() {
   const navigate = useNavigate();
   const { user, hasPermission } = useAuth();
-  const [companies] = useState<Company[]>(mockCompanies);
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     contractType: '',
@@ -40,6 +44,52 @@ export default function CompaniesPage() {
     }
   });
 
+  // Debounce search term to avoid too many API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const loadCompanies = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Prepare filters for API call - only include non-empty values
+      const apiFilters: CompanyFilters = {};
+      
+      if (debouncedSearchTerm) apiFilters.search = debouncedSearchTerm;
+      if (filters.contractType) apiFilters.contractType = filters.contractType;
+      if (filters.businessSector) apiFilters.businessSector = filters.businessSector;
+      if (filters.parentCompany) apiFilters.parentCompany = filters.parentCompany;
+      if (filters.status) apiFilters.status = filters.status;
+      if (filters.archived) apiFilters.archived = filters.archived;
+      if (user?.role) apiFilters.userRole = user.role;
+      if (user?.companyId) apiFilters.userCompanyId = user.companyId;
+      if (user?.companyName) apiFilters.userCompanyName = user.companyName;
+
+      const response = await companiesApi.getCompanies(apiFilters);
+      if (response.success) {
+        setCompanies(response.data);
+      } else {
+        setError('Failed to load companies');
+      }
+    } catch (err) {
+      setError('Failed to load companies');
+      console.error('Error loading companies:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [debouncedSearchTerm, filters, user]);
+
+  // Load companies on component mount and when filters change
+  useEffect(() => {
+    loadCompanies();
+  }, [loadCompanies]);
+
   const handleSort = (key: string) => {
     if (sortKey === key) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -53,33 +103,41 @@ export default function CompaniesPage() {
     setArchiveModal({ open: true, company });
   };
 
-  const confirmArchive = () => {
+  const confirmArchive = async () => {
     if (!archiveModal.company) return;
 
-    // Archive the company
-    const companyIndex = mockCompanies.findIndex(c => c.id === archiveModal.company!.id);
-    if (companyIndex > -1) {
-      mockCompanies[companyIndex] = {
-        ...mockCompanies[companyIndex],
-        isArchived: true,
-        archivedAt: new Date().toISOString()
-      };
-    }
+    try {
+      setLoading(true);
+      const response = await companiesApi.archiveCompany(archiveModal.company.id);
+      
+      if (response.success) {
+        // Update local state to reflect the archive
+        setCompanies(prev => prev.map(company => 
+          company.id === archiveModal.company!.id 
+            ? { ...company, isArchived: true, archivedAt: new Date().toISOString() }
+            : company
+        ));
 
-    // Disable users from this company
-    mockUsers.forEach(user => {
-      if (user.company === archiveModal.company!.name) {
-        user.status = 'inactive';
-        user.isDisabled = true;
-        user.disabledReason = 'Company archived';
+        // Disable users from this company
+        mockUsers.forEach(user => {
+          if (user.company === archiveModal.company!.name) {
+            user.status = 'inactive';
+            user.isDisabled = true;
+            user.disabledReason = 'Company archived';
+          }
+        });
+
+        console.log('Company archived successfully:', archiveModal.company);
+      } else {
+        setError('Failed to archive company');
       }
-    });
-
-    console.log('Archiving company:', archiveModal.company);
-    setArchiveModal({ open: false });
-    
-    // Refresh the page to show updated list
-    window.location.reload();
+    } catch (err) {
+      setError('Failed to archive company');
+      console.error('Error archiving company:', err);
+    } finally {
+      setLoading(false);
+      setArchiveModal({ open: false });
+    }
   };
 
   const handleDuplicate = (company: Company) => {
@@ -131,32 +189,36 @@ export default function CompaniesPage() {
       }
     }));
   };
-  const confirmDuplicate = () => {
+  const confirmDuplicate = async () => {
     if (!validateDuplicateForm()) {
       return;
     }
 
     if (duplicateModal.company) {
-      const newCompanyId = `company-${Date.now()}`;
-      const duplicatedCompany: Company = {
-        ...duplicateModal.company,
-        id: newCompanyId,
-        name: duplicateForm.companyName,
-        identifier: `${duplicateModal.company.identifier}-copy`,
-        apiToken: `${duplicateModal.company.apiToken.split('_')[0]}_copy_${Date.now()}`,
-        companyCode: `${duplicateModal.company.companyCode}_COPY`,
-        currentApiRequests: 0, // Reset API usage for new company
-      };
-      
-      // In a real app, this would make an API call to create the company
-      // For now, we'll add it to the mock data and navigate to companies list
-      console.log('Duplicating company:', duplicatedCompany);
-      
-      // Add to mock companies array (in real app this would be handled by API)
-      mockCompanies.push(duplicatedCompany);
-      
-      // Navigate back to companies list to see the new company
-      navigate('/companies');
+      try {
+        setLoading(true);
+        const response = await companiesApi.duplicateCompany(
+          duplicateModal.company.id, 
+          duplicateForm.companyName
+        );
+        
+        if (response.success) {
+          // Update local state to include the new company
+          setCompanies(prev => [...prev, response.data]);
+          
+          console.log('Company duplicated successfully:', response.data);
+          
+          // Navigate back to companies list to see the new company
+          navigate('/companies');
+        } else {
+          setError('Failed to duplicate company');
+        }
+      } catch (err) {
+        setError('Failed to duplicate company');
+        console.error('Error duplicating company:', err);
+      } finally {
+        setLoading(false);
+      }
     }
     setDuplicateModal({ open: false });
     setDuplicateForm({
@@ -171,45 +233,6 @@ export default function CompaniesPage() {
     });
   };
 
-  // Filter and search logic
-  let filteredCompanies = companies.filter(company => {
-    // Archive filter
-    const matchesArchived = filters.archived === 'all' ||
-      (filters.archived === 'active' && !company.isArchived) ||
-      (filters.archived === 'archived' && company.isArchived);
-
-    // Search filter
-    const matchesSearch = !searchTerm || 
-      company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      company.identifier.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      company.companyCode.toLowerCase().includes(searchTerm.toLowerCase());
-
-    // Contract type filter
-    const matchesContractType = !filters.contractType || company.contractType === filters.contractType;
-
-    // Business sector filter
-    const matchesBusinessSector = !filters.businessSector || company.businessSector === filters.businessSector;
-
-    // Parent company filter
-    const matchesParentCompany = !filters.parentCompany || 
-      (filters.parentCompany === 'root' && !company.parentCompany) ||
-      (filters.parentCompany === 'child' && company.parentCompany);
-
-    // Status filter (based on API requests)
-    const matchesStatus = !filters.status ||
-      (filters.status === 'active' && company.currentApiRequests < company.maxApiRequests) ||
-      (filters.status === 'limit-reached' && company.currentApiRequests >= company.maxApiRequests);
-
-    return matchesArchived && matchesSearch && matchesContractType && matchesBusinessSector && matchesParentCompany && matchesStatus;
-  });
-
-  // Apply company-based filtering for non-superAdmin users
-  if (user?.role !== 'superAdmin') {
-    filteredCompanies = filteredCompanies.filter(company => 
-      company.id === user?.companyId || company.name === user?.companyName
-    );
-  }
-
   const clearFilters = () => {
     setFilters({
       contractType: '',
@@ -219,9 +242,10 @@ export default function CompaniesPage() {
       archived: 'active'
     });
     setSearchTerm('');
+    setDebouncedSearchTerm('');
   };
 
-  const hasActiveFilters = searchTerm || Object.values(filters).some(filter => filter !== '');
+  const hasActiveFilters = searchTerm || Object.values(filters).some(filter => filter !== '' && filter !== 'active');
 
   // Helper function to check if company has chase-up rules
   const hasChaseupRules = (companyName: string) => {
@@ -260,7 +284,7 @@ export default function CompaniesPage() {
     {
       key: 'chaseupRules',
       label: 'Chase-up Rules',
-      render: (_: any, row: Company) => {
+      render: (_: unknown, row: Company) => {
         const hasRules = hasChaseupRules(row.name);
         return (
           <div className="flex items-center gap-2">
@@ -286,7 +310,7 @@ export default function CompaniesPage() {
     {
       key: 'actions',
       label: 'Actions',
-      render: (_: any, row: Company) => (
+      render: (_: unknown, row: Company) => (
         <div className="flex items-center gap-2">
           <button
             onClick={() => navigate(`/companies/${row.id}/edit`)}
@@ -320,15 +344,35 @@ export default function CompaniesPage() {
       <Header title="Companies" />
       
       <div className="flex-1 overflow-y-auto p-6">
-        <div className="mb-6 flex justify-between items-center">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">Company Management</h2>
-            <p className="text-sm text-gray-600">Manage companies, their settings, and configurations</p>
+        {loading && (
+          <div className="flex justify-center items-center h-64">
+            <LoadingSpinner />
           </div>
-          <Button
-            onClick={() => navigate('/companies/new')}
-            className="flex items-center gap-2"
-          >
+        )}
+        
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-700">{error}</p>
+            <button 
+              onClick={loadCompanies}
+              className="mt-2 text-red-600 hover:text-red-800 underline"
+            >
+              Try again
+            </button>
+          </div>
+        )}
+        
+        {!loading && !error && (
+          <>
+            <div className="mb-6 flex justify-between items-center">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">Company Management</h2>
+                <p className="text-sm text-gray-600">Manage companies, their settings, and configurations</p>
+              </div>
+              <Button
+                onClick={() => navigate('/companies/new')}
+                className="flex items-center gap-2"
+              >
             <Plus size={16} />
             Create New Company
           </Button>
@@ -345,8 +389,13 @@ export default function CompaniesPage() {
                 placeholder="Search companies..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="pl-10 pr-10 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
+              {(searchTerm !== debouncedSearchTerm || loading) && searchTerm && (
+                <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                </div>
+              )}
               {searchTerm && (
                 <button
                   onClick={() => setSearchTerm('')}
@@ -449,7 +498,7 @@ export default function CompaniesPage() {
               {hasActiveFilters && (
                 <div className="mt-4 flex justify-between items-center">
                   <span className="text-sm text-gray-600">
-                    Showing {filteredCompanies.length} of {companies.length} companies
+                    {loading ? 'Filtering...' : `Showing ${companies.length} filtered companies`}
                   </span>
                   <Button variant="secondary" size="sm" onClick={clearFilters}>
                     Clear All Filters
@@ -486,13 +535,13 @@ export default function CompaniesPage() {
         <div className="bg-white rounded-lg border border-gray-200">
           <Table
             columns={columns}
-            data={filteredCompanies}
+            data={companies}
             sortKey={sortKey}
             sortDirection={sortDirection}
             onSort={handleSort}
           />
           
-          {filteredCompanies.length === 0 && (
+          {companies.length === 0 && !loading && (
             <div className="text-center py-8 text-gray-500">
               <p>No companies found matching your criteria.</p>
               {hasActiveFilters && (
@@ -503,6 +552,8 @@ export default function CompaniesPage() {
             </div>
           )}
         </div>
+          </>
+        )}
       </div>
 
       <Modal
@@ -606,9 +657,9 @@ export default function CompaniesPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Parent Company (optional)</label>
                 <select className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                   <option value="">None</option>
-                  {mockCompanies
-                    .filter(c => c.id !== duplicateModal.company?.id)
-                    .map(c => (
+                  {companies
+                    .filter((c: Company) => c.id !== duplicateModal.company?.id)
+                    .map((c: Company) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))
                   }
