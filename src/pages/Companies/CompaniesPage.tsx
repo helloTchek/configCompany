@@ -5,20 +5,17 @@ import Header from '../../components/Layout/Header';
 import Table from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
 import Modal from '../../components/UI/Modal';
-import { mockUsers } from '../../data/mockData';
-import { Company } from '../../types';
+import { useCompanies } from '@/hooks/useCompanies';
+import { chaseupRuleService } from '@/services';
+import type { Company } from '@/types/entities';
 import { CreditCard as Edit, Archive, Copy, Plus, Upload, Search, ListFilter as Filter, X } from 'lucide-react';
-import { mockChaseupRules } from '../../data/mockData';
 import { PERMISSIONS } from '@/types/auth';
-import { companiesApi, CompanyFilters } from '@/services/api/companies';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import showToast from '@/components/ui/Toast';
 
 export default function CompaniesPage() {
   const navigate = useNavigate();
   const { user, hasPermission } = useAuth();
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -31,6 +28,7 @@ export default function CompaniesPage() {
   });
   const [sortKey, setSortKey] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [chaseupRulesCache, setChaseupRulesCache] = useState<Record<string, boolean>>({});
   const [archiveModal, setArchiveModal] = useState<{ open: boolean; company?: Company }>({ open: false });
   const [duplicateModal, setDuplicateModal] = useState<{ open: boolean; company?: Company }>({ open: false });
   const [duplicateForm, setDuplicateForm] = useState({
@@ -53,42 +51,67 @@ export default function CompaniesPage() {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  const loadCompanies = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // Prepare filters for API call - only include non-empty values
-      const apiFilters: CompanyFilters = {};
-      
-      if (debouncedSearchTerm) apiFilters.search = debouncedSearchTerm;
-      if (filters.contractType) apiFilters.contractType = filters.contractType;
-      if (filters.businessSector) apiFilters.businessSector = filters.businessSector;
-      if (filters.parentCompany) apiFilters.parentCompany = filters.parentCompany;
-      if (filters.status) apiFilters.status = filters.status;
-      if (filters.archived) apiFilters.archived = filters.archived;
-      if (user?.role) apiFilters.userRole = user.role;
-      if (user?.companyId) apiFilters.userCompanyId = user.companyId;
-      if (user?.companyName) apiFilters.userCompanyName = user.companyName;
-
-      const response = await companiesApi.getCompanies(apiFilters);
-      if (response.success) {
-        setCompanies(response.data);
-      } else {
-        setError('Failed to load companies');
-      }
-    } catch (err) {
-      setError('Failed to load companies');
-      console.error('Error loading companies:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [debouncedSearchTerm, filters, user]);
-
-  // Load companies on component mount and when filters change
+  // Load chase-up rules status for companies
   useEffect(() => {
-    loadCompanies();
-  }, [loadCompanies]);
+    const loadChaseupRulesStatus = async () => {
+      if (companies.length === 0) return;
+      
+      try {
+        const rulesPromises = companies.map(async (company) => {
+          try {
+            const response = await chaseupRuleService.getChaseupRulesByCompany(company.name);
+            return { companyName: company.name, hasRules: response.data.length > 0 };
+          } catch {
+            return { companyName: company.name, hasRules: false };
+          }
+        });
+        
+        const results = await Promise.all(rulesPromises);
+        const cache = results.reduce((acc, result) => {
+          acc[result.companyName] = result.hasRules;
+          return acc;
+        }, {} as Record<string, boolean>);
+        
+        setChaseupRulesCache(cache);
+      } catch (error) {
+        console.error('Failed to load chase-up rules status:', error);
+      }
+    };
+
+    loadChaseupRulesStatus();
+  }, [companies]);
+
+  const handleArchive = async (company: Company) => {
+    try {
+      const result = await archiveCompany(company.id);
+      if (result) {
+        setArchiveModal({ open: false });
+      }
+    } catch (error) {
+      console.error('Failed to archive company:', error);
+    }
+  };
+
+  const handleDuplicate = async (company: Company) => {
+    if (!validateDuplicateForm()) {
+      return;
+    }
+
+    try {
+      const result = await duplicateCompany(company.id, duplicateForm.companyName);
+      if (result) {
+        setDuplicateModal({ open: false });
+        setDuplicateForm({
+          companyName: '',
+          senderName: '',
+          webhookUrl: '',
+          errors: { companyName: '', senderName: '', webhookUrl: '' }
+        });
+      }
+    } catch (error) {
+      console.error('Failed to duplicate company:', error);
+    }
+  };
 
   const handleSort = (key: string) => {
     if (sortKey === key) {
@@ -99,48 +122,7 @@ export default function CompaniesPage() {
     }
   };
 
-  const handleArchive = (company: Company) => {
-    setArchiveModal({ open: true, company });
-  };
-
-  const confirmArchive = async () => {
-    if (!archiveModal.company) return;
-
-    try {
-      setLoading(true);
-      const response = await companiesApi.archiveCompany(archiveModal.company.id);
-      
-      if (response.success) {
-        // Update local state to reflect the archive
-        setCompanies(prev => prev.map(company => 
-          company.id === archiveModal.company!.id 
-            ? { ...company, isArchived: true, archivedAt: new Date().toISOString() }
-            : company
-        ));
-
-        // Disable users from this company
-        mockUsers.forEach(user => {
-          if (user.company === archiveModal.company!.name) {
-            user.status = 'inactive';
-            user.isDisabled = true;
-            user.disabledReason = 'Company archived';
-          }
-        });
-
-        console.log('Company archived successfully:', archiveModal.company);
-      } else {
-        setError('Failed to archive company');
-      }
-    } catch (err) {
-      setError('Failed to archive company');
-      console.error('Error archiving company:', err);
-    } finally {
-      setLoading(false);
-      setArchiveModal({ open: false });
-    }
-  };
-
-  const handleDuplicate = (company: Company) => {
+  const openDuplicateModal = (company: Company) => {
     setDuplicateForm({
       companyName: `${company.name} (Copy)`,
       senderName: '',
@@ -152,6 +134,10 @@ export default function CompaniesPage() {
       }
     });
     setDuplicateModal({ open: true, company });
+  };
+
+  const openArchiveModal = (company: Company) => {
+    setArchiveModal({ open: true, company });
   };
 
   const validateDuplicateForm = () => {
@@ -211,27 +197,6 @@ export default function CompaniesPage() {
           // Navigate back to companies list to see the new company
           navigate('/companies');
         } else {
-          setError('Failed to duplicate company');
-        }
-      } catch (err) {
-        setError('Failed to duplicate company');
-        console.error('Error duplicating company:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    setDuplicateModal({ open: false });
-    setDuplicateForm({
-      companyName: '',
-      senderName: '',
-      webhookUrl: '',
-      errors: {
-        companyName: '',
-        senderName: '',
-        webhookUrl: ''
-      }
-    });
-  };
 
   const clearFilters = () => {
     setFilters({
@@ -249,7 +214,7 @@ export default function CompaniesPage() {
 
   // Helper function to check if company has chase-up rules
   const hasChaseupRules = (companyName: string) => {
-    return mockChaseupRules.some(rule => rule.company === companyName);
+    return chaseupRulesCache[companyName] || false;
   };
 
   const columns = [
@@ -320,14 +285,14 @@ export default function CompaniesPage() {
           </button>
           {hasPermission(PERMISSIONS.COMPANIES.CREATE) && (
             <button
-              onClick={() => handleDuplicate(row)}
+            onClick={() => openDuplicateModal(row)}
               className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
             >
               <Copy size={16} />
             </button>
           )}
           <button
-            onClick={() => handleArchive(row)}
+            onClick={() => openArchiveModal(row)}
             className="p-2 text-orange-600 hover:bg-orange-100 rounded-lg transition-colors"
             title={row.isArchived ? "Company is archived" : "Archive company"}
             disabled={row.isArchived}
@@ -352,9 +317,9 @@ export default function CompaniesPage() {
         
         {error && (
           <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-700">{error}</p>
+            <p className="text-red-700">{error.message}</p>
             <button 
-              onClick={loadCompanies}
+              onClick={refetch}
               className="mt-2 text-red-600 hover:text-red-800 underline"
             >
               Try again
@@ -581,7 +546,7 @@ export default function CompaniesPage() {
             </Button>
             <Button
               variant="secondary"
-              onClick={confirmArchive}
+             onClick={() => archiveModal.company && handleArchive(archiveModal.company)}
               className="bg-orange-600 text-white hover:bg-orange-700"
             >
               Archive Company
@@ -841,7 +806,7 @@ export default function CompaniesPage() {
             Cancel
           </Button>
           <Button
-            onClick={confirmDuplicate}
+            onClick={() => duplicateModal.company && handleDuplicate(duplicateModal.company)}
           >
             Create Company
           </Button>
