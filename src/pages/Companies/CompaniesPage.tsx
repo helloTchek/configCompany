@@ -102,7 +102,7 @@ export default function CompaniesPage() {
   }, [companies]);
 
     try {
-      const result = await archiveCompany(company.id);
+      const result = archiveCompany(company.id);
       if (result) {
         setArchiveModal({ open: false });
       }
