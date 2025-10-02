@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/auth/AuthContext';
@@ -6,15 +7,17 @@ import Header from '../../components/Layout/Header';
 import Table from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
-import { mockSortingRules } from '../../data/mockData';
+import { sortingRuleService } from '../../services';
 import { SortingRule } from '../../types';
 import { CreditCard as Edit, Copy, Plus, Search, ListFilter as Filter, X } from 'lucide-react';
+import showToast from '../../components/ui/Toast';
 
 export default function SortingRulesPage() {
   const navigate = useNavigate();
   const { t } = useTranslation(['sortingRules', 'common']);
   const { user } = useAuth();
-  const [rules] = useState<SortingRule[]>(mockSortingRules);
+  const [rules, setRules] = useState<SortingRule[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
@@ -22,6 +25,30 @@ export default function SortingRulesPage() {
     company: '',
     priority: ''
   });
+
+  // Load rules data
+  const loadRules = async () => {
+    try {
+      setLoading(true);
+      const data = await sortingRuleService.getAll({
+        search: searchTerm,
+        type: filters.type || undefined,
+        company: filters.company || undefined,
+        priority: filters.priority || undefined
+      });
+      setRules(data);
+    } catch (error) {
+      console.error('Failed to load sorting rules:', error);
+      showToast.error('Failed to load sorting rules');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load rules on mount and when filters change
+  useEffect(() => {
+    loadRules();
+  }, [searchTerm, filters]);
 
   const clearFilters = () => {
     setFilters({
@@ -225,10 +252,15 @@ export default function SortingRulesPage() {
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200">
+          {loading && (
+            <div className="flex justify-center items-center h-32">
+              <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          )}
           <Table columns={columns} data={filteredRules} />
         </div>
 
-        {filteredRules.length === 0 && (
+        {filteredRules.length === 0 && !loading && (
           <div className="text-center py-8 text-gray-500">
             <p>{t('common:messages.noResults')}</p>
             {hasActiveFilters && (

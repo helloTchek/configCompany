@@ -4,8 +4,9 @@ import Header from '../../components/Layout/Header';
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
 import { ArrowLeft, Save, Plus, Trash2, Download, Upload } from 'lucide-react';
-import { mockCostMatrices } from '../../data/mockData';
+import { costMatrixService } from '../../services';
 import { CostMatrixPart } from '../../types';
+import showToast from '../../components/ui/Toast';
 
 const severityColors = {
   'SEV1': 'bg-green-100 text-green-800',
@@ -77,22 +78,31 @@ export default function EditCostMatrixPage() {
 
   useEffect(() => {
     // Load cost matrix data
-    const matrix = mockCostMatrices.find(m => m.id === id);
-    if (matrix) {
-      setFormData({
-        company: matrix.company,
-        currency: matrix.currency,
-        tax: matrix.tax,
-      });
-      setParts(matrix.parts.map((part, index) => ({
-        ...part,
-        id: `part-${index}`
-      })));
-    } else {
-      navigate('/cost-matrices');
-      return;
+    const loadMatrix = async () => {
+      try {
+        const matrix = await costMatrixService.getById(id!);
+        setFormData({
+          company: matrix.company,
+          currency: matrix.currency,
+          tax: matrix.tax,
+        });
+        setParts(matrix.parts.map((part, index) => ({
+          ...part,
+          id: `part-${index}`
+        })));
+      } catch (error) {
+        console.error('Failed to load cost matrix:', error);
+        showToast.error('Failed to load cost matrix');
+        navigate('/cost-matrices');
+        return;
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      loadMatrix();
     }
-    setLoading(false);
   }, [id, navigate]);
 
   const handleInputChange = (field: string, value: string | number) => {
@@ -160,15 +170,20 @@ export default function EditCostMatrixPage() {
       return;
     }
 
-    const updatedMatrix = {
-      id,
+    const updatedData = {
       ...formData,
       parts: parts.filter(part => part.partNameEn && part.locationEn),
-      updatedAt: new Date().toISOString()
     };
 
-    console.log('Updating cost matrix:', updatedMatrix);
-    navigate('/cost-matrices');
+    costMatrixService.update(id!, updatedData)
+      .then(() => {
+        showToast.success('Cost matrix updated successfully');
+        navigate('/cost-matrices');
+      })
+      .catch((error) => {
+        console.error('Failed to update cost matrix:', error);
+        showToast.error('Failed to update cost matrix');
+      });
   };
 
   const handleDownloadCsv = () => {

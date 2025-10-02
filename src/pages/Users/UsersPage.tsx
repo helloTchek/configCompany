@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
+import { useEffect } from 'react';
 import { useAuth } from '@/auth/AuthContext';
 import Header from '../../components/Layout/Header';
 import Table from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
 import Modal from '../../components/UI/Modal';
 import Input from '../../components/UI/Input';
-import { mockUsers } from '../../data/mockData';
+import { userService } from '../../services';
 import { User } from '../../types';
 import { CreditCard as Edit, Trash2, Plus, Search, ListFilter as Filter, X, Mail } from 'lucide-react';
+import showToast from '../../components/ui/Toast';
 
 export default function UsersPage() {
   const { user } = useAuth();
-  const [users] = useState<User[]>(mockUsers);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
@@ -34,6 +37,30 @@ export default function UsersPage() {
     role: '',
     company: ''
   });
+
+  // Load users data
+  const loadUsers = async () => {
+    try {
+      setLoading(true);
+      const data = await userService.getAll({
+        search: searchTerm,
+        role: filters.role || undefined,
+        status: filters.status || undefined,
+        company: filters.company || undefined
+      });
+      setUsers(data);
+    } catch (error) {
+      console.error('Failed to load users:', error);
+      showToast.error('Failed to load users');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load users on mount and when filters change
+  useEffect(() => {
+    loadUsers();
+  }, [searchTerm, filters]);
 
   const clearFilters = () => {
     setFilters({
@@ -144,11 +171,16 @@ export default function UsersPage() {
   const confirmPasswordReset = () => {
     if (!passwordResetModal.user) return;
 
-    // In a real app, this would send a password reset email
-    console.log('Sending password reset email to:', passwordResetModal.user.email);
-    
-    setPasswordResetModal({ open: false });
-    setPasswordResetSuccessModal({ open: true, user: passwordResetModal.user });
+    userService.sendPasswordReset(passwordResetModal.user.id)
+      .then(() => {
+        setPasswordResetModal({ open: false });
+        setPasswordResetSuccessModal({ open: true, user: passwordResetModal.user });
+        showToast.success('Password reset email sent successfully');
+      })
+      .catch((error) => {
+        console.error('Failed to send password reset:', error);
+        showToast.error('Failed to send password reset email');
+      });
   };
 
   const handleEditUser = (user: User) => {
@@ -201,9 +233,23 @@ export default function UsersPage() {
       return;
     }
 
-    // In a real app, this would make an API call to update the user
-    console.log('Updating user:', editFormData);
-    setEditModal({ open: false });
+    if (!editModal.user) return;
+
+    userService.update(editModal.user.id, {
+      email: editFormData.email,
+      role: editFormData.role as any,
+      company: editFormData.company,
+      status: editFormData.status as any
+    })
+      .then(() => {
+        setEditModal({ open: false });
+        showToast.success('User updated successfully');
+        loadUsers(); // Refresh the list
+      })
+      .catch((error) => {
+        console.error('Failed to update user:', error);
+        showToast.error('Failed to update user');
+      });
   };
 
   const CreateUserModal = () => (
@@ -363,6 +409,11 @@ export default function UsersPage() {
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200">
+          {loading && (
+            <div className="flex justify-center items-center h-32">
+              <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          )}
           <Table columns={columns} data={filteredUsers} />
           
           {filteredUsers.length === 0 && (
