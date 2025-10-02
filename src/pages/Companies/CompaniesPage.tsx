@@ -6,7 +6,7 @@ import Table from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
 import Modal from '../../components/UI/Modal';
 import { useCompanies } from '@/hooks/useCompanies';
-import { chaseupRuleService } from '@/services';
+import { chaseupRuleService } from '@/services/chaseupRuleService';
 import type { Company } from '@/types/entities';
 import { CreditCard as Edit, Archive, Copy, Plus, Upload, Search, ListFilter as Filter, X } from 'lucide-react';
 import { PERMISSIONS } from '@/types/auth';

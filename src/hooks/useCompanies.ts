@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Company } from '@/types/entities';
 import type { SearchParams, ApiError } from '@/types/api';
-import { companyService } from '@/services';
+import { companyService } from '@/services/companyService';
 import showToast from '@/components/ui/Toast';
 
 interface UseCompaniesState {

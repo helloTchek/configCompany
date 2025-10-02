@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { InspectionJourney } from '@/types/entities';
 import type { SearchParams, ApiError } from '@/types/api';
-import { journeyService } from '@/services';
+import { journeyService } from '@/services/journeyService';
 import showToast from '@/components/ui/Toast';
 
 interface UseJourneysState {

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { User } from '@/types/entities';
 import type { SearchParams, ApiError } from '@/types/api';
-import { userService } from '@/services';
+import { userService } from '@/services/userService';
 import showToast from '@/components/ui/Toast';
 
 interface UseUsersState {

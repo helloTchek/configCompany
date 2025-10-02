@@ -1,14 +1,10 @@
 import type { ApiResponse, SearchParams } from '@/types/api';
-import type { 
-  ChaseupRule, 
-  CreateChaseupRuleRequest, 
-  UpdateChaseupRuleRequest 
-} from '@/types/entities';
+import type { ChaseupRule } from '@/types/entities';
+import { mockChaseupRules } from '@/mocks/chaseupRules.mock';
 import { apiClient } from '@/api/client';
-import { mockChaseupRules } from '@/mocks/data';
 import environment from '@/config/environment';
 
-export class ChaseupRuleRepository {
+class ChaseupRuleService {
   private async delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
@@ -71,7 +67,7 @@ export class ChaseupRuleRepository {
     return apiClient.get<ChaseupRule>(`/chaseup-rules/${id}`);
   }
 
-  async create(data: CreateChaseupRuleRequest): Promise<ApiResponse<ChaseupRule>> {
+  async create(data: any): Promise<ApiResponse<ChaseupRule>> {
     if (environment.USE_MOCK_DATA) {
       await this.delay(600);
 
@@ -105,7 +101,7 @@ export class ChaseupRuleRepository {
     return apiClient.post<ChaseupRule>('/chaseup-rules', data);
   }
 
-  async update(data: UpdateChaseupRuleRequest): Promise<ApiResponse<ChaseupRule>> {
+  async update(data: any): Promise<ApiResponse<ChaseupRule>> {
     if (environment.USE_MOCK_DATA) {
       await this.delay(500);
 
@@ -192,6 +188,13 @@ export class ChaseupRuleRepository {
       company: newCompany 
     });
   }
+
+  async getChaseupRulesByCompany(company: string): Promise<ApiResponse<ChaseupRule[]>> {
+    const params: SearchParams = {
+      filters: { company }
+    };
+    return this.getAll(params);
+  }
 }
 
-export const chaseupRuleRepository = new ChaseupRuleRepository();
+export const chaseupRuleService = new ChaseupRuleService();

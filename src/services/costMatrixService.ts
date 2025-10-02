@@ -1,14 +1,10 @@
 import type { ApiResponse, SearchParams } from '@/types/api';
-import type { 
-  CostMatrix, 
-  CreateCostMatrixRequest, 
-  UpdateCostMatrixRequest 
-} from '@/types/entities';
+import type { CostMatrix } from '@/types/entities';
+import { mockCostMatrices } from '@/mocks/costMatrices.mock';
 import { apiClient } from '@/api/client';
-import { mockCostMatrices } from '@/mocks/data';
 import environment from '@/config/environment';
 
-export class CostMatrixRepository {
+class CostMatrixService {
   private async delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
@@ -71,7 +67,7 @@ export class CostMatrixRepository {
     return apiClient.get<CostMatrix>(`/cost-matrices/${id}`);
   }
 
-  async create(data: CreateCostMatrixRequest): Promise<ApiResponse<CostMatrix>> {
+  async create(data: any): Promise<ApiResponse<CostMatrix>> {
     if (environment.USE_MOCK_DATA) {
       await this.delay(700);
 
@@ -80,7 +76,7 @@ export class CostMatrixRepository {
         company: data.company,
         tax: data.tax,
         currency: data.currency,
-        parts: data.parts.map((part, index) => ({
+        parts: data.parts.map((part: any, index: number) => ({
           ...part,
           id: `part_${Date.now()}_${index}`,
         })),
@@ -100,7 +96,7 @@ export class CostMatrixRepository {
     return apiClient.post<CostMatrix>('/cost-matrices', data);
   }
 
-  async update(data: UpdateCostMatrixRequest): Promise<ApiResponse<CostMatrix>> {
+  async update(data: any): Promise<ApiResponse<CostMatrix>> {
     if (environment.USE_MOCK_DATA) {
       await this.delay(600);
 
@@ -193,4 +189,4 @@ export class CostMatrixRepository {
   }
 }
 
-export const costMatrixRepository = new CostMatrixRepository();
+export const costMatrixService = new CostMatrixService();

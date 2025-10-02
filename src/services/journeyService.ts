@@ -1,14 +1,10 @@
 import type { ApiResponse, SearchParams } from '@/types/api';
-import type { 
-  InspectionJourney, 
-  CreateJourneyRequest, 
-  UpdateJourneyRequest 
-} from '@/types/entities';
+import type { InspectionJourney } from '@/types/entities';
+import { mockJourneys } from '@/mocks/journeys.mock';
 import { apiClient } from '@/api/client';
-import { mockJourneys } from '@/mocks/data';
 import environment from '@/config/environment';
 
-export class JourneyRepository {
+class JourneyService {
   private async delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
@@ -75,7 +71,7 @@ export class JourneyRepository {
     return apiClient.get<InspectionJourney>(`/journeys/${id}`);
   }
 
-  async create(data: CreateJourneyRequest): Promise<ApiResponse<InspectionJourney>> {
+  async create(data: any): Promise<ApiResponse<InspectionJourney>> {
     if (environment.USE_MOCK_DATA) {
       await this.delay(700);
 
@@ -84,7 +80,7 @@ export class JourneyRepository {
         companyId: data.companyId,
         name: data.name,
         description: data.description,
-        blocks: data.blocks.map((block, index) => ({
+        blocks: data.blocks.map((block: any, index: number) => ({
           ...block,
           id: `block_${Date.now()}_${index}`,
         })),
@@ -105,7 +101,7 @@ export class JourneyRepository {
     return apiClient.post<InspectionJourney>('/journeys', data);
   }
 
-  async update(data: UpdateJourneyRequest): Promise<ApiResponse<InspectionJourney>> {
+  async update(data: any): Promise<ApiResponse<InspectionJourney>> {
     if (environment.USE_MOCK_DATA) {
       await this.delay(600);
 
@@ -198,6 +194,10 @@ export class JourneyRepository {
       companyId 
     });
   }
+
+  async toggleStatus(id: string, isActive: boolean): Promise<ApiResponse<InspectionJourney>> {
+    return this.update({ id, isActive });
+  }
 }
 
-export const journeyRepository = new JourneyRepository();
+export const journeyService = new JourneyService();

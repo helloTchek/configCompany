@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/Layout/Header';
 import Button from '../../components/UI/Button';
-import { mockCostMatrices } from '@/mocks/data';
+import { mockCostMatrices } from '@/mocks/costMatrices.mock';
 import { CostMatrix } from '../../types';
 import { CreditCard as Edit, Download, Copy, Trash2, Plus, Eye } from 'lucide-react';
 

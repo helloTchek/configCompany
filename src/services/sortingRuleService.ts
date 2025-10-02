@@ -1,14 +1,10 @@
 import type { ApiResponse, SearchParams } from '@/types/api';
-import type { 
-  SortingRule, 
-  CreateSortingRuleRequest, 
-  UpdateSortingRuleRequest 
-} from '@/types/entities';
+import type { SortingRule } from '@/types/entities';
+import { mockSortingRules } from '@/mocks/sortingRules.mock';
 import { apiClient } from '@/api/client';
-import { mockSortingRules } from '@/mocks/data';
 import environment from '@/config/environment';
 
-export class SortingRuleRepository {
+class SortingRuleService {
   private async delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
@@ -78,7 +74,7 @@ export class SortingRuleRepository {
     return apiClient.get<SortingRule>(`/sorting-rules/${id}`);
   }
 
-  async create(data: CreateSortingRuleRequest): Promise<ApiResponse<SortingRule>> {
+  async create(data: any): Promise<ApiResponse<SortingRule>> {
     if (environment.USE_MOCK_DATA) {
       await this.delay(600);
 
@@ -109,7 +105,7 @@ export class SortingRuleRepository {
     return apiClient.post<SortingRule>('/sorting-rules', data);
   }
 
-  async update(data: UpdateSortingRuleRequest): Promise<ApiResponse<SortingRule>> {
+  async update(data: any): Promise<ApiResponse<SortingRule>> {
     if (environment.USE_MOCK_DATA) {
       await this.delay(500);
 
@@ -164,4 +160,4 @@ export class SortingRuleRepository {
   }
 }
 
-export const sortingRuleRepository = new SortingRuleRepository();
+export const sortingRuleService = new SortingRuleService();
