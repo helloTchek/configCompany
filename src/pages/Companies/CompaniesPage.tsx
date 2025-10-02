@@ -6,7 +6,7 @@ import Table from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
 import Modal from '../../components/UI/Modal';
 import { useCompanies } from '@/hooks/useCompanies';
-import { chaseupRuleService } from '@/services/chaseupRuleService';
+import { chaseupRuleService } from '@/services';
 import type { Company } from '@/types/entities';
 import { CreditCard as Edit, Archive, Copy, Plus, Upload, Search, ListFilter as Filter, X } from 'lucide-react';
 import { PERMISSIONS } from '@/types/auth';
@@ -41,26 +41,6 @@ export default function CompaniesPage() {
       webhookUrl: ''
     }
   });
-
-  // Prepare search parameters for the hook
-  const searchParams = React.useMemo(() => ({
-    search: debouncedSearchTerm,
-    filters,
-    sortKey,
-    sortDirection
-  }), [debouncedSearchTerm, filters, sortKey, sortDirection]);
-
-  // Use the companies hook with search parameters
-  const { 
-    companies, 
-    loading, 
-    error, 
-    refetch, 
-    archiveCompany, 
-    duplicateCompany,
-    setCompanies,
-    setLoading
-  } = useCompanies(searchParams);
 
   // Debounce search term to avoid too many API calls
   useEffect(() => {
@@ -101,8 +81,9 @@ export default function CompaniesPage() {
     loadChaseupRulesStatus();
   }, [companies]);
 
+  const handleArchive = async (company: Company) => {
     try {
-      const result = archiveCompany(company.id);
+      const result = await archiveCompany(company.id);
       if (result) {
         setArchiveModal({ open: false });
       }
@@ -216,23 +197,6 @@ export default function CompaniesPage() {
           // Navigate back to companies list to see the new company
           navigate('/companies');
         } else {
-          showToast('Failed to duplicate company', 'error');
-        }
-      } catch (error) {
-        console.error('Failed to duplicate company:', error);
-        showToast('Failed to duplicate company', 'error');
-      } finally {
-        setLoading(false);
-        setDuplicateModal({ open: false });
-        setDuplicateForm({
-          companyName: '',
-          senderName: '',
-          webhookUrl: '',
-          errors: { companyName: '', senderName: '', webhookUrl: '' }
-        });
-      }
-    }
-  };
 
   const clearFilters = () => {
     setFilters({

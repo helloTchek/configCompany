@@ -1,17 +1,21 @@
 import type { ApiResponse, SearchParams } from '@/types/api';
-import type { Company } from '@/types/entities';
-import { mockCompanies } from '@/mocks/companies.mock';
+import type { 
+  Company, 
+  CreateCompanyRequest, 
+  UpdateCompanyRequest 
+} from '@/types/entities';
 import { apiClient } from '@/api/client';
+import { mockCompanies } from '@/mocks/data';
 import environment from '@/config/environment';
 
-class CompanyService {
+export class CompanyRepository {
   private async delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   async getAll(params?: SearchParams): Promise<ApiResponse<Company[]>> {
     if (environment.USE_MOCK_DATA) {
-      await this.delay(500);
+      await this.delay(500); // Simulate network delay
       
       let filteredCompanies = [...mockCompanies];
 
@@ -30,25 +34,26 @@ class CompanyService {
         Object.entries(params.filters).forEach(([key, value]) => {
           if (value !== undefined && value !== null && value !== '') {
             filteredCompanies = filteredCompanies.filter(company => {
-              if (key === 'archived') {
-                if (value === 'active') return !company.isArchived;
-                if (value === 'archived') return company.isArchived;
-                return true; // 'all'
-              }
-              if (key === 'status') {
-                if (value === 'active') return company.currentApiRequests < company.maxApiRequests;
-                if (value === 'limit-reached') return company.currentApiRequests >= company.maxApiRequests;
-                return true;
-              }
-              if (key === 'parentCompany') {
-                if (value === 'root') return !company.parentCompany;
-                if (value === 'child') return !!company.parentCompany;
-                return true;
-              }
               const companyValue = company[key as keyof Company];
+              if (Array.isArray(value)) {
+                return value.includes(companyValue as string);
+              }
               return companyValue === value;
             });
           }
+        });
+      }
+
+      // Apply sorting
+      if (params?.sort) {
+        const { key, direction } = params.sort;
+        filteredCompanies.sort((a, b) => {
+          const aValue = a[key as keyof Company];
+          const bValue = b[key as keyof Company];
+          
+          if (aValue < bValue) return direction === 'asc' ? -1 : 1;
+          if (aValue > bValue) return direction === 'asc' ? 1 : -1;
+          return 0;
         });
       }
 
@@ -83,7 +88,7 @@ class CompanyService {
     return apiClient.get<Company>(`/companies/${id}`);
   }
 
-  async create(data: any): Promise<ApiResponse<Company>> {
+  async create(data: CreateCompanyRequest): Promise<ApiResponse<Company>> {
     if (environment.USE_MOCK_DATA) {
       await this.delay(800);
 
@@ -93,8 +98,8 @@ class CompanyService {
         identifier: data.identifier || `ID${Date.now()}`,
         apiToken: `tk_${Math.random().toString(36).substr(2, 15)}`,
         currentApiRequests: 0,
-        maxApiRequests: data.maxApiRequests || 5000,
-        requestsExpiryDate: data.expirationDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        maxApiRequests: 5000,
+        requestsExpiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         companyCode: data.name.toUpperCase().replace(/\s+/g, '_'),
         childrenCount: 0,
         contractType: data.contractType,
@@ -123,7 +128,7 @@ class CompanyService {
     return apiClient.post<Company>('/companies', data);
   }
 
-  async update(data: any): Promise<ApiResponse<Company>> {
+  async update(data: UpdateCompanyRequest): Promise<ApiResponse<Company>> {
     if (environment.USE_MOCK_DATA) {
       await this.delay(600);
 
@@ -244,4 +249,4 @@ class CompanyService {
   }
 }
 
-export const companyService = new CompanyService();
+export const companyRepository = new CompanyRepository();

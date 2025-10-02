@@ -7,7 +7,7 @@ import Tabs from '../../components/UI/Tabs';
 import { ArrowLeft, Save, Upload, Plus, Trash2 } from 'lucide-react';
 
 // Import chase-up rules data to check if rules exist
-import { mockChaseupRules } from '@/mocks/chaseupRules.mock';
+import { mockChaseupRules } from '../../data/mockData';
 
 // Move tab components outside to prevent re-creation on every render
 const GeneralSettingsTab = ({ 

@@ -5,7 +5,7 @@ import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
 import { ArrowLeft, Save } from 'lucide-react';
 import { ChaseupRule, ChaseupReminder, ChaseupTemplates } from '../../types';
-import { mockChaseupRules } from '@/mocks/chaseupRules.mock';
+import { mockChaseupRules } from '../../data/mockData';
 
 const languages = [
   { code: 'en', name: 'English' },

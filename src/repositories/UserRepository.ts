@@ -1,10 +1,14 @@
 import type { ApiResponse, SearchParams } from '@/types/api';
-import type { User } from '@/types/entities';
-import { mockUsers } from '@/mocks/users.mock';
+import type { 
+  User, 
+  CreateUserRequest, 
+  UpdateUserRequest 
+} from '@/types/entities';
 import { apiClient } from '@/api/client';
+import { mockUsers } from '@/mocks/data';
 import environment from '@/config/environment';
 
-class UserService {
+export class UserRepository {
   private async delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
@@ -68,7 +72,7 @@ class UserService {
     return apiClient.get<User>(`/users/${id}`);
   }
 
-  async create(data: any): Promise<ApiResponse<User>> {
+  async create(data: CreateUserRequest): Promise<ApiResponse<User>> {
     if (environment.USE_MOCK_DATA) {
       await this.delay(600);
 
@@ -95,7 +99,7 @@ class UserService {
     return apiClient.post<User>('/users', data);
   }
 
-  async update(data: any): Promise<ApiResponse<User>> {
+  async update(data: UpdateUserRequest): Promise<ApiResponse<User>> {
     if (environment.USE_MOCK_DATA) {
       await this.delay(500);
 
@@ -161,6 +165,9 @@ class UserService {
         };
       }
 
+      // Simulate sending password reset email
+      console.log(`Password reset email sent to: ${user.email}`);
+
       return {
         data: null,
         success: true,
@@ -172,4 +179,4 @@ class UserService {
   }
 }
 
-export const userService = new UserService();
+export const userRepository = new UserRepository();

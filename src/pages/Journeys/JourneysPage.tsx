@@ -7,7 +7,7 @@ import Button from '../../components/UI/Button';
 import Modal from '../../components/UI/Modal';
 import Input from '../../components/UI/Input';
 import { useJourneys } from '@/hooks/useJourneys';
-import { mockCompanies } from '@/mocks/companies.mock';
+import { mockCompanies } from '@/mocks/data';
 import type { InspectionJourney } from '@/types/entities';
 import { CreditCard as Edit, Eye, Copy, Trash2, Plus, Search, ListFilter as Filter, X } from 'lucide-react';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';

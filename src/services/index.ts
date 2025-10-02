@@ -1,7 +1,29 @@
 // Central export point for all services
-export { companyService } from './companyService';
-export { userService } from './userService';
-export { journeyService } from './journeyService';
-export { sortingRuleService } from './sortingRuleService';
-export { costMatrixService } from './costMatrixService';
-export { chaseupRuleService } from './chaseupRuleService';
+export { companyService } from './CompanyService';
+export { journeyService } from './JourneyService';
+export { userService } from './UserService';
+export { sortingRuleService } from './SortingRuleService';
+export { costMatrixService } from './CostMatrixService';
+export { chaseupRuleService } from './ChaseupRuleService';
+
+// Re-export types for convenience
+export type { 
+  Company, 
+  User, 
+  InspectionJourney, 
+  SortingRule, 
+  CostMatrix, 
+  ChaseupRule,
+  CreateCompanyRequest,
+  UpdateCompanyRequest,
+  CreateUserRequest,
+  UpdateUserRequest,
+  CreateJourneyRequest,
+  UpdateJourneyRequest,
+  CreateSortingRuleRequest,
+  UpdateSortingRuleRequest,
+  CreateCostMatrixRequest,
+  UpdateCostMatrixRequest,
+  CreateChaseupRuleRequest,
+  UpdateChaseupRuleRequest
+} from '@/types/entities';
