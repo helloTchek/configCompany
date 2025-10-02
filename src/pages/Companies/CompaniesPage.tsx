@@ -42,6 +42,26 @@ export default function CompaniesPage() {
     }
   });
 
+  // Prepare search parameters for the hook
+  const searchParams = React.useMemo(() => ({
+    search: debouncedSearchTerm,
+    filters,
+    sortKey,
+    sortDirection
+  }), [debouncedSearchTerm, filters, sortKey, sortDirection]);
+
+  // Use the companies hook with search parameters
+  const { 
+    companies, 
+    loading, 
+    error, 
+    refetch, 
+    archiveCompany, 
+    duplicateCompany,
+    setCompanies,
+    setLoading
+  } = useCompanies(searchParams);
+
   // Debounce search term to avoid too many API calls
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -81,7 +101,6 @@ export default function CompaniesPage() {
     loadChaseupRulesStatus();
   }, [companies]);
 
-  const handleArchive = async (company: Company) => {
     try {
       const result = await archiveCompany(company.id);
       if (result) {
