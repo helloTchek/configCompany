@@ -6,15 +6,14 @@ import Table from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
 import Modal from '../../components/UI/Modal';
 import Input from '../../components/UI/Input';
-import { useJourneys } from '@/hooks/useJourneys';
-import { mockCompanies } from '@/mocks/data';
-import type { InspectionJourney } from '@/types/entities';
+import { mockJourneys, mockCompanies } from '../../data/mockData';
+import { InspectionJourney } from '../../types';
 import { CreditCard as Edit, Eye, Copy, Trash2, Plus, Search, ListFilter as Filter, X } from 'lucide-react';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 export default function JourneysPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [journeys] = useState<InspectionJourney[]>(mockJourneys);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
@@ -26,26 +25,6 @@ export default function JourneysPage() {
   const [duplicateCompany, setDuplicateCompany] = useState('');
   const [deleteModal, setDeleteModal] = useState<{ open: boolean; journey?: InspectionJourney }>({ open: false });
 
-  // Use the journeys hook with search and filter parameters
-  const searchParams = React.useMemo(() => ({
-    query: searchTerm,
-    filters: {
-      ...Object.fromEntries(Object.entries(filters).filter(([_, value]) => value !== '')),
-      ...(user?.role !== 'superAdmin' && user?.companyId ? {
-        companyId: user.companyId
-      } : {})
-    }
-  }), [searchTerm, filters, user]);
-
-  const {
-    journeys,
-    loading,
-    error,
-    refetch,
-    deleteJourney,
-    duplicateJourney
-  } = useJourneys(searchParams);
-
   const clearFilters = () => {
     setFilters({
       status: '',
@@ -55,6 +34,30 @@ export default function JourneysPage() {
   };
 
   const hasActiveFilters = searchTerm || Object.values(filters).some(filter => filter !== '');
+
+  // Filter and search logic
+  let filteredJourneys = journeys.filter(journey => {
+    // Search filter
+    const matchesSearch = !searchTerm || 
+      journey.name.toLowerCase().includes(searchTerm.toLowerCase());
+
+    // Status filter
+    const matchesStatus = !filters.status ||
+      (filters.status === 'active' && journey.isActive) ||
+      (filters.status === 'inactive' && !journey.isActive);
+
+    // Company filter
+    const matchesCompany = !filters.company || journey.companyId === filters.company;
+
+    return matchesSearch && matchesStatus && matchesCompany;
+  });
+
+  // Apply company-based filtering for non-superAdmin users
+  if (user?.role !== 'superAdmin') {
+    filteredJourneys = filteredJourneys.filter(journey => 
+      journey.companyId === user?.companyId
+    );
+  }
 
   const handleDuplicate = (journey: InspectionJourney) => {
     setDuplicateName(`${journey.name} (Copy)`);
@@ -66,28 +69,52 @@ export default function JourneysPage() {
     setDeleteModal({ open: true, journey });
   };
 
-  const confirmDelete = async () => {
+  const confirmDelete = () => {
     if (!deleteModal.journey) return;
 
-    const success = await deleteJourney(deleteModal.journey.id);
-    if (success) {
-      setDeleteModal({ open: false });
+    // In a real app, this would make an API call to delete the journey
+    console.log('Deleting journey:', deleteModal.journey);
+    
+    // Remove from mock journeys array (in real app this would be handled by API)
+    const index = mockJourneys.findIndex(j => j.id === deleteModal.journey!.id);
+    if (index > -1) {
+      mockJourneys.splice(index, 1);
     }
+    
+    setDeleteModal({ open: false });
+    
+    // Refresh the page to show updated list
+    window.location.reload();
   };
 
-  const confirmDuplicate = async () => {
+  const confirmDuplicate = () => {
     if (!duplicateModal.journey || !duplicateName.trim() || (user?.role === 'superAdmin' && !duplicateCompany)) {
       return;
     }
 
-    const targetCompanyId = user?.role === 'superAdmin' ? duplicateCompany : duplicateModal.journey.companyId;
-    const success = await duplicateJourney(duplicateModal.journey.id, duplicateName, targetCompanyId);
+    const duplicatedJourney: InspectionJourney = {
+      ...duplicateModal.journey,
+      id: `journey-${Date.now()}`,
+      name: duplicateName,
+      companyId: user?.role === 'superAdmin' ? duplicateCompany : duplicateModal.journey.companyId,
+      blocks: duplicateModal.journey.blocks.map(block => ({
+        ...block,
+        id: `block-${Date.now()}-${Math.random()}`,
+      })),
+    };
+
+    // In a real app, this would make an API call to create the journey
+    console.log('Duplicating journey:', duplicatedJourney);
     
-    if (success) {
-      setDuplicateModal({ open: false });
-      setDuplicateName('');
-      setDuplicateCompany('');
-    }
+    // Add to mock journeys array (in real app this would be handled by API)
+    mockJourneys.push(duplicatedJourney);
+    
+    setDuplicateModal({ open: false });
+    setDuplicateName('');
+    setDuplicateCompany('');
+    
+    // Refresh the page or update state to show the new journey
+    window.location.reload();
   };
 
   const columns = [
@@ -146,26 +173,6 @@ export default function JourneysPage() {
       <Header title="Inspection Journeys" />
       
       <div className="flex-1 overflow-y-auto p-6">
-        {loading && (
-          <div className="flex justify-center items-center h-64">
-            <LoadingSpinner />
-          </div>
-        )}
-        
-        {error && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-700">{error.message}</p>
-            <button 
-              onClick={refetch}
-              className="mt-2 text-red-600 hover:text-red-800 underline"
-            >
-              Try again
-            </button>
-          </div>
-        )}
-        
-        {!loading && !error && (
-          <>
         <div className="mb-6 flex justify-between items-center">
           <div>
             <h2 className="text-lg font-semibold text-gray-900">Journey Management</h2>
@@ -251,7 +258,7 @@ export default function JourneysPage() {
               {hasActiveFilters && (
                 <div className="mt-4 flex justify-between items-center">
                   <span className="text-sm text-gray-600">
-                    Showing {journeys.length} journeys
+                    Showing {filteredJourneys.length} of {journeys.length} journeys
                   </span>
                   <Button variant="secondary" size="sm" onClick={clearFilters}>
                     Clear All Filters
@@ -263,9 +270,9 @@ export default function JourneysPage() {
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200">
-          <Table columns={columns} data={journeys} />
+          <Table columns={columns} data={filteredJourneys} />
           
-          {journeys.length === 0 && (
+          {filteredJourneys.length === 0 && (
             <div className="text-center py-8 text-gray-500">
               <p>No journeys found matching your criteria.</p>
               {hasActiveFilters && (
@@ -276,8 +283,6 @@ export default function JourneysPage() {
             </div>
           )}
         </div>
-          </>
-        )}
       </div>
 
       {/* Duplicate Modal */}

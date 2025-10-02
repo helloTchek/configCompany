@@ -1,11 +1,5 @@
-import type { 
-  Company, 
-  User, 
-  InspectionJourney, 
-  SortingRule, 
-  CostMatrix, 
-  ChaseupRule 
-} from '@/types/entities';
+import { Company, User, InspectionJourney, SortingRule, CostMatrix } from '../types';
+import type { ChaseupRule } from '../types';
 
 export const mockCompanies: Company[] = [
   {
@@ -25,12 +19,10 @@ export const mockCompanies: Company[] = [
     retentionPeriod: 24,
     disableFastTrack: false,
     styles: '{"report":{"backgroundColor":"#252387","costsBackgroundColor":"#6A68D4","costsTextColor":"#000000","costsInfoColor":"#252387","topRightHorizontalBarColor":"#252387","borderColor":"#6a68d4"},"shootInspect":{"overlayColor":"#1adf6c"},"globalTheme":{"primaryColor":"#323276","primaryTextColor":"#ffffff","accentColor":"#1adf6c","accentTextColor":"ffffff","dominantColor":"#151841","dominantTextColor":"#ffffff","isDarkTheme":true}}',
-    reportSettings: '{"picturesPreSelected":"true","showDamage":"true","showGallery":"true","showNewDamage":"true","showState":"true","oldDamages":true,"checkDamages":true,"isCarDealership":true,"showWatermark":false,"prefix":"","selectorSens":"clockwise","selectorSvgColor":"repairSeverity","selectorSvg":"renault"}',
+    reportSettings: '{"picturesPreSelected":"true","showDamage":"true","showGallery":"true","showNewDamage":"true","showState":"true","oldDamages":true,"checkDamages":true,"isCarDealership":true,"showWatermark":false,"prefix":"","selectorSens":"clockwise","selectorSvgColor":"repairSeverity","selectorSvg":"renault","state":{"checklist":true,"picturesPreSelected":true,"showCost":true,"showSeverity":true,"signatory":true,"vehicleDetails":true,"croppImages":true,"signing":false,"notes":true,"tchekScan":true},"simple":{"signatory":true,"picturesPreSelected":true,"showCost":true,"showSeverity":true,"vehicleDetails":true,"croppImages":true},"specificSectionsConfig":{"withCosts":{"intro":{"visible":true,"showTopRightHorizontalBar":true},"signatoryAndVehicle":{"visible":true,"showEmptyFields":false},"estimatedCosts":{"visible":true},"preselectedPictures":{"visible":true},"gallery":{"visible":true,"showMiniatures":true,"showActionButton":true},"vehicleStateWithoutComparison":{"visible":true},"vehicleStateWithComparison":{"visible":true},"newDamages":{"visible":true},"damageDetails":{"visible":true},"damageInterior":{"visible":true},"exteriorElements":{"visible":true},"additionalElements":{"visible":true},"clientNotes":{"visible":true},"tchekScan":{"visible":true},"signing":{"visible":false},"footer":{"visible":true},"severityDetailsConfig":{"showCrop":true,"showCropId":false,"showCropScore":false,"showCropType":true,"showCropRoi":true,"showRois":true}},"withoutCosts":{"intro":{"visible":true,"showTopRightHorizontalBar":true},"signatoryAndVehicle":{"visible":true,"showEmptyFields":false},"estimatedCosts":{"visible":false},"preselectedPictures":{"visible":true},"gallery":{"visible":true,"showMiniatures":true,"showActionButton":true},"vehicleStateWithoutComparison":{"visible":true},"vehicleStateWithComparison":{"visible":true},"newDamages":{"visible":true},"damageDetails":{"visible":true},"damageInterior":{"visible":true},"exteriorElements":{"visible":true},"additionalElements":{"visible":true},"clientNotes":{"visible":true},"tchekScan":{"visible":true},"signing":{"visible":false},"footer":{"visible":true},"severityDetailsConfig":{"showCrop":true,"showCropId":false,"showCropScore":false,"showCropType":true,"showCropRoi":true,"showRois":true}}}}',
     configModules: '{"fastTrack":{"canWearAndTear":true,"deletedStatusEnabled":false,"validatedStatusEnabled":true,"wearAndTearStatusEnabled":true,"editionMode":true,"zoomConfig":{"minDamageCropMargin":0.3,"regularWidthMargin":1.4,"regularHeightMargin":1.4,"strokeWidthScale":5}},"shootInspect":{"autoFinalizationEnabled":false,"autoFinalizationThreshold":2},"global":{"modelIA":"codeter_ensembling"},"endInspect":{"npsEnabled":true,"npsDelay":3000}}',
     costSettings: ['bodywork', 'interior', 'mechanical'],
-    isArchived: false,
-    createdAt: '2024-01-01T00:00:00Z',
-    updatedAt: '2024-01-15T10:30:00Z'
+    isArchived: false
   },
   {
     id: '2',
@@ -48,9 +40,7 @@ export const mockCompanies: Company[] = [
     retentionPeriod: 18,
     disableFastTrack: true,
     costSettings: ['bodywork', 'mechanical'],
-    isArchived: false,
-    createdAt: '2024-01-02T00:00:00Z',
-    updatedAt: '2024-01-14T14:22:00Z'
+    isArchived: false
   }
 ];
 
@@ -62,9 +52,7 @@ export const mockUsers: User[] = [
     role: 'admin',
     company: 'AutoCorp Insurance',
     status: 'active',
-    lastLogin: '2024-01-15T10:30:00Z',
-    createdAt: '2024-01-01T00:00:00Z',
-    updatedAt: '2024-01-15T10:30:00Z'
+    lastLogin: '2024-01-15T10:30:00Z'
   },
   {
     id: '2',
@@ -73,9 +61,7 @@ export const mockUsers: User[] = [
     role: 'user',
     company: 'FleetMax Leasing',
     status: 'active',
-    lastLogin: '2024-01-14T14:22:00Z',
-    createdAt: '2024-01-02T00:00:00Z',
-    updatedAt: '2024-01-14T14:22:00Z'
+    lastLogin: '2024-01-14T14:22:00Z'
   }
 ];
 
@@ -88,24 +74,22 @@ export const mockJourneys: InspectionJourney[] = [
     blocks: [
       {
         id: 'b1',
-        type: 'form',
+        type: 'onboarding',
         name: 'Customer Onboarding',
         description: 'Collect customer information',
-        order: 1,
-        config: { fields: ['name', 'email', 'phone'] }
+        config: { fields: ['name', 'email', 'phone'] },
+        order: 1
       },
       {
         id: 'b2',
-        type: 'shootInspect',
+        type: 'shootInspection',
         name: 'Vehicle Photography',
         description: 'Capture vehicle images',
-        order: 2,
-        config: { angles: ['front', 'back', 'sides'], mandatory: true }
+        config: { angles: ['front', 'back', 'sides'], mandatory: true },
+        order: 2
       }
     ],
-    isActive: true,
-    createdAt: '2024-01-01T00:00:00Z',
-    updatedAt: '2024-01-15T10:30:00Z'
+    isActive: true
   }
 ];
 
@@ -120,9 +104,7 @@ export const mockSortingRules: SortingRule[] = [
     referencePrefix: 'DMG_',
     filters: '{"severity": {"$gte": 3}}',
     updates: '{"priority": "high"}',
-    processingPriority: 1,
-    createdAt: '2024-01-01T00:00:00Z',
-    updatedAt: '2024-01-15T10:30:00Z'
+    processingPriority: 1
   }
 ];
 
@@ -134,7 +116,6 @@ export const mockCostMatrices: CostMatrix[] = [
     currency: 'EUR',
     parts: [
       { 
-        id: 'part-1',
         partTypeCode: 'carbody',
         partCode: 'PRC',
         locationCode: 'AV',
@@ -152,7 +133,6 @@ export const mockCostMatrices: CostMatrix[] = [
         repairCode: 'polish'
       },
       { 
-        id: 'part-2',
         partTypeCode: 'carbody',
         partCode: 'PRC',
         locationCode: 'AV',
@@ -168,10 +148,25 @@ export const mockCostMatrices: CostMatrix[] = [
         repairTypeFr: 'Tôlerie Peinture',
         conditionCode: 'damaged',
         repairCode: 'sheet_metal_work_and_painting'
+      },
+      { 
+        partTypeCode: 'carbody',
+        partCode: 'PRT',
+        locationCode: 'AVG',
+        partNameEn: 'Door',
+        locationEn: 'Front Left',
+        conditionLabelEn: 'scratched',
+        severity: 'SEV3',
+        repairTypeEn: 'Painting',
+        costBeforeTax: 320,
+        partNameFr: 'PORTE',
+        locationFr: 'Avant Gauche',
+        conditionLabelFr: 'Rayé',
+        repairTypeFr: 'Peinture',
+        conditionCode: 'scratched',
+        repairCode: 'painting'
       }
-    ],
-    createdAt: '2024-01-01T00:00:00Z',
-    updatedAt: '2024-01-15T10:30:00Z'
+    ]
   }
 ];
 
