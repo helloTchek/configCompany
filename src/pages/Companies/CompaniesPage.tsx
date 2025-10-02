@@ -42,13 +42,6 @@ export default function CompaniesPage() {
     }
   });
 
-  const { companies, loading, error, refetch, archiveCompany, duplicateCompany } = useCompanies({
-    searchTerm: debouncedSearchTerm,
-    filters,
-    sortKey,
-    sortDirection
-  });
-
   // Debounce search term to avoid too many API calls
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -61,7 +54,7 @@ export default function CompaniesPage() {
   // Load chase-up rules status for companies
   useEffect(() => {
     const loadChaseupRulesStatus = async () => {
-      if (!companies || companies.length === 0) return;
+      if (companies.length === 0) return;
       
       try {
         const rulesPromises = companies.map(async (company) => {
@@ -90,7 +83,7 @@ export default function CompaniesPage() {
 
   const handleArchive = async (company: Company) => {
     try {
-      const result = await archiveCompany?.(company.id);
+      const result = await archiveCompany(company.id);
       if (result) {
         setArchiveModal({ open: false });
       }
@@ -105,7 +98,7 @@ export default function CompaniesPage() {
     }
 
     try {
-      const result = await duplicateCompany?.(company.id, duplicateForm.companyName);
+      const result = await duplicateCompany(company.id, duplicateForm.companyName);
       if (result) {
         setDuplicateModal({ open: false });
         setDuplicateForm({
@@ -189,26 +182,35 @@ export default function CompaniesPage() {
 
     if (duplicateModal.company) {
       try {
-        const response = await duplicateCompany?.(
+        setLoading(true);
+        const response = await companiesApi.duplicateCompany(
           duplicateModal.company.id, 
           duplicateForm.companyName
         );
         
-        if (response) {
-          setDuplicateModal({ open: false });
-          setDuplicateForm({
-            companyName: '',
-            senderName: '',
-            webhookUrl: '',
-            errors: {
-              companyName: '',
-              senderName: '',
-              webhookUrl: ''
-            }
-          });
+        if (response.success) {
+          // Update local state to include the new company
+          setCompanies(prev => [...prev, response.data]);
+          
+          console.log('Company duplicated successfully:', response.data);
+          
+          // Navigate back to companies list to see the new company
+          navigate('/companies');
+        } else {
+          showToast('Failed to duplicate company', 'error');
         }
       } catch (error) {
         console.error('Failed to duplicate company:', error);
+        showToast('Failed to duplicate company', 'error');
+      } finally {
+        setLoading(false);
+        setDuplicateModal({ open: false });
+        setDuplicateForm({
+          companyName: '',
+          senderName: '',
+          webhookUrl: '',
+          errors: { companyName: '', senderName: '', webhookUrl: '' }
+        });
       }
     }
   };

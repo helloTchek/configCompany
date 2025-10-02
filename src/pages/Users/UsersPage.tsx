@@ -5,13 +5,13 @@ import Table from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
 import Modal from '../../components/UI/Modal';
 import Input from '../../components/UI/Input';
-import { mockUsers } from '../../data/mockData';
-import { User } from '../../types';
+import { useUsers } from '@/hooks/useUsers';
+import type { User } from '@/types/entities';
 import { CreditCard as Edit, Trash2, Plus, Search, ListFilter as Filter, X, Mail } from 'lucide-react';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 export default function UsersPage() {
   const { user } = useAuth();
-  const [users] = useState<User[]>(mockUsers);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
@@ -19,6 +19,28 @@ export default function UsersPage() {
     status: '',
     company: ''
   });
+
+  // Use the users hook with search and filter parameters
+  const searchParams = React.useMemo(() => ({
+    query: searchTerm,
+    filters: {
+      ...Object.fromEntries(Object.entries(filters).filter(([_, value]) => value !== '')),
+      ...(user?.role !== 'superAdmin' && user?.companyName ? {
+        company: user.companyName
+      } : {})
+    }
+  }), [searchTerm, filters, user]);
+
+  const {
+    users,
+    loading,
+    error,
+    refetch,
+    updateUser,
+    deleteUser,
+    sendPasswordReset
+  } = useUsers(searchParams);
+
   const [createModal, setCreateModal] = useState(false);
   const [editModal, setEditModal] = useState<{ open: boolean; user?: User }>({ open: false });
   const [passwordResetModal, setPasswordResetModal] = useState<{ open: boolean; user?: User }>({ open: false });
@@ -45,33 +67,6 @@ export default function UsersPage() {
   };
 
   const hasActiveFilters = searchTerm || Object.values(filters).some(filter => filter !== '');
-
-  // Filter and search logic
-  let filteredUsers = users.filter(userItem => {
-    // Search filter
-    const matchesSearch = !searchTerm ||
-      userItem.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      userItem.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      userItem.company.toLowerCase().includes(searchTerm.toLowerCase());
-
-    // Role filter
-    const matchesRole = !filters.role || userItem.role === filters.role;
-
-    // Status filter
-    const matchesStatus = !filters.status || userItem.status === filters.status;
-
-    // Company filter
-    const matchesCompany = !filters.company || userItem.company === filters.company;
-
-    return matchesSearch && matchesRole && matchesStatus && matchesCompany;
-  });
-
-  // Apply company-based filtering for non-superAdmin users
-  if (user?.role !== 'superAdmin') {
-    filteredUsers = filteredUsers.filter(userItem => 
-      userItem.company === user?.companyName
-    );
-  }
 
   const columns = [
     { key: 'email', label: 'Email', sortable: true },
@@ -138,17 +133,17 @@ export default function UsersPage() {
   ];
 
   const handleSendPasswordReset = (user: User) => {
-    setPasswordResetModal({ open: true, user });
+    setPasswordResetModal({ open: true, user: user });
   };
 
-  const confirmPasswordReset = () => {
+  const confirmPasswordReset = async () => {
     if (!passwordResetModal.user) return;
 
-    // In a real app, this would send a password reset email
-    console.log('Sending password reset email to:', passwordResetModal.user.email);
-    
-    setPasswordResetModal({ open: false });
-    setPasswordResetSuccessModal({ open: true, user: passwordResetModal.user });
+    const success = await sendPasswordReset(passwordResetModal.user.id);
+    if (success) {
+      setPasswordResetModal({ open: false });
+      setPasswordResetSuccessModal({ open: true, user: passwordResetModal.user });
+    }
   };
 
   const handleEditUser = (user: User) => {
@@ -196,14 +191,27 @@ export default function UsersPage() {
     return !newErrors.email && !newErrors.role && !newErrors.company;
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!validateEditForm()) {
       return;
     }
 
-    // In a real app, this would make an API call to update the user
-    console.log('Updating user:', editFormData);
-    setEditModal({ open: false });
+    if (!editModal.user) return;
+
+    const success = await updateUser({
+      id: editModal.user.id,
+      ...editFormData
+    });
+
+    if (success) {
+      setEditModal({ open: false });
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    if (confirm('Are you sure you want to delete this user?')) {
+      await deleteUser(userId);
+    }
   };
 
   const CreateUserModal = () => (
@@ -252,6 +260,26 @@ export default function UsersPage() {
       <Header title="Users" />
       
       <div className="flex-1 overflow-y-auto p-6">
+        {loading && (
+          <div className="flex justify-center items-center h-64">
+            <LoadingSpinner />
+          </div>
+        )}
+        
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-700">{error.message}</p>
+            <button 
+              onClick={refetch}
+              className="mt-2 text-red-600 hover:text-red-800 underline"
+            >
+              Try again
+            </button>
+          </div>
+        )}
+        
+        {!loading && !error && (
+          <>
         <div className="mb-6 flex justify-between items-center">
           <div>
             <h2 className="text-lg font-semibold text-gray-900">User Management</h2>
@@ -351,7 +379,7 @@ export default function UsersPage() {
               {hasActiveFilters && (
                 <div className="mt-4 flex justify-between items-center">
                   <span className="text-sm text-gray-600">
-                    Showing {filteredUsers.length} of {users.length} users
+                    Showing {users.length} users
                   </span>
                   <Button variant="secondary" size="sm" onClick={clearFilters}>
                     Clear All Filters
@@ -363,9 +391,9 @@ export default function UsersPage() {
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200">
-          <Table columns={columns} data={filteredUsers} />
+          <Table columns={columns} data={users} />
           
-          {filteredUsers.length === 0 && (
+          {users.length === 0 && (
             <div className="text-center py-8 text-gray-500">
               <p>No users found matching your criteria.</p>
               {hasActiveFilters && (
@@ -376,6 +404,8 @@ export default function UsersPage() {
             </div>
           )}
         </div>
+          </>
+        )}
       </div>
 
       <CreateUserModal />

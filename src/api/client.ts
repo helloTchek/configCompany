@@ -1,28 +1,25 @@
-import type { ApiResponse, ApiError, SearchParams, PaginatedResponse } from '@/types/api';
+import type { ApiResponse, ApiError, SearchParams } from '@/types/api';
+import environment from '@/config/environment';
 
 class ApiClient {
   private baseURL: string;
-  private defaultHeaders: Record<string, string>;
+  private timeout: number;
 
-  constructor(baseURL: string = '/api') {
-    this.baseURL = baseURL;
-    this.defaultHeaders = {
+  constructor() {
+    this.baseURL = environment.API_BASE_URL;
+    this.timeout = environment.API_TIMEOUT;
+  }
+
+  private getAuthHeaders(): Record<string, string> {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
-  }
 
-  private getAuthToken(): string | null {
-    return localStorage.getItem('accessToken');
-  }
-
-  private getHeaders(): Record<string, string> {
-    const headers = { ...this.defaultHeaders };
-    const token = this.getAuthToken();
-    
+    const token = localStorage.getItem('accessToken');
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     }
-    
+
     return headers;
   }
 
@@ -54,7 +51,7 @@ class ApiClient {
     }
   }
 
-  private buildSearchParams(params: SearchParams): URLSearchParams {
+  private buildQueryString(params: SearchParams): string {
     const searchParams = new URLSearchParams();
 
     if (params.query) {
@@ -85,70 +82,89 @@ class ApiClient {
       });
     }
 
-    return searchParams;
+    return searchParams.toString();
+  }
+
+  private async makeRequest<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<ApiResponse<T>> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
+    try {
+      const response = await fetch(`${this.baseURL}${endpoint}`, {
+        ...options,
+        headers: {
+          ...this.getAuthHeaders(),
+          ...options.headers,
+        },
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+      return this.handleResponse<T>(response);
+    } catch (error) {
+      clearTimeout(timeoutId);
+      
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw {
+          message: 'Request timeout',
+          status: 408,
+        } as ApiError;
+      }
+      
+      throw error;
+    }
   }
 
   async get<T>(endpoint: string, params?: SearchParams): Promise<ApiResponse<T>> {
-    const url = new URL(`${this.baseURL}${endpoint}`, window.location.origin);
+    let url = endpoint;
     
     if (params) {
-      const searchParams = this.buildSearchParams(params);
-      url.search = searchParams.toString();
+      const queryString = this.buildQueryString(params);
+      if (queryString) {
+        url += `?${queryString}`;
+      }
     }
 
-    const response = await fetch(url.toString(), {
+    return this.makeRequest<T>(url, {
       method: 'GET',
-      headers: this.getHeaders(),
     });
-
-    return this.handleResponse<T>(response);
   }
 
   async post<T>(endpoint: string, data?: unknown): Promise<ApiResponse<T>> {
-    const response = await fetch(`${this.baseURL}${endpoint}`, {
+    return this.makeRequest<T>(endpoint, {
       method: 'POST',
-      headers: this.getHeaders(),
       body: data ? JSON.stringify(data) : undefined,
     });
-
-    return this.handleResponse<T>(response);
   }
 
   async put<T>(endpoint: string, data?: unknown): Promise<ApiResponse<T>> {
-    const response = await fetch(`${this.baseURL}${endpoint}`, {
+    return this.makeRequest<T>(endpoint, {
       method: 'PUT',
-      headers: this.getHeaders(),
       body: data ? JSON.stringify(data) : undefined,
     });
-
-    return this.handleResponse<T>(response);
   }
 
   async patch<T>(endpoint: string, data?: unknown): Promise<ApiResponse<T>> {
-    const response = await fetch(`${this.baseURL}${endpoint}`, {
+    return this.makeRequest<T>(endpoint, {
       method: 'PATCH',
-      headers: this.getHeaders(),
       body: data ? JSON.stringify(data) : undefined,
     });
-
-    return this.handleResponse<T>(response);
   }
 
   async delete<T>(endpoint: string): Promise<ApiResponse<T>> {
-    const response = await fetch(`${this.baseURL}${endpoint}`, {
+    return this.makeRequest<T>(endpoint, {
       method: 'DELETE',
-      headers: this.getHeaders(),
     });
-
-    return this.handleResponse<T>(response);
   }
 
-  // Paginated requests
-  async getPaginated<T>(
-    endpoint: string, 
-    params?: SearchParams
-  ): Promise<ApiResponse<PaginatedResponse<T>>> {
-    return this.get<PaginatedResponse<T>>(endpoint, params);
+  // Utility method for logging in development
+  private log(message: string, data?: unknown): void {
+    if (environment.ENABLE_LOGGING) {
+      console.log(`[ApiClient] ${message}`, data);
+    }
   }
 }
 
