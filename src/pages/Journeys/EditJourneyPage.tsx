@@ -9,7 +9,7 @@ import ShootInspectionConfig from '../../components/Journey/ShootInspectionConfi
 import { ArrowLeft, Plus, Upload, Download, GripVertical, Save } from 'lucide-react';
 import { JourneyBlock, InspectionJourney } from '../../types';
 import { ShootInspectionData } from '../../types';
-import { mockJourneys } from '@/mocks/data';
+import { mockJourneys } from '../../data/mockData';
 import onboardingData from '../../data/onboarding.json';
 
 const blockTypes = [

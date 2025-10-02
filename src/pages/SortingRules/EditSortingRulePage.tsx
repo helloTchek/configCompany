@@ -5,7 +5,7 @@ import Header from '../../components/Layout/Header';
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
 import { ArrowLeft, Save } from 'lucide-react';
-import { mockSortingRules } from '@/mocks/data';
+import { mockSortingRules } from '../../data/mockData';
 
 export default function EditSortingRulePage() {
   const navigate = useNavigate();

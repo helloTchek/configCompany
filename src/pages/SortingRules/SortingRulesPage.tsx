@@ -6,7 +6,7 @@ import Header from '../../components/Layout/Header';
 import Table from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
-import { mockSortingRules } from '@/mocks/data';
+import { mockSortingRules } from '../../data/mockData';
 import { SortingRule } from '../../types';
 import { CreditCard as Edit, Copy, Plus, Search, ListFilter as Filter, X } from 'lucide-react';
 
