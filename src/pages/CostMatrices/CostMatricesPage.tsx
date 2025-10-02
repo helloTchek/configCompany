@@ -1,36 +1,14 @@
 import React, { useState } from 'react';
-import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/Layout/Header';
 import Button from '../../components/UI/Button';
-import { costMatrixService } from '../../services';
+import { mockCostMatrices } from '../../data/mockData';
 import { CostMatrix } from '../../types';
 import { CreditCard as Edit, Download, Copy, Trash2, Plus, Eye } from 'lucide-react';
-import showToast from '../../components/ui/Toast';
 
 export default function CostMatricesPage() {
   const navigate = useNavigate();
-  const [matrices, setMatrices] = useState<CostMatrix[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  // Load cost matrices data
-  const loadMatrices = async () => {
-    try {
-      setLoading(true);
-      const data = await costMatrixService.getAll();
-      setMatrices(data);
-    } catch (error) {
-      console.error('Failed to load cost matrices:', error);
-      showToast.error('Failed to load cost matrices');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Load matrices on mount
-  useEffect(() => {
-    loadMatrices();
-  }, []);
+  const [matrices] = useState<CostMatrix[]>(mockCostMatrices);
 
   const handleDownloadTemplate = () => {
     // Create CSV template
@@ -45,31 +23,14 @@ export default function CostMatricesPage() {
   };
 
   const handleDuplicate = (matrix: CostMatrix) => {
-    const newCompanyName = prompt('Enter company name for the duplicated matrix:');
-    if (!newCompanyName) return;
-
-    costMatrixService.duplicate(matrix.id, newCompanyName)
-      .then(() => {
-        showToast.success('Cost matrix duplicated successfully');
-        loadMatrices(); // Refresh the list
-      })
-      .catch((error) => {
-        console.error('Failed to duplicate matrix:', error);
-        showToast.error('Failed to duplicate matrix');
-      });
+    console.log('Duplicating matrix:', matrix);
+    // In real app, would create a copy
   };
 
   const handleDelete = (matrix: CostMatrix) => {
     if (confirm(`Are you sure you want to delete the cost matrix for ${matrix.company}?`)) {
-      costMatrixService.delete(matrix.id)
-        .then(() => {
-          showToast.success('Cost matrix deleted successfully');
-          loadMatrices(); // Refresh the list
-        })
-        .catch((error) => {
-          console.error('Failed to delete matrix:', error);
-          showToast.error('Failed to delete matrix');
-        });
+      console.log('Deleting matrix:', matrix);
+      // In real app, would delete the matrix
     }
   };
 
@@ -110,11 +71,6 @@ export default function CostMatricesPage() {
           </div>
 
           <div className="p-6">
-            {loading && (
-              <div className="flex justify-center items-center h-32">
-                <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-              </div>
-            )}
             <div className="overflow-x-auto">
               <table className="min-w-full">
                 <thead>

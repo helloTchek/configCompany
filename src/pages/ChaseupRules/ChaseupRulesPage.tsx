@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthContext';
 import Header from '../../components/Layout/Header';
@@ -7,10 +6,9 @@ import Table from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
 import Modal from '../../components/UI/Modal';
 import Input from '../../components/UI/Input';
-import { chaseupRuleService } from '../../services';
+import { mockChaseupRules } from '../../data/mockData';
 import { ChaseupRule } from '../../types';
 import { CreditCard as Edit, Copy, Trash2, Plus, Search, ListFilter as Filter, X } from 'lucide-react';
-import showToast from '../../components/ui/Toast';
 
 export default function ChaseupRulesPage() {
   const navigate = useNavigate();
@@ -20,8 +18,7 @@ export default function ChaseupRulesPage() {
   const urlParams = new URLSearchParams(window.location.search);
   const companyFromUrl = urlParams.get('company');
   
-  const [rules, setRules] = useState<ChaseupRule[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [rules, setRules] = useState<ChaseupRule[]>([...mockChaseupRules]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(!!companyFromUrl);
   const [filters, setFilters] = useState({
@@ -32,30 +29,6 @@ export default function ChaseupRulesPage() {
   const [duplicateModal, setDuplicateModal] = useState<{ open: boolean; rule?: ChaseupRule }>({ open: false });
   const [duplicateName, setDuplicateName] = useState('');
   const [deleteModal, setDeleteModal] = useState<{ open: boolean; rule?: ChaseupRule }>({ open: false });
-
-  // Load rules data
-  const loadRules = async () => {
-    try {
-      setLoading(true);
-      const data = await chaseupRuleService.getAll({
-        search: searchTerm,
-        type: filters.type || undefined,
-        company: filters.company || undefined,
-        maxSendings: filters.maxSendings || undefined
-      });
-      setRules(data);
-    } catch (error) {
-      console.error('Failed to load chaseup rules:', error);
-      showToast.error('Failed to load chaseup rules');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Load rules on mount and when filters change
-  useEffect(() => {
-    loadRules();
-  }, [searchTerm, filters]);
 
   const clearFilters = () => {
     setFilters({
@@ -106,16 +79,9 @@ export default function ChaseupRulesPage() {
   const confirmDelete = () => {
     if (!deleteModal.rule) return;
 
-    chaseupRuleService.delete(deleteModal.rule.id)
-      .then(() => {
-        setDeleteModal({ open: false });
-        showToast.success('Chaseup rule deleted successfully');
-        loadRules(); // Refresh the list
-      })
-      .catch((error) => {
-        console.error('Failed to delete chaseup rule:', error);
-        showToast.error('Failed to delete chaseup rule');
-      });
+    setRules(prevRules => prevRules.filter(r => r.id !== deleteModal.rule!.id));
+    
+    setDeleteModal({ open: false });
   };
 
   const confirmDuplicate = () => {
@@ -123,17 +89,18 @@ export default function ChaseupRulesPage() {
       return;
     }
 
-    chaseupRuleService.duplicate(duplicateModal.rule.id, duplicateName)
-      .then(() => {
-        setDuplicateModal({ open: false });
-        setDuplicateName('');
-        showToast.success('Chaseup rule duplicated successfully');
-        loadRules(); // Refresh the list
-      })
-      .catch((error) => {
-        console.error('Failed to duplicate chaseup rule:', error);
-        showToast.error('Failed to duplicate chaseup rule');
-      });
+    const duplicatedRule: ChaseupRule = {
+      ...duplicateModal.rule,
+      id: `chaseup-rule-${Date.now()}`,
+      company: duplicateName,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    setRules(prevRules => [...prevRules, duplicatedRule]);
+    
+    setDuplicateModal({ open: false });
+    setDuplicateName('');
   };
 
   const columns = [
@@ -319,11 +286,6 @@ export default function ChaseupRulesPage() {
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200">
-          {loading && (
-            <div className="flex justify-center items-center h-32">
-              <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-          )}
           <Table columns={columns} data={filteredRules} />
           
           {filteredRules.length === 0 && (

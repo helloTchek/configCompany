@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthContext';
 import Header from '../../components/Layout/Header';
@@ -7,17 +6,14 @@ import Table from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
 import Modal from '../../components/UI/Modal';
 import Input from '../../components/UI/Input';
-import { journeyService, companyService } from '../../services';
+import { mockJourneys, mockCompanies } from '../../data/mockData';
 import { InspectionJourney } from '../../types';
 import { CreditCard as Edit, Eye, Copy, Trash2, Plus, Search, ListFilter as Filter, X } from 'lucide-react';
-import showToast from '../../components/ui/Toast';
 
 export default function JourneysPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [journeys, setJourneys] = useState<InspectionJourney[]>([]);
-  const [companies, setCompanies] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [journeys] = useState<InspectionJourney[]>(mockJourneys);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
@@ -28,33 +24,6 @@ export default function JourneysPage() {
   const [duplicateName, setDuplicateName] = useState('');
   const [duplicateCompany, setDuplicateCompany] = useState('');
   const [deleteModal, setDeleteModal] = useState<{ open: boolean; journey?: InspectionJourney }>({ open: false });
-
-  // Load data
-  const loadJourneys = async () => {
-    try {
-      setLoading(true);
-      const [journeysData, companiesData] = await Promise.all([
-        journeyService.getAll({
-          search: searchTerm,
-          status: filters.status || undefined,
-          company: filters.company || undefined
-        }),
-        companyService.getAll()
-      ]);
-      setJourneys(journeysData);
-      setCompanies(companiesData);
-    } catch (error) {
-      console.error('Failed to load data:', error);
-      showToast.error('Failed to load journeys');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Load data on mount and when filters change
-  useEffect(() => {
-    loadJourneys();
-  }, [searchTerm, filters]);
 
   const clearFilters = () => {
     setFilters({
@@ -103,16 +72,19 @@ export default function JourneysPage() {
   const confirmDelete = () => {
     if (!deleteModal.journey) return;
 
-    journeyService.delete(deleteModal.journey.id)
-      .then(() => {
-        setDeleteModal({ open: false });
-        showToast.success('Journey deleted successfully');
-        loadJourneys(); // Refresh the list
-      })
-      .catch((error) => {
-        console.error('Failed to delete journey:', error);
-        showToast.error('Failed to delete journey');
-      });
+    // In a real app, this would make an API call to delete the journey
+    console.log('Deleting journey:', deleteModal.journey);
+    
+    // Remove from mock journeys array (in real app this would be handled by API)
+    const index = mockJourneys.findIndex(j => j.id === deleteModal.journey!.id);
+    if (index > -1) {
+      mockJourneys.splice(index, 1);
+    }
+    
+    setDeleteModal({ open: false });
+    
+    // Refresh the page to show updated list
+    window.location.reload();
   };
 
   const confirmDuplicate = () => {
@@ -120,20 +92,29 @@ export default function JourneysPage() {
       return;
     }
 
-    const targetCompanyId = user?.role === 'superAdmin' ? duplicateCompany : duplicateModal.journey.companyId;
+    const duplicatedJourney: InspectionJourney = {
+      ...duplicateModal.journey,
+      id: `journey-${Date.now()}`,
+      name: duplicateName,
+      companyId: user?.role === 'superAdmin' ? duplicateCompany : duplicateModal.journey.companyId,
+      blocks: duplicateModal.journey.blocks.map(block => ({
+        ...block,
+        id: `block-${Date.now()}-${Math.random()}`,
+      })),
+    };
+
+    // In a real app, this would make an API call to create the journey
+    console.log('Duplicating journey:', duplicatedJourney);
     
-    journeyService.duplicate(duplicateModal.journey.id, duplicateName, targetCompanyId)
-      .then(() => {
-        setDuplicateModal({ open: false });
-        setDuplicateName('');
-        setDuplicateCompany('');
-        showToast.success('Journey duplicated successfully');
-        loadJourneys(); // Refresh the list
-      })
-      .catch((error) => {
-        console.error('Failed to duplicate journey:', error);
-        showToast.error('Failed to duplicate journey');
-      });
+    // Add to mock journeys array (in real app this would be handled by API)
+    mockJourneys.push(duplicatedJourney);
+    
+    setDuplicateModal({ open: false });
+    setDuplicateName('');
+    setDuplicateCompany('');
+    
+    // Refresh the page or update state to show the new journey
+    window.location.reload();
   };
 
   const columns = [
@@ -289,11 +270,6 @@ export default function JourneysPage() {
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200">
-          {loading && (
-            <div className="flex justify-center items-center h-32">
-              <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-          )}
           <Table columns={columns} data={filteredJourneys} />
           
           {filteredJourneys.length === 0 && (
@@ -329,7 +305,7 @@ export default function JourneysPage() {
                 className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">Select Company</option>
-                {companies.map((company) => (
+                {mockCompanies.map((company) => (
                   <option key={company.id} value={company.id}>
                     {company.name}
                   </option>
