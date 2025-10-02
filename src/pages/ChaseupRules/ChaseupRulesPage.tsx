@@ -6,7 +6,7 @@ import Table from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
 import Modal from '../../components/UI/Modal';
 import Input from '../../components/UI/Input';
-import { mockChaseupRules } from '../../data/mockData';
+import { mockChaseupRules } from '@/mocks/data';
 import { ChaseupRule } from '../../types';
 import { CreditCard as Edit, Copy, Trash2, Plus, Search, ListFilter as Filter, X } from 'lucide-react';
 

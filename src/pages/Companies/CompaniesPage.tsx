@@ -197,6 +197,23 @@ export default function CompaniesPage() {
           // Navigate back to companies list to see the new company
           navigate('/companies');
         } else {
+          showToast('Failed to duplicate company', 'error');
+        }
+      } catch (error) {
+        console.error('Failed to duplicate company:', error);
+        showToast('Failed to duplicate company', 'error');
+      } finally {
+        setLoading(false);
+        setDuplicateModal({ open: false });
+        setDuplicateForm({
+          companyName: '',
+          senderName: '',
+          webhookUrl: '',
+          errors: { companyName: '', senderName: '', webhookUrl: '' }
+        });
+      }
+    }
+  };
 
   const clearFilters = () => {
     setFilters({

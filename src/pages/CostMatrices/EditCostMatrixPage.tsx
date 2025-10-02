@@ -4,7 +4,7 @@ import Header from '../../components/Layout/Header';
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
 import { ArrowLeft, Save, Plus, Trash2, Download, Upload } from 'lucide-react';
-import { mockCostMatrices } from '../../data/mockData';
+import { mockCostMatrices } from '@/mocks/data';
 import { CostMatrixPart } from '../../types';
 
 const severityColors = {
