@@ -1,0 +1,80 @@
+import type { Company } from '@/types';
+
+// Données mock centralisées pour les companies
+// Cette liste sera modifiée par les opérations CRUD en mode mock
+export const mockCompanies: Company[] = [
+  {
+    id: '1',
+    identifier: 'AC001',
+    name: 'AutoCorp Insurance',
+    companyCode: 'AUTOCORP',
+    apiToken: 'atk_autocorp_live_12345678901234567890',
+    currentApiRequests: 1250,
+    maxApiRequests: 5000,
+    requestsExpiryDate: '2024-12-31',
+    
+    childrenCount: 1,
+    contractType: 'Client',
+    businessSector: 'Insurance',
+    logoUrl: 'https://images.pexels.com/photos/164686/pexels-photo-164686.jpeg?auto=compress&cs=tinysrgb&w=100',
+    retentionPeriod: 24,
+    disableFastTrack: false,
+    styles: '{"primaryColor": "#007bff", "secondaryColor": "#6c757d"}',
+    reportSettings: '{"includeImages": true, "format": "pdf"}',
+    configModules: '{"mileageEnabled": true, "blurEnabled": true, "vinEnabled": true}',
+    costSettings: ['cost_matrix_1', 'cost_matrix_2'],
+    isArchived: false,
+    createdAt: '2024-01-15T10:30:00Z',
+    updatedAt: '2024-03-20T14:45:00Z',
+  },
+  {
+    id: '2',
+    identifier: 'FM002',
+    name: 'FleetMax Leasing',
+    companyCode: 'FLEETMAX',
+    apiToken: 'atk_fleetmax_live_98765432109876543210',
+    currentApiRequests: 2800,
+    maxApiRequests: 3000,
+    requestsExpiryDate: '2024-11-30',
+    parentCompany: 'AutoCorp Insurance',
+    childrenCount: 0,
+    contractType: 'Client',
+    businessSector: 'Leasing',
+    retentionPeriod: 18,
+    disableFastTrack: true,
+    styles: '{"primaryColor": "#28a745", "secondaryColor": "#dc3545"}',
+    reportSettings: '{"includeImages": false, "format": "json"}',
+    configModules: '{"mileageEnabled": true, "blurEnabled": false, "vinEnabled": true}',
+    costSettings: ['cost_matrix_3'],
+    isArchived: false,
+    createdAt: '2024-02-12T08:00:00Z',
+    updatedAt: '2024-03-01T16:20:00Z',
+  },
+  {
+    id: '3',
+    identifier: 'QL003',
+    name: 'QuickLease Solutions',
+    companyCode: 'QUICKLEASE',
+    apiToken: 'atk_quicklease_test_11111111111111111111',
+    currentApiRequests: 50,
+    maxApiRequests: 1000,
+    requestsExpiryDate: '2024-10-31',
+    
+    childrenCount: 0,
+    contractType: 'Prospect',
+    businessSector: 'Leasing',
+    retentionPeriod: 12,
+    disableFastTrack: false,
+    styles: '{"primaryColor": "#ffc107", "secondaryColor": "#6f42c1"}',
+    reportSettings: '{"includeImages": true, "format": "pdf"}',
+    configModules: '{"mileageEnabled": true, "blurEnabled": true, "vinEnabled": false}',
+    costSettings: [],
+    isArchived: false,
+    createdAt: '2024-03-05T12:10:00Z',
+    updatedAt: '2024-03-21T09:35:00Z',
+  },
+];
+
+// Utilitaire pour simuler un délai réseau
+export const mockDelay = (ms: number = 500): Promise<void> => 
+  new Promise(resolve => setTimeout(resolve, ms));

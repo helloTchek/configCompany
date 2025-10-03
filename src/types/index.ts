@@ -20,6 +20,8 @@ export interface Company {
   costSettings?: string[];
   isArchived?: boolean;
   archivedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface User {

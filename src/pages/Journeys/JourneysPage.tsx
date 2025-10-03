@@ -6,7 +6,8 @@ import Table from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
 import Modal from '../../components/UI/Modal';
 import Input from '../../components/UI/Input';
-import { mockJourneys, mockCompanies } from '../../data/mockData';
+import { mockJourneys } from '../../data/mockData';
+import { mockCompanies } from '@/mocks/companies.mock';
 import { InspectionJourney } from '../../types';
 import { CreditCard as Edit, Eye, Copy, Trash2, Plus, Search, ListFilter as Filter, X } from 'lucide-react';
 

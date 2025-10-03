@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthContext';
 import Header from '../../components/Layout/Header';
@@ -6,8 +6,10 @@ import Table from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
 import Modal from '../../components/UI/Modal';
 import Input from '../../components/UI/Input';
-import { mockCompanies, mockUsers } from '../../data/mockData';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { mockUsers } from '../../data/mockData';
 import { Company } from '../../types';
+import companiesService from '../../services/companiesService';
 import { CreditCard as Edit, Archive, Copy, Plus, Upload, Search, ListFilter as Filter, X } from 'lucide-react';
 import { mockChaseupRules } from '../../data/mockData';
 import { PERMISSIONS } from '@/types/auth';
@@ -15,7 +17,9 @@ import { PERMISSIONS } from '@/types/auth';
 export default function CompaniesPage() {
   const navigate = useNavigate();
   const { user, hasPermission } = useAuth();
-  const [companies] = useState<Company[]>(mockCompanies);
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [totalCompanies, setTotalCompanies] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
@@ -40,6 +44,34 @@ export default function CompaniesPage() {
     }
   });
 
+  // Chargement des données
+  const loadCompanies = async () => {
+    try {
+      setLoading(true);
+      const allCompanies = await companiesService.getCompanies();
+      
+      // Filtrage par company pour les utilisateurs non-superAdmin
+      let filteredCompanies = allCompanies;
+      if (user?.role !== 'superAdmin') {
+        filteredCompanies = filteredCompanies.filter(company => 
+          company.id === user?.companyId || company.name === user?.companyName
+        );
+      }
+
+      setCompanies(filteredCompanies);
+      setTotalCompanies(filteredCompanies.length);
+    } catch (error) {
+      console.error('Error loading companies:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Effect pour charger les données au montage
+  useEffect(() => {
+    loadCompanies();
+  }, [user?.role, user?.companyId, user?.companyName]);
+
   const handleSort = (key: string) => {
     if (sortKey === key) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -53,33 +85,38 @@ export default function CompaniesPage() {
     setArchiveModal({ open: true, company });
   };
 
-  const confirmArchive = () => {
+  const confirmArchive = async () => {
     if (!archiveModal.company) return;
 
-    // Archive the company
-    const companyIndex = mockCompanies.findIndex(c => c.id === archiveModal.company!.id);
-    if (companyIndex > -1) {
-      mockCompanies[companyIndex] = {
-        ...mockCompanies[companyIndex],
+    try {
+      setLoading(true);
+      const updatedCompany = {
+        ...archiveModal.company,
         isArchived: true,
         archivedAt: new Date().toISOString()
       };
+
+      await companiesService.updateCompany(archiveModal.company.id, updatedCompany);
+      
+      // Disable users from this company
+      mockUsers.forEach(user => {
+        if (user.company === archiveModal.company!.name) {
+          user.status = 'inactive';
+          user.isDisabled = true;
+          user.disabledReason = 'Company archived';
+        }
+      });
+
+      console.log('Company archived successfully:', archiveModal.company);
+      setArchiveModal({ open: false });
+      
+      // Recharger les données
+      await loadCompanies();
+    } catch (error) {
+      console.error('Error archiving company:', error);
+    } finally {
+      setLoading(false);
     }
-
-    // Disable users from this company
-    mockUsers.forEach(user => {
-      if (user.company === archiveModal.company!.name) {
-        user.status = 'inactive';
-        user.isDisabled = true;
-        user.disabledReason = 'Company archived';
-      }
-    });
-
-    console.log('Archiving company:', archiveModal.company);
-    setArchiveModal({ open: false });
-    
-    // Refresh the page to show updated list
-    window.location.reload();
   };
 
   const handleDuplicate = (company: Company) => {
@@ -131,48 +168,53 @@ export default function CompaniesPage() {
       }
     }));
   };
-  const confirmDuplicate = () => {
+  const confirmDuplicate = async () => {
     if (!validateDuplicateForm()) {
       return;
     }
 
-    if (duplicateModal.company) {
-      const newCompanyId = `company-${Date.now()}`;
-      const duplicatedCompany: Company = {
+    if (!duplicateModal.company) return;
+
+    try {
+      setLoading(true);
+      const duplicatedCompanyData = {
         ...duplicateModal.company,
-        id: newCompanyId,
         name: duplicateForm.companyName,
-        identifier: `${duplicateModal.company.identifier}-copy`,
-        apiToken: `${duplicateModal.company.apiToken.split('_')[0]}_copy_${Date.now()}`,
+        identifier: `${duplicateModal.company.identifier}_COPY`,
         companyCode: `${duplicateModal.company.companyCode}_COPY`,
+        apiToken: `${duplicateModal.company.apiToken ? duplicateModal.company.apiToken.split('_')[0] : 'atk'}_copy_${Date.now()}`,
         currentApiRequests: 0, // Reset API usage for new company
+        isArchived: false,
       };
+
+      const duplicatedCompany = await companiesService.createCompany(duplicatedCompanyData);
       
-      // In a real app, this would make an API call to create the company
-      // For now, we'll add it to the mock data and navigate to companies list
-      console.log('Duplicating company:', duplicatedCompany);
-      
-      // Add to mock companies array (in real app this would be handled by API)
-      mockCompanies.push(duplicatedCompany);
-      
-      // Navigate back to companies list to see the new company
-      navigate('/companies');
-    }
-    setDuplicateModal({ open: false });
-    setDuplicateForm({
-      companyName: '',
-      senderName: '',
-      webhookUrl: '',
-      errors: {
-        companyName: '',
-        senderName: '',
-        webhookUrl: ''
+      if (duplicatedCompany) {
+        console.log('Company duplicated successfully:', duplicatedCompany);
+        setDuplicateModal({ open: false });
+        setDuplicateForm({
+          companyName: '',
+          senderName: '',
+          webhookUrl: '',
+          errors: {
+            companyName: '',
+            senderName: '',
+            webhookUrl: ''
+          }
+        });
+        
+        // Recharger les données pour voir la nouvelle company
+        await loadCompanies();
       }
-    });
+    } catch (error) {
+      console.error('Error duplicating company:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Filter and search logic
-  let filteredCompanies = companies.filter(company => {
+  const filteredCompanies = companies.filter(company => {
     // Archive filter
     const matchesArchived = filters.archived === 'all' ||
       (filters.archived === 'active' && !company.isArchived) ||
@@ -203,12 +245,26 @@ export default function CompaniesPage() {
     return matchesArchived && matchesSearch && matchesContractType && matchesBusinessSector && matchesParentCompany && matchesStatus;
   });
 
-  // Apply company-based filtering for non-superAdmin users
-  if (user?.role !== 'superAdmin') {
-    filteredCompanies = filteredCompanies.filter(company => 
-      company.id === user?.companyId || company.name === user?.companyName
-    );
-  }
+  // Apply sorting
+  const sortedCompanies = sortKey ? [...filteredCompanies].sort((a, b) => {
+    const aValue = a[sortKey as keyof Company];
+    const bValue = b[sortKey as keyof Company];
+
+    if (aValue === undefined && bValue === undefined) return 0;
+    if (aValue === undefined) return sortDirection === 'asc' ? 1 : -1;
+    if (bValue === undefined) return sortDirection === 'asc' ? -1 : 1;
+
+    let comparison = 0;
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      comparison = aValue.localeCompare(bValue);
+    } else if (typeof aValue === 'number' && typeof bValue === 'number') {
+      comparison = aValue - bValue;
+    } else {
+      comparison = String(aValue).localeCompare(String(bValue));
+    }
+
+    return sortDirection === 'asc' ? comparison : -comparison;
+  }) : filteredCompanies;
 
   const clearFilters = () => {
     setFilters({
@@ -221,7 +277,7 @@ export default function CompaniesPage() {
     setSearchTerm('');
   };
 
-  const hasActiveFilters = searchTerm || Object.values(filters).some(filter => filter !== '');
+  const hasActiveFilters = searchTerm || Object.values(filters).some(filter => filter !== '' && filter !== 'active');
 
   // Helper function to check if company has chase-up rules
   const hasChaseupRules = (companyName: string) => {
@@ -248,7 +304,7 @@ export default function CompaniesPage() {
       label: 'API Token',
       render: (value: string) => (
         <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
-          {value.substring(0, 12)}...
+          {value ? value.substring(0, 12) : 'N/A'}...
         </span>
       )
     },
@@ -449,7 +505,7 @@ export default function CompaniesPage() {
               {hasActiveFilters && (
                 <div className="mt-4 flex justify-between items-center">
                   <span className="text-sm text-gray-600">
-                    Showing {filteredCompanies.length} of {companies.length} companies
+                    Showing {sortedCompanies.length} of {companies.length} companies
                   </span>
                   <Button variant="secondary" size="sm" onClick={clearFilters}>
                     Clear All Filters
@@ -484,23 +540,31 @@ export default function CompaniesPage() {
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200">
-          <Table
-            columns={columns}
-            data={filteredCompanies}
-            sortKey={sortKey}
-            sortDirection={sortDirection}
-            onSort={handleSort}
-          />
-          
-          {filteredCompanies.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              <p>No companies found matching your criteria.</p>
-              {hasActiveFilters && (
-                <Button variant="secondary" onClick={clearFilters} className="mt-2">
-                  Clear Filters
-                </Button>
-              )}
+          {loading ? (
+            <div className="flex justify-center items-center py-8">
+              <LoadingSpinner />
             </div>
+          ) : (
+            <>
+              <Table
+                columns={columns}
+                data={sortedCompanies}
+                sortKey={sortKey}
+                sortDirection={sortDirection}
+                onSort={handleSort}
+              />
+              
+              {sortedCompanies.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  <p>No companies found matching your criteria.</p>
+                  {hasActiveFilters && (
+                    <Button variant="secondary" onClick={clearFilters} className="mt-2">
+                      Clear Filters
+                    </Button>
+                  )}
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -606,12 +670,11 @@ export default function CompaniesPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Parent Company (optional)</label>
                 <select className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                   <option value="">None</option>
-                  {mockCompanies
+                  {companies
                     .filter(c => c.id !== duplicateModal.company?.id)
                     .map(c => (
                       <option key={c.id} value={c.id}>{c.name}</option>
-                    ))
-                  }
+                    ))}
                 </select>
               </div>
               <label className="flex items-center">
