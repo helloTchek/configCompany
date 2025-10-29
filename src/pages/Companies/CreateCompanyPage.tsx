@@ -5,15 +5,18 @@ import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
 import Tabs from '../../components/UI/Tabs';
 import { ArrowLeft, Save, Upload, Plus, Trash2 } from 'lucide-react';
+import { companiesService } from '@/services/companiesService';
 
 // Move tab components outside to prevent re-creation on every render
-const GeneralSettingsTab = ({ 
-  formData, 
-  errors, 
-  handleCompanyNameChange, 
-  handleLogoUrlChange, 
-  handleFieldChange, 
-  handleInputChange 
+const GeneralSettingsTab = ({
+  formData,
+  errors,
+  handleCompanyNameChange,
+  handleLogoUrlChange,
+  handleFieldChange,
+  handleInputChange,
+  handleCheckboxChange,
+  handleTextareaChange
 }) => (
   <div className="space-y-6">
     {/* General Settings */}
@@ -34,37 +37,6 @@ const GeneralSettingsTab = ({
           helperText="Generated from ObjectID"
           disabled
         />
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Contract Type
-          </label>
-          <select 
-            className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            onChange={handleInputChange}
-          >
-            <option value="">Select contract type</option>
-            <option value="Client">Client</option>
-            <option value="Prospect">Prospect</option>
-            <option value="Test">Test</option>
-            <option value="Demo">Demo</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Business Sector
-          </label>
-          <select 
-            className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            onChange={handleInputChange}
-          >
-            <option value="">Select business sector</option>
-            <option value="Insurance">Insurance</option>
-            <option value="Leasing">Leasing</option>
-            <option value="Rental">Rental</option>
-            <option value="Fleet Management">Fleet Management</option>
-            <option value="Automotive">Automotive</option>
-          </select>
-        </div>
         <Input
           label="Logo URL"
           value={formData.logoUrl}
@@ -82,8 +54,8 @@ const GeneralSettingsTab = ({
         <Input
           label="Retention Period (months)"
           type="number"
-          defaultValue="24"
-          onChange={handleInputChange}
+          value={formData.retentionPeriod}
+          onChange={(e) => handleFieldChange('retentionPeriod', parseInt(e.target.value) || 0)}
         />
         <Input
           label="Max API Requests"
@@ -107,7 +79,8 @@ const GeneralSettingsTab = ({
           <label className="flex items-center">
             <input
               type="checkbox"
-              onChange={handleInputChange}
+              checked={formData.isFastTrackDisabled}
+              onChange={(e) => handleCheckboxChange('isFastTrackDisabled', e.target.checked)}
               className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
             />
             <span className="ml-2 text-sm text-gray-700">Disable Fast Track</span>
@@ -136,8 +109,8 @@ const GeneralSettingsTab = ({
           </div>
           <textarea
             rows={4}
-            onChange={handleInputChange}
-            defaultValue='{"report":{"backgroundColor":"#252387","costsBackgroundColor":"#6A68D4","costsTextColor":"#000000","costsInfoColor":"#252387","topRightHorizontalBarColor":"#252387","borderColor":"#6a68d4"},"shootInspect":{"overlayColor":"#1adf6c"},"globalTheme":{"primaryColor":"#323276","primaryTextColor":"#ffffff","accentColor":"#1adf6c","accentTextColor":"ffffff","dominantColor":"#151841","dominantTextColor":"#ffffff","isDarkTheme":true}}'
+            value={formData.styles}
+            onChange={(e) => handleTextareaChange('styles', e.target.value)}
             className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
           />
         </div>
@@ -154,8 +127,8 @@ const GeneralSettingsTab = ({
           </div>
           <textarea
             rows={4}
-            onChange={handleInputChange}
-            defaultValue='{"picturesPreSelected":"true","showDamage":"true","showGallery":"true","showNewDamage":"true","showState":"true","oldDamages":true,"checkDamages":true,"isCarDealership":true,"showWatermark":false,"prefix":"","selectorSens":"clockwise","selectorSvgColor":"repairSeverity","selectorSvg":"renault"}'
+            value={formData.reportSettings}
+            onChange={(e) => handleTextareaChange('reportSettings', e.target.value)}
             className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
           />
         </div>
@@ -172,8 +145,8 @@ const GeneralSettingsTab = ({
           </div>
           <textarea
             rows={4}
-            onChange={handleInputChange}
-            defaultValue='{"fastTrack":{"canWearAndTear":true,"deletedStatusEnabled":false,"validatedStatusEnabled":true,"wearAndTearStatusEnabled":true,"editionMode":true,"zoomConfig":{"minDamageCropMargin":0.3,"regularWidthMargin":1.4,"regularHeightMargin":1.4,"strokeWidthScale":5}},"shootInspect":{"autoFinalizationEnabled":false,"autoFinalizationThreshold":2},"global":{"modelIA":"codeter_ensembling"},"endInspect":{"npsEnabled":true,"npsDelay":3000}}'
+            value={formData.configModules}
+            onChange={(e) => handleTextareaChange('configModules', e.target.value)}
             className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
           />
         </div>
@@ -187,8 +160,8 @@ const GeneralSettingsTab = ({
         <label className="flex items-center">
           <input
             type="checkbox"
-            defaultChecked={true}
-            onChange={handleInputChange}
+            checked={formData.mileageEnabled}
+            onChange={(e) => handleCheckboxChange('mileageEnabled', e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
           />
           <span className="ml-2 text-sm text-gray-700">Enable Mileage Capture</span>
@@ -196,8 +169,8 @@ const GeneralSettingsTab = ({
         <label className="flex items-center">
           <input
             type="checkbox"
-            defaultChecked={true}
-            onChange={handleInputChange}
+            checked={formData.blurEnabled}
+            onChange={(e) => handleCheckboxChange('blurEnabled', e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
           />
           <span className="ml-2 text-sm text-gray-700">Enable Blur Detection</span>
@@ -205,8 +178,8 @@ const GeneralSettingsTab = ({
         <label className="flex items-center">
           <input
             type="checkbox"
-            defaultChecked={true}
-            onChange={handleInputChange}
+            checked={formData.vinEnabled}
+            onChange={(e) => handleCheckboxChange('vinEnabled', e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
           />
           <span className="ml-2 text-sm text-gray-700">Enable VIN Scanning</span>
@@ -214,8 +187,8 @@ const GeneralSettingsTab = ({
         <label className="flex items-center">
           <input
             type="checkbox"
-            defaultChecked={true}
-            onChange={handleInputChange}
+            checked={formData.readCarInformationEnabled}
+            onChange={(e) => handleCheckboxChange('readCarInformationEnabled', e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
           />
           <span className="ml-2 text-sm text-gray-700">Enable Brand & Model Detection</span>
@@ -223,8 +196,8 @@ const GeneralSettingsTab = ({
         <label className="flex items-center">
           <input
             type="checkbox"
-            defaultChecked={false}
-            onChange={handleInputChange}
+            checked={formData.interiorEnabled}
+            onChange={(e) => handleCheckboxChange('interiorEnabled', e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
           />
           <span className="ml-2 text-sm text-gray-700">Enable Interior Damage Detection</span>
@@ -232,20 +205,11 @@ const GeneralSettingsTab = ({
         <label className="flex items-center">
           <input
             type="checkbox"
-            defaultChecked={false}
-            onChange={handleInputChange}
+            checked={formData.dashboardEnabled}
+            onChange={(e) => handleCheckboxChange('dashboardEnabled', e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
           />
           <span className="ml-2 text-sm text-gray-700">Enable Dashboard Warning Lights Detection</span>
-        </label>
-        <label className="flex items-center">
-          <input
-            type="checkbox"
-            defaultChecked={true}
-            onChange={handleInputChange}
-            className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
-          />
-          <span className="ml-2 text-sm text-gray-700">Enable Brand, Model & Color Recognition</span>
         </label>
       </div>
     </div>
@@ -257,8 +221,8 @@ const GeneralSettingsTab = ({
         <label className="flex items-center">
           <input
             type="checkbox"
-            defaultChecked={true}
-            onChange={handleInputChange}
+            checked={formData.showStartInstantInspection}
+            onChange={(e) => handleCheckboxChange('showStartInstantInspection', e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
           />
           <span className="ml-2 text-sm text-gray-700">Show Start Instant Inspection</span>
@@ -266,8 +230,8 @@ const GeneralSettingsTab = ({
         <label className="flex items-center">
           <input
             type="checkbox"
-            defaultChecked={true}
-            onChange={handleInputChange}
+            checked={formData.showSendInspectionLink}
+            onChange={(e) => handleCheckboxChange('showSendInspectionLink', e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
           />
           <span className="ml-2 text-sm text-gray-700">Show Send Inspection Link</span>
@@ -282,8 +246,8 @@ const GeneralSettingsTab = ({
         <label className="flex items-center lg:col-span-2">
           <input
             type="checkbox"
-            defaultChecked={false}
-            onChange={handleInputChange}
+            checked={formData.iaValidation}
+            onChange={(e) => handleCheckboxChange('iaValidation', e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
           />
           <span className="ml-2 text-sm text-gray-700">IA Validation (Joelle model)</span>
@@ -293,67 +257,21 @@ const GeneralSettingsTab = ({
   </div>
 );
 
-const EventsWebhooksTab = ({ 
-  selectedLanguage, 
-  setSelectedLanguage, 
-  handleInputChange, 
-  languages, 
-  events, 
-  variables 
+const EventsWebhooksTab = ({
+  selectedLanguage,
+  setSelectedLanguage,
+  handleInputChange,
+  formData,
+  handleFieldChange,
+  languages,
+  events,
+  variables,
+  templates,
+  setTemplates
 }) => {
   // State to track which field is currently focused
   const [focusedField, setFocusedField] = useState(null);
   const fieldRefs = useRef({});
-
-  // State to store templates for each event, addressee, medium, and language
-  const [templates, setTemplates] = useState(() => {
-    const initialTemplates = {};
-    events.forEach(event => {
-      initialTemplates[event.key] = {
-        webhook: {
-          enabled: false
-        },
-        user: {
-          enabled: false,
-          sms: false,
-          email: false,
-          templates: {}
-        },
-        customer: {
-          enabled: false,
-          sms: false,
-          email: false,
-          templates: {}
-        },
-        emailAddress: {
-          enabled: false,
-          address: '',
-          sms: false,
-          email: false,
-          templates: {}
-        },
-        agent: {
-          enabled: false,
-          address: '',
-          sms: false,
-          email: false,
-          templates: {}
-        }
-      };
-      
-      // Initialize templates for each addressee
-      ['user', 'customer', 'emailAddress', 'agent'].forEach(addressee => {
-        initialTemplates[event.key][addressee].templates = {};
-        languages.forEach(lang => {
-          initialTemplates[event.key][addressee].templates[lang.code] = {
-            email: { subject: '', content: '' },
-            sms: { content: '' }
-          };
-        });
-      });
-    });
-    return initialTemplates;
-  });
 
   const updateTemplate = (eventKey, addressee, language, templateType, field, value) => {
     setTemplates(prev => ({
@@ -575,12 +493,14 @@ const EventsWebhooksTab = ({
         <Input
           label="Sender Name (for all events)"
           placeholder="Your Company Name"
-          onChange={handleInputChange}
+          value={formData.senderName}
+          onChange={(e) => handleFieldChange('senderName', e.target.value)}
         />
         <Input
           label="Webhook URL"
           placeholder="https://your-domain.com/webhook"
-          onChange={handleInputChange}
+          value={formData.webhookUrl}
+          onChange={(e) => handleFieldChange('webhookUrl', e.target.value)}
         />
       </div>
     </div>
@@ -696,11 +616,97 @@ export default function CreateCompanyPage() {
   const [activeTab, setActiveTab] = useState('general');
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   const [companyEmailEnabled, setCompanyEmailEnabled] = useState({});
+
+  // State for events and webhooks templates - must be in parent to persist across tab changes
+  const events = [
+    { key: 'selfInspectionCreation', name: 'Self Inspection Creation' },
+    { key: 'manualChaseUp', name: 'Manual Chase-up Message' },
+    { key: 'inspectionFinished', name: 'Inspection Finished Message' },
+    { key: 'damageReviewFinished', name: 'Damage Review Finished Message' },
+    { key: 'shareUpdatedReport', name: 'Share Updated Report Message' }
+  ];
+
+  const languages = [
+    { code: 'en', name: 'English' },
+    { code: 'fr', name: 'Français' },
+    { code: 'de', name: 'Deutsch' },
+    { code: 'it', name: 'Italiano' },
+    { code: 'es', name: 'Español' },
+    { code: 'nl', name: 'Nederlands' },
+    { code: 'sv', name: 'Svenska' },
+    { code: 'no', name: 'Norsk' }
+  ];
+
+  const [templates, setTemplates] = useState(() => {
+    const initialTemplates = {};
+    events.forEach(event => {
+      initialTemplates[event.key] = {
+        webhook: {
+          enabled: false
+        },
+        user: {
+          enabled: false,
+          sms: false,
+          email: false,
+          templates: {}
+        },
+        customer: {
+          enabled: false,
+          sms: false,
+          email: false,
+          templates: {}
+        },
+        emailAddress: {
+          enabled: false,
+          address: '',
+          sms: false,
+          email: false,
+          templates: {}
+        },
+        agent: {
+          enabled: false,
+          address: '',
+          sms: false,
+          email: false,
+          templates: {}
+        }
+      };
+
+      // Initialize templates for each addressee
+      ['user', 'customer', 'emailAddress', 'agent'].forEach(addressee => {
+        initialTemplates[event.key][addressee].templates = {};
+        languages.forEach(lang => {
+          initialTemplates[event.key][addressee].templates[lang.code] = {
+            email: { subject: '', content: '' },
+            sms: { content: '' }
+          };
+        });
+      });
+    });
+    return initialTemplates;
+  });
   const [formData, setFormData] = useState({
     companyName: '',
     logoUrl: '',
     maxApiRequests: 30,
-    expirationDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // Today + 30 days
+    expirationDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Today + 30 days
+    retentionPeriod: 24,
+    isFastTrackDisabled: false,
+    styles: '{"report":{"backgroundColor":"#252387","costsBackgroundColor":"#6A68D4","costsTextColor":"#000000","costsInfoColor":"#252387","topRightHorizontalBarColor":"#252387","borderColor":"#6a68d4"},"shootInspect":{"overlayColor":"#1adf6c"},"globalTheme":{"primaryColor":"#323276","primaryTextColor":"#ffffff","accentColor":"#1adf6c","accentTextColor":"ffffff","dominantColor":"#151841","dominantTextColor":"#ffffff","isDarkTheme":true}}',
+    reportSettings: '{"picturesPreSelected":"true","showDamage":"true","showGallery":"true","showNewDamage":"true","showState":"true","oldDamages":true,"checkDamages":true,"isCarDealership":true,"showWatermark":false,"prefix":"","selectorSens":"clockwise","selectorSvgColor":"repairSeverity","selectorSvg":"renault"}',
+    configModules: '{"fastTrack":{"canWearAndTear":true,"deletedStatusEnabled":false,"validatedStatusEnabled":true,"wearAndTearStatusEnabled":true,"editionMode":true,"zoomConfig":{"minDamageCropMargin":0.3,"regularWidthMargin":1.4,"regularHeightMargin":1.4,"strokeWidthScale":5}},"shootInspect":{"autoFinalizationEnabled":false,"autoFinalizationThreshold":2},"global":{"modelIA":"codeter_ensembling"},"endInspect":{"npsEnabled":true,"npsDelay":3000}}',
+    mileageEnabled: true,
+    blurEnabled: true,
+    vinEnabled: true,
+    readCarInformationEnabled: true,
+    interiorEnabled: false,
+    dashboardEnabled: false,
+    iaValidation: false,
+    showStartInstantInspection: true,
+    showSendInspectionLink: true,
+    // EventManager fields
+    senderName: '',
+    webhookUrl: ''
   });
   const [errors, setErrors] = useState({
     companyName: '',
@@ -715,6 +721,16 @@ export default function CreateCompanyPage() {
   const handleFieldChange = (field: string, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setErrors(prev => ({ ...prev, [field]: '' }));
+    setHasUnsavedChanges(true);
+  };
+
+  const handleCheckboxChange = (field: string, value: boolean) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    setHasUnsavedChanges(true);
+  };
+
+  const handleTextareaChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
     setHasUnsavedChanges(true);
   };
 
@@ -751,36 +767,73 @@ export default function CreateCompanyPage() {
     return !newErrors.companyName && !newErrors.logoUrl && !newErrors.maxApiRequests;
   };
   
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!validateForm()) {
       return;
     }
 
-    console.log('Saving new company...');
-    // Navigate back to companies list after save
-    navigate('/companies');
+    try {
+      // Generate identifier from company name (uppercase, replace spaces with underscores)
+      const identifier = formData.companyName.toUpperCase().replace(/\s+/g, '_');
+
+      // Parse JSON fields
+      let parsedStyles, parsedReportSettings, parsedConfigModules;
+      try {
+        parsedStyles = JSON.parse(formData.styles);
+        parsedReportSettings = JSON.parse(formData.reportSettings);
+        parsedConfigModules = JSON.parse(formData.configModules);
+      } catch (e) {
+        alert('Invalid JSON in styles, report settings, or config modules');
+        return;
+      }
+
+      // Prepare complete company data with ALL related objects
+      const companyData: any = {
+        // ===== Company fields =====
+        name: formData.companyName,
+        identifier: identifier,
+        retentionPeriod: formData.retentionPeriod,
+        isFastTrackDisabled: formData.isFastTrackDisabled,
+        iaValidation: formData.iaValidation,
+        blurEnabled: formData.blurEnabled,
+
+        // ProcessingParams object
+        processingParams: {
+          mileageEnabled: formData.mileageEnabled,
+          vinEnabled: formData.vinEnabled,
+          interiorEnabled: formData.interiorEnabled,
+          dashboardEnabled: formData.dashboardEnabled,
+        },
+
+        // ===== APIToken fields =====
+        maxRequestAPI: formData.maxApiRequests,
+        expiration: formData.expirationDate,
+
+        // ===== Settings fields =====
+        styles: parsedStyles,
+        reportSettings: parsedReportSettings,
+        configModules: parsedConfigModules,
+        showStartInstantInspection: formData.showStartInstantInspection,
+        showSendInspectionLink: formData.showSendInspectionLink,
+
+        // ===== EventManager fields =====
+        webhookUrl: formData.webhookUrl,
+        senderName: formData.senderName,
+      };
+
+      console.log('Creating company with all relations:', companyData);
+      const newCompany = await companiesService.createCompany(companyData);
+      console.log('Company created successfully:', newCompany);
+
+      // Navigate back to companies list after save
+      navigate('/companies');
+    } catch (error) {
+      console.error('Error creating company:', error);
+      alert(`Failed to create company: ${error.message || 'Please try again.'}`);
+    }
   };
 
-  // Static data arrays
-  const languages = [
-    { code: 'en', name: 'English' },
-    { code: 'fr', name: 'Français' },
-    { code: 'de', name: 'Deutsch' },
-    { code: 'it', name: 'Italiano' },
-    { code: 'es', name: 'Español' },
-    { code: 'nl', name: 'Nederlands' },
-    { code: 'sv', name: 'Svenska' },
-    { code: 'no', name: 'Norsk' }
-  ];
-
-  const events = [
-    { key: 'selfInspectionCreation', name: 'Self Inspection Creation' },
-    { key: 'manualChaseUp', name: 'Manual Chase-up Message' },
-    { key: 'inspectionFinished', name: 'Inspection Finished Message' },
-    { key: 'damageReviewFinished', name: 'Damage Review Finished Message' },
-    { key: 'shareUpdatedReport', name: 'Share Updated Report Message' }
-  ];
-
+  // Static data arrays - variables only (events and languages moved to top)
   const variables = [
     { key: '##clientLastName##', name: 'Client Last Name' },
     { key: '##clientFirstName##', name: 'Client First Name' },
@@ -814,25 +867,31 @@ export default function CreateCompanyPage() {
     {
       key: 'general',
       label: 'General Settings',
-      content: <GeneralSettingsTab 
+      content: <GeneralSettingsTab
         formData={formData}
         errors={errors}
         handleCompanyNameChange={handleCompanyNameChange}
         handleLogoUrlChange={handleLogoUrlChange}
         handleFieldChange={handleFieldChange}
         handleInputChange={handleInputChange}
+        handleCheckboxChange={handleCheckboxChange}
+        handleTextareaChange={handleTextareaChange}
       />
     },
     {
       key: 'events',
       label: 'Events & Webhooks',
-      content: <EventsWebhooksTab 
+      content: <EventsWebhooksTab
         selectedLanguage={selectedLanguage}
         setSelectedLanguage={setSelectedLanguage}
         handleInputChange={handleInputChange}
+        formData={formData}
+        handleFieldChange={handleFieldChange}
         languages={languages}
         events={events}
         variables={variables}
+        templates={templates}
+        setTemplates={setTemplates}
         companyEmailEnabled={companyEmailEnabled}
         setCompanyEmailEnabled={setCompanyEmailEnabled}
       />
