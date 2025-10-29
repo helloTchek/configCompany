@@ -1,22 +1,25 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Header from '../../components/Layout/Header';
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
 import Tabs from '../../components/UI/Tabs';
 import { ArrowLeft, Save, Upload, Plus, Trash2 } from 'lucide-react';
+import { companiesService } from '@/services/companiesService';
 
 // Import chase-up rules data to check if rules exist
 import { mockChaseupRules } from '../../data/mockData';
 
 // Move tab components outside to prevent re-creation on every render
-const GeneralSettingsTab = ({ 
-  formData, 
-  errors, 
-  handleCompanyNameChange, 
-  handleLogoUrlChange, 
-  handleFieldChange, 
-  handleInputChange 
+const GeneralSettingsTab = ({
+  formData,
+  errors,
+  handleCompanyNameChange,
+  handleLogoUrlChange,
+  handleFieldChange,
+  handleInputChange,
+  handleCheckboxChange,
+  handleTextareaChange
 }) => (
   <div className="space-y-6">
     {/* General Settings */}
@@ -37,39 +40,6 @@ const GeneralSettingsTab = ({
           onChange={(e) => handleFieldChange('companyCode', e.target.value)}
           placeholder="Company code"
         />
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Contract Type
-          </label>
-          <select 
-            value={formData.contractType}
-            onChange={(e) => handleFieldChange('contractType', e.target.value)}
-            className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="">Select contract type</option>
-            <option value="Client">Client</option>
-            <option value="Prospect">Prospect</option>
-            <option value="Test">Test</option>
-            <option value="Demo">Demo</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Business Sector
-          </label>
-          <select 
-            value={formData.businessSector}
-            onChange={(e) => handleFieldChange('businessSector', e.target.value)}
-            className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="">Select business sector</option>
-            <option value="Insurance">Insurance</option>
-            <option value="Leasing">Leasing</option>
-            <option value="Rental">Rental</option>
-            <option value="Fleet Management">Fleet Management</option>
-            <option value="Automotive">Automotive</option>
-          </select>
-        </div>
         <Input
           label="Logo URL"
           value={formData.logoUrl}
@@ -112,8 +82,8 @@ const GeneralSettingsTab = ({
           <label className="flex items-center">
             <input
               type="checkbox"
-              checked={formData.disableFastTrack}
-              onChange={(e) => handleFieldChange('disableFastTrack', e.target.checked)}
+              checked={formData.isFastTrackDisabled}
+              onChange={(e) => handleCheckboxChange('isFastTrackDisabled', e.target.checked)}
               className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
             />
             <span className="ml-2 text-sm text-gray-700">Disable Fast Track</span>
@@ -144,7 +114,7 @@ const GeneralSettingsTab = ({
           <textarea
             rows={4}
             value={formData.styles}
-            onChange={(e) => handleFieldChange('styles', e.target.value)}
+            onChange={(e) => handleTextareaChange('styles', e.target.value)}
             className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
           />
         </div>
@@ -162,7 +132,7 @@ const GeneralSettingsTab = ({
           <textarea
             rows={4}
             value={formData.reportSettings}
-            onChange={(e) => handleFieldChange('reportSettings', e.target.value)}
+            onChange={(e) => handleTextareaChange('reportSettings', e.target.value)}
             className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
           />
         </div>
@@ -180,7 +150,7 @@ const GeneralSettingsTab = ({
           <textarea
             rows={4}
             value={formData.configModules}
-            onChange={(e) => handleFieldChange('configModules', e.target.value)}
+            onChange={(e) => handleTextareaChange('configModules', e.target.value)}
             className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
           />
         </div>
@@ -194,8 +164,8 @@ const GeneralSettingsTab = ({
         <label className="flex items-center">
           <input
             type="checkbox"
-            checked={formData.enableMileageCapture}
-            onChange={(e) => handleFieldChange('enableMileageCapture', e.target.checked)}
+            checked={formData.mileageEnabled}
+            onChange={(e) => handleCheckboxChange('mileageEnabled', e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
           />
           <span className="ml-2 text-sm text-gray-700">Enable Mileage Capture</span>
@@ -203,17 +173,17 @@ const GeneralSettingsTab = ({
         <label className="flex items-center">
           <input
             type="checkbox"
-            checked={formData.enableBlurDetection}
-            onChange={(e) => handleFieldChange('enableBlurDetection', e.target.checked)}
+            checked={formData.blurEnabled}
+            onChange={(e) => handleCheckboxChange('blurEnabled', e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
           />
-          <span className="ml-2 text-sm text-gray-700">Blur License plates</span>
+          <span className="ml-2 text-sm text-gray-700">Enable Blur Detection</span>
         </label>
         <label className="flex items-center">
           <input
             type="checkbox"
-            checked={formData.enableVinScanning}
-            onChange={(e) => handleFieldChange('enableVinScanning', e.target.checked)}
+            checked={formData.vinEnabled}
+            onChange={(e) => handleCheckboxChange('vinEnabled', e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
           />
           <span className="ml-2 text-sm text-gray-700">Enable VIN Scanning</span>
@@ -221,8 +191,8 @@ const GeneralSettingsTab = ({
         <label className="flex items-center">
           <input
             type="checkbox"
-            checked={formData.enableBrandModelDetection}
-            onChange={(e) => handleFieldChange('enableBrandModelDetection', e.target.checked)}
+            checked={formData.readCarInformationEnabled}
+            onChange={(e) => handleCheckboxChange('readCarInformationEnabled', e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
           />
           <span className="ml-2 text-sm text-gray-700">Enable Brand & Model Detection</span>
@@ -230,8 +200,8 @@ const GeneralSettingsTab = ({
         <label className="flex items-center">
           <input
             type="checkbox"
-            checked={formData.enableInteriorDamageDetection}
-            onChange={(e) => handleFieldChange('enableInteriorDamageDetection', e.target.checked)}
+            checked={formData.interiorEnabled}
+            onChange={(e) => handleCheckboxChange('interiorEnabled', e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
           />
           <span className="ml-2 text-sm text-gray-700">Enable Interior Damage Detection</span>
@@ -239,20 +209,11 @@ const GeneralSettingsTab = ({
         <label className="flex items-center">
           <input
             type="checkbox"
-            checked={formData.enableDashboardWarningLightsDetection}
-            onChange={(e) => handleFieldChange('enableDashboardWarningLightsDetection', e.target.checked)}
+            checked={formData.dashboardEnabled}
+            onChange={(e) => handleCheckboxChange('dashboardEnabled', e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
           />
           <span className="ml-2 text-sm text-gray-700">Enable Dashboard Warning Lights Detection</span>
-        </label>
-        <label className="flex items-center">
-          <input
-            type="checkbox"
-            checked={formData.enableBrandModelColorRecognition}
-            onChange={(e) => handleFieldChange('enableBrandModelColorRecognition', e.target.checked)}
-            className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
-          />
-          <span className="ml-2 text-sm text-gray-700">Enable Brand, Model & Color Recognition</span>
         </label>
       </div>
     </div>
@@ -265,7 +226,7 @@ const GeneralSettingsTab = ({
           <input
             type="checkbox"
             checked={formData.showStartInstantInspection}
-            onChange={(e) => handleFieldChange('showStartInstantInspection', e.target.checked)}
+            onChange={(e) => handleCheckboxChange('showStartInstantInspection', e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
           />
           <span className="ml-2 text-sm text-gray-700">Show Start Instant Inspection</span>
@@ -274,7 +235,7 @@ const GeneralSettingsTab = ({
           <input
             type="checkbox"
             checked={formData.showSendInspectionLink}
-            onChange={(e) => handleFieldChange('showSendInspectionLink', e.target.checked)}
+            onChange={(e) => handleCheckboxChange('showSendInspectionLink', e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
           />
           <span className="ml-2 text-sm text-gray-700">Show Send Inspection Link</span>
@@ -290,7 +251,7 @@ const GeneralSettingsTab = ({
           <input
             type="checkbox"
             checked={formData.iaValidation}
-            onChange={(e) => handleFieldChange('iaValidation', e.target.checked)}
+            onChange={(e) => handleCheckboxChange('iaValidation', e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
           />
           <span className="ml-2 text-sm text-gray-700">IA Validation (Joelle model)</span>
@@ -705,37 +666,170 @@ export default function EditCompanyPage() {
   const [activeTab, setActiveTab] = useState('general');
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   const [companyEmailEnabled, setCompanyEmailEnabled] = useState({});
-  
-  // Initialize form data with existing company data (mock data for now)
+  const [loading, setLoading] = useState(true);
+
+  // Define events and languages before using them
+  const events = [
+    { key: 'selfInspectionCreation', name: 'Self Inspection Creation' },
+    { key: 'manualChaseUp', name: 'Manual Chase-up Message' },
+    { key: 'inspectionFinished', name: 'Inspection Finished Message' },
+    { key: 'damageReviewFinished', name: 'Damage Review Finished Message' },
+    { key: 'shareUpdatedReport', name: 'Share Updated Report Message' }
+  ];
+
+  const languages = [
+    { code: 'en', name: 'English' },
+    { code: 'fr', name: 'Français' },
+    { code: 'de', name: 'Deutsch' },
+    { code: 'it', name: 'Italiano' },
+    { code: 'es', name: 'Español' },
+    { code: 'nl', name: 'Nederlands' },
+    { code: 'sv', name: 'Svenska' },
+    { code: 'no', name: 'Norsk' }
+  ];
+
+  // State for events and webhooks templates - initialized empty, will be loaded from API
+  const [templates, setTemplates] = useState(() => {
+    const initialTemplates = {};
+    events.forEach(event => {
+      initialTemplates[event.key] = {
+        webhook: {
+          enabled: false
+        },
+        user: {
+          enabled: false,
+          sms: false,
+          email: false,
+          templates: {}
+        },
+        customer: {
+          enabled: false,
+          sms: false,
+          email: false,
+          templates: {}
+        },
+        emailAddress: {
+          enabled: false,
+          address: '',
+          sms: false,
+          email: false,
+          templates: {}
+        },
+        agent: {
+          enabled: false,
+          address: '',
+          sms: false,
+          email: false,
+          templates: {}
+        }
+      };
+
+      // Initialize templates for each addressee
+      ['user', 'customer', 'emailAddress', 'agent'].forEach(addressee => {
+        initialTemplates[event.key][addressee].templates = {};
+        languages.forEach(lang => {
+          initialTemplates[event.key][addressee].templates[lang.code] = {
+            email: { subject: '', content: '' },
+            sms: { content: '' }
+          };
+        });
+      });
+    });
+    return initialTemplates;
+  });
+
+  // Initialize form data - will be loaded from API
   const [formData, setFormData] = useState({
-    companyName: 'AutoCorp Insurance',
-    companyCode: 'AUTOCORP',
-    contractType: 'Client',
-    businessSector: 'Insurance',
-    logoUrl: 'https://images.pexels.com/photos/164686/pexels-photo-164686.jpeg?auto=compress&cs=tinysrgb&w=100',
+    companyName: '',
+    companyCode: '',
+    logoUrl: '',
     retentionPeriod: 24,
-    maxApiRequests: 5000,
-    expirationDate: '2025-12-31',
-    disableFastTrack: false,
-    enableMileageCapture: true,
-    enableBlurDetection: true,
-    enableVinScanning: true,
-    enableBrandModelDetection: true,
-    enableBrandModelColorRecognition: true,
-    enableInteriorDamageDetection: false,
-    enableDashboardWarningLightsDetection: false,
+    maxApiRequests: 30,
+    expirationDate: '',
+    isFastTrackDisabled: false,
+    mileageEnabled: true,
+    blurEnabled: true,
+    vinEnabled: true,
+    readCarInformationEnabled: true,
+    interiorEnabled: false,
+    dashboardEnabled: false,
     showStartInstantInspection: true,
     showSendInspectionLink: true,
-    humanValidationEnabled: true,
-    validationPriority: 3,
-    maxValidationDelay: 60,
-    minTaskProcessingDuration: 5,
     iaValidation: false,
     parentCompany: '',
-    styles: '{"report":{"backgroundColor":"#252387","costsBackgroundColor":"#6A68D4","costsTextColor":"#000000","costsInfoColor":"#252387","topRightHorizontalBarColor":"#252387","borderColor":"#6a68d4"},"shootInspect":{"overlayColor":"#1adf6c"},"globalTheme":{"primaryColor":"#323276","primaryTextColor":"#ffffff","accentColor":"#1adf6c","accentTextColor":"ffffff","dominantColor":"#151841","dominantTextColor":"#ffffff","isDarkTheme":true}}',
-    reportSettings: '{"picturesPreSelected":"true","showDamage":"true","showGallery":"true","showNewDamage":"true","showState":"true","oldDamages":true,"checkDamages":true,"isCarDealership":true,"showWatermark":false,"prefix":"","selectorSens":"clockwise","selectorSvgColor":"repairSeverity","selectorSvg":"renault"}',
-    configModules: '{"fastTrack":{"canWearAndTear":true,"deletedStatusEnabled":false,"validatedStatusEnabled":true,"wearAndTearStatusEnabled":true,"editionMode":true,"zoomConfig":{"minDamageCropMargin":0.3,"regularWidthMargin":1.4,"regularHeightMargin":1.4,"strokeWidthScale":5}},"shootInspect":{"autoFinalizationEnabled":false,"autoFinalizationThreshold":2},"global":{"modelIA":"codeter_ensembling"},"endInspect":{"npsEnabled":true,"npsDelay":3000}}'
+    styles: '',
+    reportSettings: '',
+    configModules: '',
+    senderName: '',
+    webhookUrl: ''
   });
+
+  // Load company data from API
+  useEffect(() => {
+    const fetchCompany = async () => {
+      if (!id) return;
+
+      try {
+        setLoading(true);
+        const company = await companiesService.getCompanyById(id);
+
+        // Transform backend data to frontend format
+        // Helper function to safely parse dates
+        const parseExpirationDate = (expiration: any): string => {
+          if (!expiration) return '';
+          try {
+            // Handle Parse Date object format
+            if (expiration.iso) {
+              return new Date(expiration.iso).toISOString().split('T')[0];
+            }
+            // Handle string or Date object
+            const date = new Date(expiration);
+            if (isNaN(date.getTime())) {
+              console.warn('Invalid expiration date:', expiration);
+              return '';
+            }
+            return date.toISOString().split('T')[0];
+          } catch (error) {
+            console.error('Error parsing expiration date:', error);
+            return '';
+          }
+        };
+
+        setFormData({
+          companyName: company.name || '',
+          companyCode: company.identifier || '',
+          logoUrl: company.logo?.url || '',
+          retentionPeriod: company.retentionPeriod || 24,
+          maxApiRequests: company.apiToken?.maxRequestAPI || 30,
+          expirationDate: parseExpirationDate(company.apiToken?.expiration),
+          isFastTrackDisabled: company.isFastTrackDisabled || false,
+          mileageEnabled: company.processingParams?.mileageEnabled || false,
+          blurEnabled: company.blurEnabled || false,
+          vinEnabled: company.processingParams?.vinEnabled || false,
+          readCarInformationEnabled: company.processingParams?.readCarInformationEnabled || false,
+          interiorEnabled: company.processingParams?.interiorEnabled || false,
+          dashboardEnabled: company.processingParams?.dashboardEnabled || false,
+          showStartInstantInspection: company.settingsPtr?.instantInspection?.enabled || false,
+          showSendInspectionLink: company.settingsPtr?.instantInspection?.options?.fastTrack || false,
+          iaValidation: company.iaValidation || false,
+          parentCompany: company.parentCompany || '',
+          styles: company.settingsPtr?.style ? JSON.stringify(company.settingsPtr.style, null, 2) : '',
+          reportSettings: company.settingsPtr?.report ? JSON.stringify(company.settingsPtr.report, null, 2) : '',
+          configModules: company.settingsPtr?.configModules ? JSON.stringify(company.settingsPtr.configModules, null, 2) : '',
+          senderName: company.eventManagerPtr?.tradeinVehicleConfig?.senderName || '',
+          webhookUrl: company.eventManagerPtr?.webhookUrlV2 || ''
+        });
+
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching company:', error);
+        alert(`Failed to load company: ${error.message || 'Please try again.'}`);
+        navigate('/companies');
+      }
+    };
+
+    fetchCompany();
+  }, [id, navigate]);
   
   // Check if company has chase-up rules (moved after formData initialization)
   const hasChaseupRules = mockChaseupRules.some(rule => rule.company === formData.companyName);
@@ -765,6 +859,16 @@ export default function EditCompanyPage() {
     handleFieldChange('companyName', e.target.value);
   };
 
+  const handleCheckboxChange = (field: string, value: boolean) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    setHasUnsavedChanges(true);
+  };
+
+  const handleTextareaChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    setHasUnsavedChanges(true);
+  };
+
   const validateForm = () => {
     const newErrors = {
       companyName: '',
@@ -790,37 +894,71 @@ export default function EditCompanyPage() {
     return !newErrors.companyName && !newErrors.logoUrl && !newErrors.maxApiRequests;
   };
   
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!validateForm()) {
       return;
     }
 
-    console.log('Saving company changes...', formData);
-    setHasUnsavedChanges(false);
-    // Navigate back to companies list after save
-    navigate('/companies');
+    try {
+      // Parse JSON fields
+      let parsedStyles, parsedReportSettings, parsedConfigModules;
+      try {
+        parsedStyles = formData.styles ? JSON.parse(formData.styles) : undefined;
+        parsedReportSettings = formData.reportSettings ? JSON.parse(formData.reportSettings) : undefined;
+        parsedConfigModules = formData.configModules ? JSON.parse(formData.configModules) : undefined;
+      } catch (e) {
+        alert('Invalid JSON in styles, report settings, or config modules');
+        return;
+      }
+
+      // Prepare update data
+      const updateData: any = {
+        name: formData.companyName,
+        identifier: formData.companyCode,
+        retentionPeriod: formData.retentionPeriod,
+        isFastTrackDisabled: formData.isFastTrackDisabled,
+        iaValidation: formData.iaValidation,
+        blurEnabled: formData.blurEnabled,
+
+        // ProcessingParams
+        processingParams: {
+          mileageEnabled: formData.mileageEnabled,
+          vinEnabled: formData.vinEnabled,
+          interiorEnabled: formData.interiorEnabled,
+          dashboardEnabled: formData.dashboardEnabled,
+          readCarInformationEnabled: formData.readCarInformationEnabled,
+        },
+
+        // APIToken
+        maxRequestAPI: formData.maxApiRequests,
+        expiration: formData.expirationDate,
+
+        // Settings
+        styles: parsedStyles,
+        reportSettings: parsedReportSettings,
+        configModules: parsedConfigModules,
+        showStartInstantInspection: formData.showStartInstantInspection,
+        showSendInspectionLink: formData.showSendInspectionLink,
+
+        // EventManager
+        webhookUrl: formData.webhookUrl,
+        senderName: formData.senderName,
+      };
+
+      console.log('Updating company:', updateData);
+      const updatedCompany = await companiesService.updateCompany(id, updateData);
+      console.log('Company updated successfully:', updatedCompany);
+
+      setHasUnsavedChanges(false);
+      // Navigate back to companies list after save
+      navigate('/companies');
+    } catch (error) {
+      console.error('Error updating company:', error);
+      alert(`Failed to update company: ${error.message || 'Please try again.'}`);
+    }
   };
 
   // Static data arrays
-  const languages = [
-    { code: 'en', name: 'English' },
-    { code: 'fr', name: 'Français' },
-    { code: 'de', name: 'Deutsch' },
-    { code: 'it', name: 'Italiano' },
-    { code: 'es', name: 'Español' },
-    { code: 'nl', name: 'Nederlands' },
-    { code: 'sv', name: 'Svenska' },
-    { code: 'no', name: 'Norsk' }
-  ];
-
-  const events = [
-    { key: 'selfInspectionCreation', name: 'Self Inspection Creation' },
-    { key: 'manualChaseUp', name: 'Manual Chase-up Message' },
-    { key: 'inspectionFinished', name: 'Inspection Finished Message' },
-    { key: 'damageReviewFinished', name: 'Damage Review Finished Message' },
-    { key: 'shareUpdatedReport', name: 'Share Updated Report Message' }
-  ];
-
   const variables = [
     { key: '##clientLastName##', name: 'Client Last Name' },
     { key: '##clientFirstName##', name: 'Client First Name' },
@@ -854,19 +992,21 @@ export default function EditCompanyPage() {
     {
       key: 'general',
       label: 'General Settings',
-      content: <GeneralSettingsTab 
+      content: <GeneralSettingsTab
         formData={formData}
         errors={errors}
         handleCompanyNameChange={handleCompanyNameChange}
         handleLogoUrlChange={handleLogoUrlChange}
         handleFieldChange={handleFieldChange}
         handleInputChange={handleInputChange}
+        handleCheckboxChange={handleCheckboxChange}
+        handleTextareaChange={handleTextareaChange}
       />
     },
     {
       key: 'events',
       label: 'Events & Webhooks',
-      content: <EventsWebhooksTab 
+      content: <EventsWebhooksTab
         selectedLanguage={selectedLanguage}
         setSelectedLanguage={setSelectedLanguage}
         handleInputChange={handleInputChange}
@@ -875,6 +1015,10 @@ export default function EditCompanyPage() {
         variables={variables}
         companyEmailEnabled={companyEmailEnabled}
         setCompanyEmailEnabled={setCompanyEmailEnabled}
+        templates={templates}
+        setTemplates={setTemplates}
+        formData={formData}
+        handleFieldChange={handleFieldChange}
       />
     },
     {
@@ -887,6 +1031,20 @@ export default function EditCompanyPage() {
       />
     }
   ];
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header title="Edit Company" />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading company data...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">

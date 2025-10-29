@@ -803,6 +803,7 @@ export default function CreateCompanyPage() {
           vinEnabled: formData.vinEnabled,
           interiorEnabled: formData.interiorEnabled,
           dashboardEnabled: formData.dashboardEnabled,
+          readCarInformationEnabled: formData.readCarInformationEnabled,
         },
 
         // ===== APIToken fields =====
