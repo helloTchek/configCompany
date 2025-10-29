@@ -18,11 +18,12 @@ class ApiClient {
   private getHeaders(): Record<string, string> {
     const headers = { ...this.defaultHeaders };
     const token = this.getAuthToken();
-    
+
     if (token) {
-      headers.Authorization = `Bearer ${token}`;
+      // Backend uses x-api-key header instead of Authorization Bearer
+      headers['x-api-key'] = token;
     }
-    
+
     return headers;
   }
 
@@ -53,6 +54,7 @@ class ApiClient {
       return { data: null as T, success: true };
     }
   }
+  
 
   private buildSearchParams(params: SearchParams): URLSearchParams {
     const searchParams = new URLSearchParams();

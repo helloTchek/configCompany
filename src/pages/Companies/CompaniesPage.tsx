@@ -9,7 +9,7 @@ import Input from '../../components/UI/Input';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { mockUsers } from '../../data/mockData';
 import { Company } from '../../types';
-import companiesService from '../../services/companiesService';
+import companiesService, { getCompanyId } from '../../services/companiesService';
 import { CreditCard as Edit, Archive, Copy, Plus, Upload, Search, ListFilter as Filter, X } from 'lucide-react';
 import { mockChaseupRules } from '../../data/mockData';
 import { PERMISSIONS } from '@/types/auth';
@@ -48,13 +48,13 @@ export default function CompaniesPage() {
   const loadCompanies = async () => {
     try {
       setLoading(true);
-      const allCompanies = await companiesService.getCompanies();
-      
+      const allCompanies = await companiesService.getAllCompanies();
+
       // Filtrage par company pour les utilisateurs non-superAdmin
       let filteredCompanies = allCompanies;
       if (user?.role !== 'superAdmin') {
-        filteredCompanies = filteredCompanies.filter(company => 
-          company.id === user?.companyId || company.name === user?.companyName
+        filteredCompanies = filteredCompanies.filter(company =>
+          getCompanyId(company) === user?.companyId || company.name === user?.companyName
         );
       }
 
@@ -96,7 +96,7 @@ export default function CompaniesPage() {
         archivedAt: new Date().toISOString()
       };
 
-      await companiesService.updateCompany(archiveModal.company.id, updatedCompany);
+      await companiesService.updateCompany(getCompanyId(archiveModal.company), updatedCompany);
       
       // Disable users from this company
       mockUsers.forEach(user => {
@@ -298,21 +298,53 @@ export default function CompaniesPage() {
       )
     },
     { key: 'identifier', label: 'Identifier', sortable: true },
-    { key: 'companyCode', label: 'Company ID', sortable: true },
-    { 
-      key: 'apiToken', 
-      label: 'API Token',
-      render: (value: string) => (
-        <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
-          {value ? value.substring(0, 12) : 'N/A'}...
-        </span>
-      )
+    {
+      key: 'objectId',
+      label: 'Company ID',
+      sortable: true,
+      render: (value: string) => value || 'N/A'
     },
-    { key: 'currentApiRequests', label: 'Current Requests', sortable: true },
-    { key: 'maxApiRequests', label: 'Max Requests', sortable: true },
-    { key: 'requestsExpiryDate', label: 'Expiry Date', sortable: true },
-    { key: 'parentCompany', label: 'Parent Company' },
-    { key: 'childrenCount', label: 'Children', sortable: true },
+    {
+      key: 'apiToken',
+      label: 'API Token',
+      render: (value: any) => {
+        const token = typeof value === 'string' ? value : value?.token;
+        return (
+          <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
+            {token ? token.substring(0, 12) + '...' : 'N/A'}
+          </span>
+        );
+      }
+    },
+    {
+      key: 'currentApiRequests',
+      label: 'Current Requests',
+      sortable: true,
+      render: (_: any, row: Company) => row.apiToken?.numberRequest ?? 'N/A'
+    },
+    {
+      key: 'maxApiRequests',
+      label: 'Max Requests',
+      sortable: true,
+      render: (_: any, row: Company) => row.apiToken?.maxRequestAPI ?? 'N/A'
+    },
+    {
+      key: 'createdAt',
+      label: 'Created Date',
+      sortable: true,
+      render: (value: string) => value ? new Date(value).toLocaleDateString() : 'N/A'
+    },
+    {
+      key: 'parentCompany',
+      label: 'Parent Company',
+      render: (_: any, row: Company) => row.parentCompanyId ?? 'None'
+    },
+    {
+      key: 'childrenCount',
+      label: 'Children',
+      sortable: true,
+      render: (_: any, row: Company) => row.childCompanyIds?.length ?? 0
+    },
     {
       key: 'chaseupRules',
       label: 'Chase-up Rules',
@@ -345,7 +377,7 @@ export default function CompaniesPage() {
       render: (_: any, row: Company) => (
         <div className="flex items-center gap-2">
           <button
-            onClick={() => navigate(`/companies/${row.id}/edit`)}
+            onClick={() => navigate(`/companies/${getCompanyId(row)}/edit`)}
             className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
           >
             <Edit size={16} />
@@ -566,6 +598,7 @@ export default function CompaniesPage() {
               )}
             </>
           )}
+
         </div>
       </div>
 

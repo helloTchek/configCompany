@@ -198,8 +198,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
         throw new Error('Invalid email or password');
       }
 
+      // Use the real token from environment variable
+      const realToken = import.meta.env.VITE_AUTH_TOKEN || `mock_token_${Date.now()}`;
       const tokens = {
-        accessToken: `mock_token_${Date.now()}`,
+        accessToken: realToken,
         refreshToken: `mock_refresh_${Date.now()}`,
         expiresAt: Date.now() + 3600000, // 1 hour
       };

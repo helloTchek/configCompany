@@ -9,6 +9,7 @@ import Input from '../../components/UI/Input';
 import { mockJourneys } from '../../data/mockData';
 import { mockCompanies } from '@/mocks/companies.mock';
 import { InspectionJourney } from '../../types';
+import { getCompanyId } from '../../services/companiesService';
 import { CreditCard as Edit, Eye, Copy, Trash2, Plus, Search, ListFilter as Filter, X } from 'lucide-react';
 
 export default function JourneysPage() {
@@ -307,7 +308,7 @@ export default function JourneysPage() {
               >
                 <option value="">Select Company</option>
                 {mockCompanies.map((company) => (
-                  <option key={company.id} value={company.id}>
+                  <option key={getCompanyId(company)} value={getCompanyId(company)}>
                     {company.name}
                   </option>
                 ))}
