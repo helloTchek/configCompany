@@ -367,10 +367,27 @@ const EventsWebhooksTab = ({
   const renderAddresseeConfig = (eventKey, addressee, addresseeLabel) => {
     const config = templates[eventKey][addressee];
 
+    // Check how many languages have content
+    const languagesWithEmailContent = languages.filter(lang =>
+      config.templates[lang.code]?.email.subject || config.templates[lang.code]?.email.content
+    ).length;
+    const languagesWithSmsContent = languages.filter(lang =>
+      config.templates[lang.code]?.sms.content
+    ).length;
+
+    const hasAnyContent = languagesWithEmailContent > 0 || languagesWithSmsContent > 0;
+
     return (
-      <div className="border border-gray-200 rounded-lg p-4">
+      <div className={`border rounded-lg p-4 ${hasAnyContent ? 'border-green-400 bg-green-50' : 'border-gray-200'}`}>
         <div className="flex items-center justify-between mb-4">
-          <h5 className="font-medium text-gray-900">{addresseeLabel}</h5>
+          <div className="flex items-center gap-2">
+            <h5 className="font-medium text-gray-900">{addresseeLabel}</h5>
+            {hasAnyContent && (
+              <span className="px-2 py-0.5 bg-green-600 text-white text-xs font-bold rounded-full">
+                ✓ {languagesWithEmailContent + languagesWithSmsContent} configured
+              </span>
+            )}
+          </div>
           <label className="flex items-center">
             <input
               type="checkbox"
@@ -395,7 +412,7 @@ const EventsWebhooksTab = ({
             )}
 
             <div className="flex gap-4">
-              <label className="flex items-center">
+              <label className="flex items-center gap-1">
                 <input
                   type="checkbox"
                   checked={config.sms}
@@ -403,8 +420,13 @@ const EventsWebhooksTab = ({
                   className="rounded border-gray-300 text-blue-600 shadow-sm"
                 />
                 <span className="ml-2 text-sm text-gray-700">SMS</span>
+                {languagesWithSmsContent > 0 && (
+                  <span className="px-1.5 py-0.5 bg-purple-100 text-purple-700 text-xs font-semibold rounded">
+                    {languagesWithSmsContent}
+                  </span>
+                )}
               </label>
-              <label className="flex items-center">
+              <label className="flex items-center gap-1">
                 <input
                   type="checkbox"
                   checked={config.email}
@@ -412,6 +434,11 @@ const EventsWebhooksTab = ({
                   className="rounded border-gray-300 text-blue-600 shadow-sm"
                 />
                 <span className="ml-2 text-sm text-gray-700">Email</span>
+                {languagesWithEmailContent > 0 && (
+                  <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs font-semibold rounded">
+                    {languagesWithEmailContent}
+                  </span>
+                )}
               </label>
             </div>
 
@@ -424,12 +451,22 @@ const EventsWebhooksTab = ({
                     onChange={(e) => setSelectedLanguage(e.target.value)}
                     className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    {languages.map((lang) => (
-                      <option key={lang.code} value={lang.code}>
-                        {lang.name}
-                      </option>
-                    ))}
+                    {languages.map((lang) => {
+                      const hasEmailContent = config.templates[lang.code]?.email.subject || config.templates[lang.code]?.email.content;
+                      const hasSmsContent = config.templates[lang.code]?.sms.content;
+                      const hasContent = hasEmailContent || hasSmsContent;
+                      return (
+                        <option key={lang.code} value={lang.code}>
+                          {hasContent ? '✓ ' : ''}{lang.name}
+                        </option>
+                      );
+                    })}
                   </select>
+                  {(config.templates[selectedLanguage]?.email.subject || config.templates[selectedLanguage]?.email.content || config.templates[selectedLanguage]?.sms.content) && (
+                    <span className="text-xs text-green-600 font-semibold">
+                      ✓ Has content
+                    </span>
+                  )}
                 </div>
 
                 {config.email && (
@@ -793,22 +830,32 @@ export default function EditCompanyPage() {
         newTemplates[frontendEventKey].user.sms = config.customerSMS || false;
       }
 
-      if (templatesData) {
+      if (templatesData && Object.keys(templatesData).length > 0) {
+        console.log(`📧 Loading templates for ${backendEventKey}:`, Object.keys(templatesData));
         // Map templates to frontend format
         Object.keys(templatesData).forEach(templateKey => {
           // Parse template key: "customerEmail_EN" or "customerSMS_FR"
           const match = templateKey.match(/^(customer|company|agent)(Email|SMS)_(.+)$/);
-          if (!match) return;
+          if (!match) {
+            console.warn(`⚠️ Template key doesn't match pattern: ${templateKey}`);
+            return;
+          }
 
           const [, addresseeType, channel, backendLang] = match;
           const frontendLang = backendToFrontendLangMapping[backendLang];
-          if (!frontendLang) return;
+          if (!frontendLang) {
+            console.warn(`⚠️ Unknown backend language: ${backendLang}`);
+            return;
+          }
 
           let addressee = addresseeType === 'customer' ? 'customer' : addresseeType === 'company' ? 'emailAddress' : 'agent';
+
+          console.log(`  ✅ Parsing ${templateKey} -> ${frontendEventKey}.${addressee}.${frontendLang}.${channel.toLowerCase()}`);
 
           if (channel === 'Email') {
             const emailData = templatesData[templateKey];
             if (emailData && typeof emailData === 'object') {
+              console.log(`    📝 Email data:`, { subject: emailData.subject, hasText: !!emailData.text, hasHtml: !!emailData.html });
               newTemplates[frontendEventKey][addressee].templates[frontendLang].email = {
                 subject: emailData.subject || '',
                 content: emailData.text || emailData.html || ''
@@ -817,12 +864,15 @@ export default function EditCompanyPage() {
           } else if (channel === 'SMS') {
             const smsData = templatesData[templateKey];
             if (typeof smsData === 'string') {
+              console.log(`    📱 SMS data:`, smsData.substring(0, 50));
               newTemplates[frontendEventKey][addressee].templates[frontendLang].sms = {
                 content: smsData
               };
             }
           }
         });
+      } else {
+        console.log(`ℹ️ No templates found for ${backendEventKey}`);
       }
     });
 
