@@ -20,6 +20,9 @@ export default function CompaniesPage() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalCompanies, setTotalCompanies] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(50);
+  const [totalPages, setTotalPages] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
@@ -44,14 +47,14 @@ export default function CompaniesPage() {
     }
   });
 
-  // Chargement des données
-  const loadCompanies = async () => {
+  // Chargement des données avec pagination
+  const loadCompanies = async (page: number = currentPage) => {
     try {
       setLoading(true);
-      const allCompanies = await companiesService.getAllCompanies();
+      const response = await companiesService.getCompanies({ page, limit: itemsPerPage });
 
       // Filtrage par company pour les utilisateurs non-superAdmin
-      let filteredCompanies = allCompanies;
+      let filteredCompanies = response.data;
       if (user?.role !== 'superAdmin') {
         filteredCompanies = filteredCompanies.filter(company =>
           getCompanyId(company) === user?.companyId || company.name === user?.companyName
@@ -59,12 +62,19 @@ export default function CompaniesPage() {
       }
 
       setCompanies(filteredCompanies);
-      setTotalCompanies(filteredCompanies.length);
+      setTotalCompanies(response.pagination.total);
+      setTotalPages(response.pagination.totalPages);
+      setCurrentPage(page);
     } catch (error) {
       console.error('Error loading companies:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Gestion du changement de page
+  const handlePageChange = (newPage: number) => {
+    loadCompanies(newPage);
   };
 
   // Effect pour charger les données au montage
@@ -636,6 +646,83 @@ export default function CompaniesPage() {
           )}
 
         </div>
+
+        {/* Pagination */}
+        {!loading && sortedCompanies.length > 0 && (
+          <div className="bg-white border-t border-gray-200 px-6 py-4 flex items-center justify-between">
+            <div className="flex-1 flex justify-between sm:hidden">
+              <Button
+                variant="secondary"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </Button>
+            </div>
+            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm text-gray-700">
+                  Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> to{' '}
+                  <span className="font-medium">
+                    {Math.min(currentPage * itemsPerPage, totalCompanies)}
+                  </span>{' '}
+                  of <span className="font-medium">{totalCompanies}</span> companies
+                </p>
+              </div>
+              <div>
+                <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  {[...Array(Math.min(5, totalPages))].map((_, idx) => {
+                    let pageNumber;
+                    if (totalPages <= 5) {
+                      pageNumber = idx + 1;
+                    } else if (currentPage <= 3) {
+                      pageNumber = idx + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNumber = totalPages - 4 + idx;
+                    } else {
+                      pageNumber = currentPage - 2 + idx;
+                    }
+
+                    return (
+                      <button
+                        key={pageNumber}
+                        onClick={() => handlePageChange(pageNumber)}
+                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                          currentPage === pageNumber
+                            ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                            : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                        }`}
+                      >
+                        {pageNumber}
+                      </button>
+                    );
+                  })}
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </nav>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <Modal

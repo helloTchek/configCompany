@@ -24,35 +24,63 @@ export type UpdateCompanyData = Partial<CreateCompanyData>;
 export const getCompanyId = (company: Company): string => company.objectId || company.id || '';
 
 export interface PaginationParams {
-  skip?: number;
+  page?: number;
   limit?: number;
 }
 
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}
+
 class CompaniesService {
-  async getCompanies(params?: PaginationParams): Promise<Company[]> {
+  async getCompanies(params?: PaginationParams): Promise<PaginatedResponse<Company>> {
     if (isMockMode()) {
       await mockDelay(config.mock.delay);
-      return [...mockCompanies];
+      const page = params?.page || 1;
+      const limit = params?.limit || 50;
+      const start = (page - 1) * limit;
+      const end = start + limit;
+      const paginatedData = mockCompanies.slice(start, end);
+
+      return {
+        data: paginatedData,
+        pagination: {
+          page,
+          limit,
+          total: mockCompanies.length,
+          totalPages: Math.ceil(mockCompanies.length / limit),
+          hasNext: end < mockCompanies.length,
+          hasPrev: page > 1
+        }
+      };
     }
+
     const queryParams: Record<string, unknown> = {};
-    if (params?.skip !== undefined) queryParams.skip = params.skip;
+    if (params?.page !== undefined) queryParams.page = params.page;
     if (params?.limit !== undefined) queryParams.limit = params.limit;
 
-    const companies = await apiClient.get<Company[]>(API_ENDPOINTS.companies.list, queryParams);
-    return companies;
+    const response = await apiClient.get<PaginatedResponse<Company>>(API_ENDPOINTS.companies.list, queryParams);
+    return response;
   }
 
-  // Fetch all companies - API doesn't support pagination, returns max 100
+  // Fetch all companies - use with caution for large datasets
   async getAllCompanies(): Promise<Company[]> {
     if (isMockMode()) {
       await mockDelay(config.mock.delay);
       return [...mockCompanies];
     }
 
-    // API returns max 100 companies and doesn't support pagination parameters
-    // So we just fetch once
-    const companies = await apiClient.get<Company[]>(API_ENDPOINTS.companies.list);
-    return companies;
+    // Fetch first page to get total count
+    const firstPage = await this.getCompanies({ page: 1, limit: 1000 });
+    return firstPage.data;
   }
 
   async getCompanyById(id: string): Promise<Company | null> {

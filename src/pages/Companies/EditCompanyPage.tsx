@@ -261,67 +261,26 @@ const GeneralSettingsTab = ({
   </div>
 );
 
-const EventsWebhooksTab = ({ 
-  selectedLanguage, 
-  setSelectedLanguage, 
-  handleInputChange, 
-  languages, 
-  events, 
-  variables 
+const EventsWebhooksTab = ({
+  selectedLanguage,
+  setSelectedLanguage,
+  handleInputChange,
+  languages,
+  events,
+  variables,
+  templates,
+  setTemplates,
+  formData,
+  handleFieldChange,
+  companyEmailEnabled,
+  setCompanyEmailEnabled
 }) => {
   // State to track which field is currently focused
   const [focusedField, setFocusedField] = useState(null);
   const fieldRefs = useRef({});
 
-  // State to store templates for each event, addressee, medium, and language
-  const [templates, setTemplates] = useState(() => {
-    const initialTemplates = {};
-    events.forEach(event => {
-      initialTemplates[event.key] = {
-        webhook: {
-          enabled: false
-        },
-        user: {
-          enabled: false,
-          sms: false,
-          email: false,
-          templates: {}
-        },
-        customer: {
-          enabled: false,
-          sms: false,
-          email: false,
-          templates: {}
-        },
-        emailAddress: {
-          enabled: false,
-          address: '',
-          sms: false,
-          email: false,
-          templates: {}
-        },
-        agent: {
-          enabled: false,
-          address: '',
-          sms: false,
-          email: false,
-          templates: {}
-        }
-      };
-      
-      // Initialize templates for each addressee
-      ['user', 'customer', 'emailAddress', 'agent'].forEach(addressee => {
-        initialTemplates[event.key][addressee].templates = {};
-        languages.forEach(lang => {
-          initialTemplates[event.key][addressee].templates[lang.code] = {
-            email: { subject: '', content: '' },
-            sms: { content: '' }
-          };
-        });
-      });
-    });
-    return initialTemplates;
-  });
+  // Note: templates and setTemplates are now received from parent props
+  // This allows the parent to load data from backend and have it reflected here
 
   const updateTemplate = (eventKey, addressee, language, templateType, field, value) => {
     setTemplates(prev => ({
@@ -543,12 +502,14 @@ const EventsWebhooksTab = ({
         <Input
           label="Sender Name (for all events)"
           placeholder="Your Company Name"
-          onChange={handleInputChange}
+          value={formData.senderName}
+          onChange={(e) => handleFieldChange('senderName', e.target.value)}
         />
         <Input
           label="Webhook URL"
           placeholder="https://your-domain.com/webhook"
-          onChange={handleInputChange}
+          value={formData.webhookUrl}
+          onChange={(e) => handleFieldChange('webhookUrl', e.target.value)}
         />
       </div>
     </div>
@@ -778,6 +739,7 @@ export default function EditCompanyPage() {
   const loadEventTemplatesFromBackend = (eventManager: any) => {
     console.log('🔄 loadEventTemplatesFromBackend CALLED');
     console.log('eventManager received:', eventManager);
+    console.log('eventManager JSON:', JSON.stringify(eventManager, null, 2));
 
     const backendToFrontendEventMapping = {
       tradeinVehicle: 'selfInspectionCreation',
@@ -798,15 +760,27 @@ export default function EditCompanyPage() {
       NO: 'no'
     };
 
-    const newTemplates = { ...templates };
+    // Deep clone templates to ensure React detects changes
+    const newTemplates = JSON.parse(JSON.stringify(templates));
 
     Object.keys(backendToFrontendEventMapping).forEach(backendEventKey => {
       const frontendEventKey = backendToFrontendEventMapping[backendEventKey];
       const config = eventManager[`${backendEventKey}Config`];
       const templatesData = eventManager[`${backendEventKey}Templates`];
 
+      console.log(`🔍 Processing ${backendEventKey}:`);
+      console.log(`  - config found:`, !!config, config);
+      console.log(`  - templates found:`, !!templatesData, templatesData);
+
       if (config) {
         // Map config to frontend format
+        console.log(`✏️ Updating ${frontendEventKey} config:`, {
+          webhook: config.webhook,
+          companyEmail: config.companyEmail,
+          agentEmail: config.agentEmail,
+          customerEmail: config.customerEmail
+        });
+
         newTemplates[frontendEventKey].webhook.enabled = config.webhook || false;
         newTemplates[frontendEventKey].emailAddress.email = config.companyEmail || false;
         newTemplates[frontendEventKey].emailAddress.sms = config.companySMS || false;
@@ -852,7 +826,11 @@ export default function EditCompanyPage() {
       }
     });
 
+    console.log('📝 Setting new templates:', newTemplates);
+    console.log('📝 selfInspectionCreation webhook enabled:', newTemplates.selfInspectionCreation.webhook.enabled);
     setTemplates(newTemplates);
+
+    console.log('✅ Templates state updated');
   };
 
   // Load company data from API
