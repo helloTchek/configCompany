@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/Layout/Header';
 import Button from '../../components/UI/Button';
@@ -588,20 +588,27 @@ const EventsWebhooksTab = ({
   );
 };
 
-const HierarchyTab = ({ handleInputChange }) => (
+const HierarchyTab = ({ formData, handleFieldChange, handleInputChange, companies }) => (
   <div className="space-y-6">
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Company Hierarchy</h3>
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Parent Company (optional)</label>
-          <select 
+          <select
             className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            onChange={handleInputChange}
+            value={formData.parentCompanyId || ''}
+            onChange={(e) => {
+              handleFieldChange('parentCompanyId', e.target.value);
+              handleInputChange();
+            }}
           >
             <option value="">None - This will be a root company</option>
-            <option value="1">AutoCorp Insurance</option>
-            <option value="2">FleetMax Leasing</option>
+            {companies.map((company) => (
+              <option key={company.objectId || company.id} value={company.objectId || company.id}>
+                {company.name}
+              </option>
+            ))}
           </select>
           <p className="text-sm text-gray-500 mt-1">Select a parent company to create a hierarchical structure</p>
         </div>
@@ -616,6 +623,7 @@ export default function CreateCompanyPage() {
   const [activeTab, setActiveTab] = useState('general');
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   const [companyEmailEnabled, setCompanyEmailEnabled] = useState({});
+  const [companies, setCompanies] = useState<any[]>([]);
 
   // State for events and webhooks templates - must be in parent to persist across tab changes
   const events = [
@@ -706,13 +714,28 @@ export default function CreateCompanyPage() {
     showSendInspectionLink: true,
     // EventManager fields
     senderName: '',
-    webhookUrl: ''
+    webhookUrl: '',
+    // Hierarchy field
+    parentCompanyId: ''
   });
   const [errors, setErrors] = useState({
     companyName: '',
     logoUrl: '',
     maxApiRequests: ''
   });
+
+  // Load companies for parent selection
+  useEffect(() => {
+    const loadCompanies = async () => {
+      try {
+        const allCompanies = await companiesService.getAllCompanies();
+        setCompanies(allCompanies);
+      } catch (error) {
+        console.error('Error loading companies:', error);
+      }
+    };
+    loadCompanies();
+  }, []);
 
   const handleInputChange = () => {
     setHasUnsavedChanges(true);
@@ -820,6 +843,9 @@ export default function CreateCompanyPage() {
         // ===== EventManager fields =====
         webhookUrl: formData.webhookUrl,
         senderName: formData.senderName,
+
+        // ===== Hierarchy fields =====
+        parentCompanyId: formData.parentCompanyId || undefined,
       };
 
       console.log('Creating company with all relations:', companyData);
@@ -900,7 +926,12 @@ export default function CreateCompanyPage() {
     {
       key: 'hierarchy',
       label: 'Hierarchy',
-      content: <HierarchyTab handleInputChange={handleInputChange} />
+      content: <HierarchyTab
+        formData={formData}
+        handleFieldChange={handleFieldChange}
+        handleInputChange={handleInputChange}
+        companies={companies}
+      />
     }
   ];
 

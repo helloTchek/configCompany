@@ -1,5 +1,6 @@
 export interface Company {
   id: string;
+  objectId?: string;
   name: string;
   identifier: string;
   apiToken: string;
@@ -7,8 +8,8 @@ export interface Company {
   maxApiRequests: number;
   requestsExpiryDate: string;
   companyCode: string;
-  parentCompany?: string;
-  childrenCount: number;
+  parentCompanyId?: string;
+  childCompanyIds?: string[];
   contractType: 'Client' | 'Prospect' | 'Test' | 'Demo';
   businessSector: string;
   logoUrl?: string;

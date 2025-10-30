@@ -636,21 +636,29 @@ const EventsWebhooksTab = ({
   );
 };
 
-const HierarchyTab = ({ handleInputChange, formData, handleFieldChange }) => (
+const HierarchyTab = ({ handleInputChange, formData, handleFieldChange, companies, currentCompanyId }) => (
   <div className="space-y-6">
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Company Hierarchy</h3>
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Parent Company (optional)</label>
-          <select 
-            value={formData.parentCompany || ''}
-            onChange={(e) => handleFieldChange('parentCompany', e.target.value)}
+          <select
+            value={formData.parentCompanyId || ''}
+            onChange={(e) => {
+              handleFieldChange('parentCompanyId', e.target.value);
+              handleInputChange();
+            }}
             className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="">None - This will be a root company</option>
-            <option value="1">AutoCorp Insurance</option>
-            <option value="2">FleetMax Leasing</option>
+            {companies
+              .filter(company => (company.objectId || company.id) !== currentCompanyId)
+              .map((company) => (
+                <option key={company.objectId || company.id} value={company.objectId || company.id}>
+                  {company.name}
+                </option>
+              ))}
           </select>
           <p className="text-sm text-gray-500 mt-1">Select a parent company to create a hierarchical structure</p>
         </div>
@@ -667,6 +675,7 @@ export default function EditCompanyPage() {
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   const [companyEmailEnabled, setCompanyEmailEnabled] = useState({});
   const [loading, setLoading] = useState(true);
+  const [companies, setCompanies] = useState<any[]>([]);
 
   // Define events and languages before using them
   const events = [
@@ -756,7 +765,7 @@ export default function EditCompanyPage() {
     showStartInstantInspection: true,
     showSendInspectionLink: true,
     iaValidation: false,
-    parentCompany: '',
+    parentCompanyId: '',
     styles: '',
     reportSettings: '',
     configModules: '',
@@ -812,7 +821,7 @@ export default function EditCompanyPage() {
           showStartInstantInspection: company.settingsPtr?.instantInspection?.enabled || false,
           showSendInspectionLink: company.settingsPtr?.instantInspection?.options?.fastTrack || false,
           iaValidation: company.iaValidation || false,
-          parentCompany: company.parentCompany || '',
+          parentCompanyId: company.parentCompanyId || '',
           styles: company.settingsPtr?.style ? JSON.stringify(company.settingsPtr.style, null, 2) : '',
           reportSettings: company.settingsPtr?.report ? JSON.stringify(company.settingsPtr.report, null, 2) : '',
           configModules: company.settingsPtr?.configModules ? JSON.stringify(company.settingsPtr.configModules, null, 2) : '',
@@ -830,7 +839,20 @@ export default function EditCompanyPage() {
 
     fetchCompany();
   }, [id, navigate]);
-  
+
+  // Load all companies for parent selection
+  useEffect(() => {
+    const loadCompanies = async () => {
+      try {
+        const allCompanies = await companiesService.getAllCompanies();
+        setCompanies(allCompanies);
+      } catch (error) {
+        console.error('Error loading companies:', error);
+      }
+    };
+    loadCompanies();
+  }, []);
+
   // Check if company has chase-up rules (moved after formData initialization)
   const hasChaseupRules = mockChaseupRules.some(rule => rule.company === formData.companyName);
   const chaseupRulesCount = mockChaseupRules.filter(rule => rule.company === formData.companyName).length;
@@ -1024,10 +1046,12 @@ export default function EditCompanyPage() {
     {
       key: 'hierarchy',
       label: 'Hierarchy',
-      content: <HierarchyTab 
+      content: <HierarchyTab
         handleInputChange={handleInputChange}
         formData={formData}
         handleFieldChange={handleFieldChange}
+        companies={companies}
+        currentCompanyId={id}
       />
     }
   ];
