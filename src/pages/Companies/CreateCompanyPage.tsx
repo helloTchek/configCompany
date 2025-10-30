@@ -765,6 +765,98 @@ export default function CreateCompanyPage() {
     handleFieldChange('companyName', e.target.value);
   };
 
+  // Event name mapping: Frontend → Backend
+  const eventNameMapping = {
+    selfInspectionCreation: 'tradeinVehicle',
+    manualChaseUp: 'chaseUpVehicle',
+    inspectionFinished: 'detectionFinished',
+    damageReviewFinished: 'createReport',
+    shareUpdatedReport: 'shareUpdatedReport'
+  };
+
+  // Language code mapping: Frontend → Backend
+  const languageMapping = {
+    en: 'EN',
+    fr: 'FR',
+    de: 'DE',
+    it: 'IT',
+    es: 'ES',
+    nl: 'NL-BE',
+    sv: 'SV',
+    no: 'NO'
+  };
+
+  // Transform frontend templates to backend event configuration
+  const transformTemplatesToBackendFormat = () => {
+    const eventsConfig: any = {};
+
+    Object.keys(templates).forEach(frontendEventKey => {
+      const backendEventKey = eventNameMapping[frontendEventKey];
+      if (!backendEventKey) return;
+
+      const eventData = templates[frontendEventKey];
+
+      // Build config object
+      const config: any = {
+        webhook: eventData.webhook?.enabled || false,
+        companyEmail: eventData.emailAddress?.email || false,
+        companyEmailAddress: eventData.emailAddress?.address || '',
+        companySMS: eventData.emailAddress?.sms || false,
+        companySMSNumber: '',
+        agentSMS: eventData.agent?.sms || false,
+        agentEmail: eventData.agent?.email || false,
+        customerEmail: eventData.customer?.email || false,
+        customerSMS: eventData.customer?.sms || false,
+        senderEmail: '',
+        senderName: formData.senderName || '',
+        pdfGeneration: false
+      };
+
+      // Build templates object
+      const templatesObj: any = {};
+
+      // Process each addressee (user, customer, emailAddress, agent)
+      ['user', 'customer', 'emailAddress', 'agent'].forEach(addressee => {
+        const addresseeData = eventData[addressee];
+        if (!addresseeData || !addresseeData.enabled) return;
+
+        // Map addressee to backend field prefix
+        let fieldPrefix = '';
+        if (addressee === 'customer' || addressee === 'user') fieldPrefix = 'customer';
+        else if (addressee === 'emailAddress') fieldPrefix = 'company';
+        else if (addressee === 'agent') fieldPrefix = 'agent';
+
+        // Process each language
+        Object.keys(addresseeData.templates || {}).forEach(langCode => {
+          const backendLangCode = languageMapping[langCode];
+          if (!backendLangCode) return;
+
+          const langTemplates = addresseeData.templates[langCode];
+
+          // Email template
+          if (addresseeData.email && langTemplates.email) {
+            templatesObj[`${fieldPrefix}Email_${backendLangCode}`] = {
+              subject: langTemplates.email.subject || '',
+              text: langTemplates.email.content || '',
+              html: langTemplates.email.content || '' // Using same content for HTML
+            };
+          }
+
+          // SMS template
+          if (addresseeData.sms && langTemplates.sms) {
+            templatesObj[`${fieldPrefix}SMS_${backendLangCode}`] = langTemplates.sms.content || '';
+          }
+        });
+      });
+
+      // Store in eventsConfig
+      eventsConfig[`${backendEventKey}Config`] = config;
+      eventsConfig[`${backendEventKey}Templates`] = templatesObj;
+    });
+
+    return eventsConfig;
+  };
+
   const validateForm = () => {
     const newErrors = {
       companyName: '',
@@ -810,11 +902,15 @@ export default function CreateCompanyPage() {
         return;
       }
 
+      // Transform event templates to backend format
+      const eventsConfig = transformTemplatesToBackendFormat();
+
       // Prepare complete company data with ALL related objects
       const companyData: any = {
         // ===== Company fields =====
         name: formData.companyName,
         identifier: identifier,
+        logoUrl: formData.logoUrl,
         retentionPeriod: formData.retentionPeriod,
         isFastTrackDisabled: formData.isFastTrackDisabled,
         iaValidation: formData.iaValidation,
@@ -843,6 +939,7 @@ export default function CreateCompanyPage() {
         // ===== EventManager fields =====
         webhookUrl: formData.webhookUrl,
         senderName: formData.senderName,
+        eventsConfig: eventsConfig, // Event configurations and templates
 
         // ===== Hierarchy fields =====
         parentCompanyId: formData.parentCompanyId || undefined,

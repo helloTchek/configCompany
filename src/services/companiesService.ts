@@ -3,8 +3,22 @@ import { mockCompanies, mockDelay } from '@/mocks/companies.mock';
 import { apiClient } from '@/lib/api-client';
 import { config, isMockMode, API_ENDPOINTS } from '@/config';
 
-export type CreateCompanyData = Omit<Company, 'objectId' | 'createdAt' | 'updatedAt'>;
-export type UpdateCompanyData = Partial<Omit<Company, 'objectId' | 'createdAt' | 'updatedAt'>>;
+export type CreateCompanyData = Omit<Company, 'objectId' | 'createdAt' | 'updatedAt'> & {
+  eventsConfig?: any;
+  parentCompanyId?: string;
+  logoUrl?: string;
+  webhookUrl?: string;
+  senderName?: string;
+  processingParams?: any;
+  styles?: any;
+  reportSettings?: any;
+  configModules?: any;
+  showStartInstantInspection?: boolean;
+  showSendInspectionLink?: boolean;
+  maxRequestAPI?: number;
+  expiration?: string;
+};
+export type UpdateCompanyData = Partial<CreateCompanyData>;
 
 // Helper to get company ID (supports both objectId and legacy id)
 export const getCompanyId = (company: Company): string => company.objectId || company.id || '';
@@ -57,6 +71,10 @@ class CompaniesService {
   }
 
   async createCompany(data: CreateCompanyData): Promise<Company> {
+    console.log('=== CREATE COMPANY - Data being sent to API ===', data);
+    console.log('eventsConfig:', data.eventsConfig);
+    console.log('parentCompanyId:', data.parentCompanyId);
+
     if (isMockMode()) {
       await mockDelay(config.mock.delay);
       const newCompany: Company = {
@@ -72,6 +90,10 @@ class CompaniesService {
   }
 
   async updateCompany(id: string, data: UpdateCompanyData): Promise<Company | null> {
+    console.log('=== UPDATE COMPANY - Data being sent to API ===', data);
+    console.log('eventsConfig:', data.eventsConfig);
+    console.log('parentCompanyId:', data.parentCompanyId);
+
     if (isMockMode()) {
       await mockDelay(config.mock.delay);
       const index = mockCompanies.findIndex(c => getCompanyId(c) === id);
@@ -104,6 +126,27 @@ class CompaniesService {
     } catch {
       return false;
     }
+  }
+
+  async archiveCompany(id: string, archived: boolean): Promise<Company | null> {
+    if (isMockMode()) {
+      await mockDelay(config.mock.delay);
+      const company = mockCompanies.find(c => getCompanyId(c) === id);
+      if (!company) throw new Error(`Company with id ${id} not found`);
+
+      company.archived = archived;
+      company.isArchived = archived;
+      if (archived) {
+        company.archivedAt = new Date().toISOString();
+      } else {
+        delete company.archivedAt;
+      }
+      company.updatedAt = new Date().toISOString();
+
+      return company;
+    }
+
+    return apiClient.patch<Company>(`${API_ENDPOINTS.companies.detail(id)}/archive`, { archived });
   }
 }
 

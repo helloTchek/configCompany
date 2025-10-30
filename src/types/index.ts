@@ -20,6 +20,7 @@ export interface Company {
   configModules?: string;
   costSettings?: string[];
   isArchived?: boolean;
+  archived?: boolean;
   archivedAt?: string;
   createdAt?: string;
   updatedAt?: string;

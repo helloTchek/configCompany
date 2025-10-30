@@ -770,8 +770,90 @@ export default function EditCompanyPage() {
     reportSettings: '',
     configModules: '',
     senderName: '',
-    webhookUrl: ''
+    webhookUrl: '',
+    archived: false
   });
+
+  // Load event templates from backend EventManager and transform to frontend format
+  const loadEventTemplatesFromBackend = (eventManager: any) => {
+    console.log('🔄 loadEventTemplatesFromBackend CALLED');
+    console.log('eventManager received:', eventManager);
+
+    const backendToFrontendEventMapping = {
+      tradeinVehicle: 'selfInspectionCreation',
+      chaseUpVehicle: 'manualChaseUp',
+      detectionFinished: 'inspectionFinished',
+      createReport: 'damageReviewFinished',
+      shareUpdatedReport: 'shareUpdatedReport'
+    };
+
+    const backendToFrontendLangMapping = {
+      EN: 'en',
+      FR: 'fr',
+      DE: 'de',
+      IT: 'it',
+      ES: 'es',
+      'NL-BE': 'nl',
+      SV: 'sv',
+      NO: 'no'
+    };
+
+    const newTemplates = { ...templates };
+
+    Object.keys(backendToFrontendEventMapping).forEach(backendEventKey => {
+      const frontendEventKey = backendToFrontendEventMapping[backendEventKey];
+      const config = eventManager[`${backendEventKey}Config`];
+      const templatesData = eventManager[`${backendEventKey}Templates`];
+
+      if (config) {
+        // Map config to frontend format
+        newTemplates[frontendEventKey].webhook.enabled = config.webhook || false;
+        newTemplates[frontendEventKey].emailAddress.email = config.companyEmail || false;
+        newTemplates[frontendEventKey].emailAddress.sms = config.companySMS || false;
+        newTemplates[frontendEventKey].emailAddress.address = config.companyEmailAddress || '';
+        newTemplates[frontendEventKey].agent.email = config.agentEmail || false;
+        newTemplates[frontendEventKey].agent.sms = config.agentSMS || false;
+        newTemplates[frontendEventKey].customer.email = config.customerEmail || false;
+        newTemplates[frontendEventKey].customer.sms = config.customerSMS || false;
+        newTemplates[frontendEventKey].user.email = config.customerEmail || false;
+        newTemplates[frontendEventKey].user.sms = config.customerSMS || false;
+      }
+
+      if (templatesData) {
+        // Map templates to frontend format
+        Object.keys(templatesData).forEach(templateKey => {
+          // Parse template key: "customerEmail_EN" or "customerSMS_FR"
+          const match = templateKey.match(/^(customer|company|agent)(Email|SMS)_(.+)$/);
+          if (!match) return;
+
+          const [, addresseeType, channel, backendLang] = match;
+          const frontendLang = backendToFrontendLangMapping[backendLang];
+          if (!frontendLang) return;
+
+          let addressee = addresseeType === 'customer' ? 'customer' : addresseeType === 'company' ? 'emailAddress' : 'agent';
+
+          if (channel === 'Email') {
+            const emailData = templatesData[templateKey];
+            if (emailData && typeof emailData === 'object') {
+              newTemplates[frontendEventKey][addressee].templates[frontendLang].email = {
+                subject: emailData.subject || '',
+                content: emailData.text || emailData.html || ''
+              };
+            }
+          } else if (channel === 'SMS') {
+            const smsData = templatesData[templateKey];
+            if (typeof smsData === 'string') {
+              newTemplates[frontendEventKey][addressee].templates[frontendLang].sms = {
+                content: smsData
+              };
+            }
+          }
+        });
+      }
+    });
+
+    setTemplates(newTemplates);
+  };
 
   // Load company data from API
   useEffect(() => {
@@ -781,6 +863,22 @@ export default function EditCompanyPage() {
       try {
         setLoading(true);
         const company = await companiesService.getCompanyById(id);
+
+        console.log('=== COMPANY DATA RECEIVED ===', company);
+        console.log('processingParams:', company?.processingParams);
+        console.log('settingsPtr:', company?.settingsPtr);
+        console.log('eventManagerPtr:', company?.eventManagerPtr);
+
+        // Log specific EventManager fields
+        if (company?.eventManagerPtr) {
+          console.log('🔍 EventManager configs:');
+          console.log('  - tradeinVehicleConfig:', company.eventManagerPtr.tradeinVehicleConfig);
+          console.log('  - tradeinVehicleTemplates:', company.eventManagerPtr.tradeinVehicleTemplates);
+          console.log('  - chaseUpVehicleConfig:', company.eventManagerPtr.chaseUpVehicleConfig);
+          console.log('  - webhookUrlV2:', company.eventManagerPtr.webhookUrlV2);
+        } else {
+          console.warn('⚠️ eventManagerPtr is NULL or UNDEFINED');
+        }
 
         // Transform backend data to frontend format
         // Helper function to safely parse dates
@@ -808,26 +906,32 @@ export default function EditCompanyPage() {
           companyName: company.name || '',
           companyCode: company.identifier || '',
           logoUrl: company.logo?.url || '',
-          retentionPeriod: company.retentionPeriod || 24,
-          maxApiRequests: company.apiToken?.maxRequestAPI || 30,
+          retentionPeriod: company.retentionPeriod ?? 24,
+          maxApiRequests: company.apiToken?.maxRequestAPI ?? 30,
           expirationDate: parseExpirationDate(company.apiToken?.expiration),
-          isFastTrackDisabled: company.isFastTrackDisabled || false,
-          mileageEnabled: company.processingParams?.mileageEnabled || false,
-          blurEnabled: company.blurEnabled || false,
-          vinEnabled: company.processingParams?.vinEnabled || false,
-          readCarInformationEnabled: company.processingParams?.readCarInformationEnabled || false,
-          interiorEnabled: company.processingParams?.interiorEnabled || false,
-          dashboardEnabled: company.processingParams?.dashboardEnabled || false,
-          showStartInstantInspection: company.settingsPtr?.instantInspection?.enabled || false,
-          showSendInspectionLink: company.settingsPtr?.instantInspection?.options?.fastTrack || false,
-          iaValidation: company.iaValidation || false,
+          isFastTrackDisabled: company.isFastTrackDisabled ?? false,
+          mileageEnabled: company.processingParams?.mileageEnabled ?? false,
+          blurEnabled: company.blurEnabled ?? false,
+          vinEnabled: company.processingParams?.vinEnabled ?? false,
+          readCarInformationEnabled: company.processingParams?.readCarInformationEnabled ?? false,
+          interiorEnabled: company.processingParams?.interiorEnabled ?? false,
+          dashboardEnabled: company.processingParams?.dashboardEnabled ?? false,
+          showStartInstantInspection: company.settingsPtr?.instantInspection?.enabled ?? false,
+          showSendInspectionLink: company.settingsPtr?.instantInspection?.options?.fastTrack ?? false,
+          iaValidation: company.iaValidation ?? false,
           parentCompanyId: company.parentCompanyId || '',
           styles: company.settingsPtr?.style ? JSON.stringify(company.settingsPtr.style, null, 2) : '',
           reportSettings: company.settingsPtr?.report ? JSON.stringify(company.settingsPtr.report, null, 2) : '',
           configModules: company.settingsPtr?.configModules ? JSON.stringify(company.settingsPtr.configModules, null, 2) : '',
-          senderName: company.eventManagerPtr?.tradeinVehicleConfig?.senderName || '',
-          webhookUrl: company.eventManagerPtr?.webhookUrlV2 || ''
+          senderName: company.eventManagerPtr?.tradeinVehicleConfig?.senderName || company.eventManagerPtr?.chaseUpVehicleConfig?.senderName || '',
+          webhookUrl: company.eventManagerPtr?.webhookUrlV2 || '',
+          archived: company.archived ?? false
         });
+
+        // Load event templates from EventManager if they exist
+        if (company.eventManagerPtr) {
+          loadEventTemplatesFromBackend(company.eventManagerPtr);
+        }
 
         setLoading(false);
       } catch (error) {
@@ -891,6 +995,98 @@ export default function EditCompanyPage() {
     setHasUnsavedChanges(true);
   };
 
+  // Event name mapping: Frontend → Backend
+  const eventNameMapping = {
+    selfInspectionCreation: 'tradeinVehicle',
+    manualChaseUp: 'chaseUpVehicle',
+    inspectionFinished: 'detectionFinished',
+    damageReviewFinished: 'createReport',
+    shareUpdatedReport: 'shareUpdatedReport'
+  };
+
+  // Language code mapping: Frontend → Backend
+  const languageMapping = {
+    en: 'EN',
+    fr: 'FR',
+    de: 'DE',
+    it: 'IT',
+    es: 'ES',
+    nl: 'NL-BE',
+    sv: 'SV',
+    no: 'NO'
+  };
+
+  // Transform frontend templates to backend event configuration
+  const transformTemplatesToBackendFormat = () => {
+    const eventsConfig: any = {};
+
+    Object.keys(templates).forEach(frontendEventKey => {
+      const backendEventKey = eventNameMapping[frontendEventKey];
+      if (!backendEventKey) return;
+
+      const eventData = templates[frontendEventKey];
+
+      // Build config object
+      const config: any = {
+        webhook: eventData.webhook?.enabled || false,
+        companyEmail: eventData.emailAddress?.email || false,
+        companyEmailAddress: eventData.emailAddress?.address || '',
+        companySMS: eventData.emailAddress?.sms || false,
+        companySMSNumber: '',
+        agentSMS: eventData.agent?.sms || false,
+        agentEmail: eventData.agent?.email || false,
+        customerEmail: eventData.customer?.email || false,
+        customerSMS: eventData.customer?.sms || false,
+        senderEmail: '',
+        senderName: formData.senderName || '',
+        pdfGeneration: false
+      };
+
+      // Build templates object
+      const templatesObj: any = {};
+
+      // Process each addressee (user, customer, emailAddress, agent)
+      ['user', 'customer', 'emailAddress', 'agent'].forEach(addressee => {
+        const addresseeData = eventData[addressee];
+        if (!addresseeData || !addresseeData.enabled) return;
+
+        // Map addressee to backend field prefix
+        let fieldPrefix = '';
+        if (addressee === 'customer' || addressee === 'user') fieldPrefix = 'customer';
+        else if (addressee === 'emailAddress') fieldPrefix = 'company';
+        else if (addressee === 'agent') fieldPrefix = 'agent';
+
+        // Process each language
+        Object.keys(addresseeData.templates || {}).forEach(langCode => {
+          const backendLangCode = languageMapping[langCode];
+          if (!backendLangCode) return;
+
+          const langTemplates = addresseeData.templates[langCode];
+
+          // Email template
+          if (addresseeData.email && langTemplates.email) {
+            templatesObj[`${fieldPrefix}Email_${backendLangCode}`] = {
+              subject: langTemplates.email.subject || '',
+              text: langTemplates.email.content || '',
+              html: langTemplates.email.content || '' // Using same content for HTML
+            };
+          }
+
+          // SMS template
+          if (addresseeData.sms && langTemplates.sms) {
+            templatesObj[`${fieldPrefix}SMS_${backendLangCode}`] = langTemplates.sms.content || '';
+          }
+        });
+      });
+
+      // Store in eventsConfig
+      eventsConfig[`${backendEventKey}Config`] = config;
+      eventsConfig[`${backendEventKey}Templates`] = templatesObj;
+    });
+
+    return eventsConfig;
+  };
+
   const validateForm = () => {
     const newErrors = {
       companyName: '',
@@ -933,10 +1129,14 @@ export default function EditCompanyPage() {
         return;
       }
 
+      // Transform event templates to backend format
+      const eventsConfig = transformTemplatesToBackendFormat();
+
       // Prepare update data
       const updateData: any = {
         name: formData.companyName,
         identifier: formData.companyCode,
+        logoUrl: formData.logoUrl,
         retentionPeriod: formData.retentionPeriod,
         isFastTrackDisabled: formData.isFastTrackDisabled,
         iaValidation: formData.iaValidation,
@@ -965,6 +1165,10 @@ export default function EditCompanyPage() {
         // EventManager
         webhookUrl: formData.webhookUrl,
         senderName: formData.senderName,
+        eventsConfig: eventsConfig, // Event configurations and templates
+
+        // Hierarchy
+        parentCompanyId: formData.parentCompanyId || undefined,
       };
 
       console.log('Updating company:', updateData);
@@ -1087,6 +1291,26 @@ export default function EditCompanyPage() {
         </div>
 
         <div className="max-w-6xl mx-auto">
+          {/* Archived Status Banner */}
+          {formData.archived && (
+            <div className="mb-6 bg-orange-50 border border-orange-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0">
+                  <span className="text-orange-600">📦</span>
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-sm font-semibold text-orange-900 mb-1">
+                    This company is archived
+                  </h4>
+                  <p className="text-sm text-orange-800">
+                    This company is currently archived. Its API token is disabled and users cannot access it.
+                    You can unarchive it from the companies list to restore access.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Chase-up Rules Reminder */}
           <div className={`mb-6 border rounded-lg p-4 ${
             hasChaseupRules ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'

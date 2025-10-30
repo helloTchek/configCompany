@@ -15,15 +15,17 @@ interface TableProps {
   sortDirection?: 'asc' | 'desc';
   onSort?: (key: string) => void;
   className?: string;
+  getRowClassName?: (row: any) => string;
 }
 
-export default function Table({ 
-  columns, 
-  data, 
-  sortKey, 
-  sortDirection, 
+export default function Table({
+  columns,
+  data,
+  sortKey,
+  sortDirection,
   onSort,
-  className = '' 
+  className = '',
+  getRowClassName
 }: TableProps) {
   return (
     <div className={`overflow-x-auto ${className}`}>
@@ -66,15 +68,18 @@ export default function Table({
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
-          {data.map((row, rowIndex) => (
-            <tr key={rowIndex} className="hover:bg-gray-50">
-              {columns.map((column) => (
-                <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {column.render ? column.render(row[column.key], row) : row[column.key]}
-                </td>
-              ))}
-            </tr>
-          ))}
+          {data.map((row, rowIndex) => {
+            const rowClassName = getRowClassName ? getRowClassName(row) : '';
+            return (
+              <tr key={rowIndex} className={`hover:bg-gray-50 ${rowClassName}`}>
+                {columns.map((column) => (
+                  <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {column.render ? column.render(row[column.key], row) : row[column.key]}
+                  </td>
+                ))}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

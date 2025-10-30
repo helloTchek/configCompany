@@ -90,26 +90,28 @@ export default function CompaniesPage() {
 
     try {
       setLoading(true);
-      const updatedCompany = {
-        ...archiveModal.company,
-        isArchived: true,
-        archivedAt: new Date().toISOString()
-      };
+      const isCurrentlyArchived = archiveModal.company.archived || archiveModal.company.isArchived;
 
-      await companiesService.updateCompany(getCompanyId(archiveModal.company), updatedCompany);
-      
+      // Use the new archive endpoint which also disables the API token
+      await companiesService.archiveCompany(getCompanyId(archiveModal.company), !isCurrentlyArchived);
+
       // Disable users from this company
       mockUsers.forEach(user => {
         if (user.company === archiveModal.company!.name) {
-          user.status = 'inactive';
-          user.isDisabled = true;
-          user.disabledReason = 'Company archived';
+          user.status = !isCurrentlyArchived ? 'inactive' : 'active';
+          user.isDisabled = !isCurrentlyArchived;
+          user.disabledReason = !isCurrentlyArchived ? 'Company archived' : '';
         }
       });
 
-      console.log('Company archived successfully:', archiveModal.company);
+      console.log(`Company ${!isCurrentlyArchived ? 'archived' : 'unarchived'} successfully:`, archiveModal.company);
       setArchiveModal({ open: false });
-      
+
+      // If archiving, switch filter to show archived companies
+      if (!isCurrentlyArchived) {
+        setFilters(prev => ({ ...prev, archived: 'archived' }));
+      }
+
       // Recharger les données
       await loadCompanies();
     } catch (error) {
@@ -215,10 +217,11 @@ export default function CompaniesPage() {
 
   // Filter and search logic
   const filteredCompanies = companies.filter(company => {
-    // Archive filter
+    // Archive filter - check both archived and isArchived fields
+    const isArchived = company.archived || company.isArchived;
     const matchesArchived = filters.archived === 'all' ||
-      (filters.archived === 'active' && !company.isArchived) ||
-      (filters.archived === 'archived' && company.isArchived);
+      (filters.archived === 'active' && !isArchived) ||
+      (filters.archived === 'archived' && isArchived);
 
     // Search filter
     const matchesSearch = !searchTerm || 
@@ -288,10 +291,10 @@ export default function CompaniesPage() {
     { key: 'name', label: 'Company Name', sortable: true,
       render: (value: string, row: Company) => (
         <div className="flex items-center gap-2">
-          <span className={row.isArchived ? 'text-gray-500' : ''}>{value}</span>
-          {row.isArchived && (
-            <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">
-              Archived
+          <span className={(row.archived || row.isArchived) ? 'font-semibold text-orange-900' : 'font-medium'}>{value}</span>
+          {(row.archived || row.isArchived) && (
+            <span className="px-2 py-1 bg-orange-200 text-orange-800 text-xs font-bold rounded-full">
+              📦 ARCHIVED
             </span>
           )}
         </div>
@@ -392,9 +395,12 @@ export default function CompaniesPage() {
           )}
           <button
             onClick={() => handleArchive(row)}
-            className="p-2 text-orange-600 hover:bg-orange-100 rounded-lg transition-colors"
-            title={row.isArchived ? "Company is archived" : "Archive company"}
-            disabled={row.isArchived}
+            className={`p-2 rounded-lg transition-colors ${
+              (row.archived || row.isArchived)
+                ? 'text-green-600 hover:bg-green-100'
+                : 'text-orange-600 hover:bg-orange-100'
+            }`}
+            title={(row.archived || row.isArchived) ? "Unarchive company" : "Archive company"}
           >
             <Archive size={16} />
           </button>
@@ -521,7 +527,14 @@ export default function CompaniesPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Company Status</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Company Status
+                    {companies.filter(c => c.archived || c.isArchived).length > 0 && (
+                      <span className="ml-2 px-2 py-0.5 bg-orange-100 text-orange-800 text-xs font-bold rounded-full">
+                        {companies.filter(c => c.archived || c.isArchived).length} archived
+                      </span>
+                    )}
+                  </label>
                   <select
                     value={filters.archived}
                     onChange={(e) => setFilters(prev => ({ ...prev, archived: e.target.value }))}
@@ -547,6 +560,24 @@ export default function CompaniesPage() {
             </div>
           )}
         </div>
+
+        {/* Archived Companies Banner */}
+        {filters.archived === 'archived' && (
+          <div className="mb-6 bg-orange-50 border border-orange-200 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0">
+                <span className="text-orange-600">📦</span>
+              </div>
+              <div className="flex-1">
+                <h4 className="text-sm font-medium text-orange-900 mb-1">Viewing Archived Companies</h4>
+                <p className="text-sm text-orange-800">
+                  You are currently viewing archived companies. These companies have their API tokens disabled.
+                  Click the archive button to unarchive and restore access.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Chase-up Rules Reminder */}
         <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -584,6 +615,11 @@ export default function CompaniesPage() {
                 sortKey={sortKey}
                 sortDirection={sortDirection}
                 onSort={handleSort}
+                getRowClassName={(row) =>
+                  (row.archived || row.isArchived)
+                    ? 'bg-orange-50 hover:!bg-orange-100 border-l-4 border-l-orange-400'
+                    : ''
+                }
               />
               
               {sortedCompanies.length === 0 && (
@@ -605,17 +641,28 @@ export default function CompaniesPage() {
       <Modal
         isOpen={archiveModal.open}
         onClose={() => setArchiveModal({ open: false })}
-        title="Archive Company"
+        title={archiveModal.company?.archived || archiveModal.company?.isArchived ? "Unarchive Company" : "Archive Company"}
         size="sm"
       >
         <div className="space-y-4">
           <p className="text-gray-600">
-            Are you sure you want to archive <strong>{archiveModal.company?.name}</strong>? 
-            This will disable all users from this company and hide it from the active companies list.
+            {archiveModal.company?.archived || archiveModal.company?.isArchived ? (
+              <>
+                Are you sure you want to unarchive <strong>{archiveModal.company?.name}</strong>?
+                This will re-enable the API token and make the company active again.
+              </>
+            ) : (
+              <>
+                Are you sure you want to archive <strong>{archiveModal.company?.name}</strong>?
+                This will disable the API token and all users from this company.
+              </>
+            )}
           </p>
           <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
             <p className="text-sm text-orange-800">
-              <strong>Note:</strong> Archived companies can be restored later using the "Show archived companies" filter.
+              <strong>Note:</strong> {archiveModal.company?.archived || archiveModal.company?.isArchived ?
+                "Unarchiving will restore access to the company and its API token." :
+                "Archived companies can be restored later using the \"Show archived companies\" filter."}
             </p>
           </div>
           <div className="flex gap-3 justify-end">
@@ -630,7 +677,7 @@ export default function CompaniesPage() {
               onClick={confirmArchive}
               className="bg-orange-600 text-white hover:bg-orange-700"
             >
-              Archive Company
+              {archiveModal.company?.archived || archiveModal.company?.isArchived ? "Unarchive Company" : "Archive Company"}
             </Button>
           </div>
         </div>
