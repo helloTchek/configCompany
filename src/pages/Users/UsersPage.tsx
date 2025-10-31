@@ -95,7 +95,7 @@ export default function UsersPage() {
           }`}>
             {value}
           </span>
-          {row.isDisabled && (
+          {row.isDeleted && (
             <span className="px-2 py-1 text-xs font-medium rounded-full bg-orange-100 text-orange-800">
               {row.disabledReason || 'Disabled'}
             </span>

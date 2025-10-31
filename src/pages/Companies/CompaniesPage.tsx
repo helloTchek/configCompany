@@ -109,7 +109,7 @@ export default function CompaniesPage() {
       mockUsers.forEach(user => {
         if (user.company === archiveModal.company!.name) {
           user.status = !isCurrentlyArchived ? 'inactive' : 'active';
-          user.isDisabled = !isCurrentlyArchived;
+          user.isDeleted = !isCurrentlyArchived;
           user.disabledReason = !isCurrentlyArchived ? 'Company archived' : '';
         }
       });
@@ -1029,3 +1029,8 @@ export default function CompaniesPage() {
     </div>
   );
 }
+
+// generate code company company id prendre premiere 6 caractere de l'objectid de la company en gros quand tu créé la company je veux que tu prennes les 6 premiers caracteres et ca ca va te creer dcp ca : Company Code Will be auto-generated Generated from ObjectID
+// utiliser isDeleted au lieu de isDisabled dans le model APIToken et supprimer isDisabled ca ca concerne l'archive je veux juste que tu fasses un remplacement merci et dcp que tu enleves le champs isDisabled la fonctionnalité est exactement la meme
+// barre de recherche pour company hierarchie dans creation et update ici meme Company Hierarchy Parent Company (optional) None - This will be a root company Select a parent company to create a hierarchical structure et je veux au cas ou les company mette du temps à charger un loader ou fait ca dynamiquement ameliore de sorte a ce quil ny ai pas trop d'attente
+// enlever duplicate children de duplicate company c'est à dire lors de la duplication enleve la possiblité de faire ca Duplicate Children Companies et d'ailleurs par rapport a ca je veux que tu fasses la fonctionnalité ducplicate company en fonction du front que tu le rendes fonctionnel merci 

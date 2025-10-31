@@ -33,7 +33,7 @@ export interface User {
   role: 'superadmin' | 'admin' | 'user';
   company: string;
   status: 'active' | 'inactive';
-  isDisabled?: boolean;
+  isDeleted?: boolean;
   disabledReason?: string;
   lastLogin?: string;
 }
