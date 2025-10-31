@@ -169,10 +169,6 @@ export default function CompaniesPage() {
       const configModules = (fullCompanyData as any).settingsPtr?.configModules;
       const parentCompanyId = (fullCompanyData as any).parentCompanyId;
 
-      console.log('=== DUPLICATE MODAL DEBUG ===');
-      console.log('Full company data:', fullCompanyData);
-      console.log('parentCompanyId extracted:', parentCompanyId);
-
       // Convert objects to JSON strings for textarea display
       const reportSettingsStr = reportSettings ? JSON.stringify(reportSettings, null, 2) : '';
       const configModulesStr = configModules ? JSON.stringify(configModules, null, 2) : '';
@@ -252,13 +248,6 @@ export default function CompaniesPage() {
       setLoading(true);
 
       const companyId = getCompanyId(duplicateModal.company);
-      console.log('=== CONFIRM DUPLICATE - Frontend ===');
-      console.log('companyId:', companyId);
-      console.log('companyName:', duplicateForm.companyName);
-      console.log('senderName:', duplicateForm.senderName);
-      console.log('webhookUrl:', duplicateForm.webhookUrl);
-      console.log('parentCompanyId:', duplicateForm.parentCompanyId);
-
       const duplicatedCompany = await companiesService.duplicateCompany(
         companyId,
         duplicateForm.companyName,
