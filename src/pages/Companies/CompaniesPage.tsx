@@ -28,9 +28,7 @@ export default function CompaniesPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     contractType: '',
-    businessSector: '',
-    parentCompany: '',
-    status: '',
+    companyHierarchy: '',
     archived: 'active'
   });
   const [sortKey, setSortKey] = useState<string>('');
@@ -291,28 +289,20 @@ export default function CompaniesPage() {
       (filters.archived === 'archived' && isArchived);
 
     // Search filter
-    const matchesSearch = !searchTerm || 
+    const matchesSearch = !searchTerm ||
       company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       company.identifier.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      company.companyCode.toLowerCase().includes(searchTerm.toLowerCase());
+      (company.companyCode && company.companyCode.toLowerCase().includes(searchTerm.toLowerCase()));
 
     // Contract type filter
     const matchesContractType = !filters.contractType || company.contractType === filters.contractType;
 
-    // Business sector filter
-    const matchesBusinessSector = !filters.businessSector || company.businessSector === filters.businessSector;
+    // Company hierarchy filter (root vs child)
+    const matchesHierarchy = !filters.companyHierarchy ||
+      (filters.companyHierarchy === 'root' && !company.parentCompanyId) ||
+      (filters.companyHierarchy === 'child' && company.parentCompanyId);
 
-    // Parent company filter
-    const matchesParentCompany = !filters.parentCompany || 
-      (filters.parentCompany === 'root' && !company.parentCompany) ||
-      (filters.parentCompany === 'child' && company.parentCompany);
-
-    // Status filter (based on API requests)
-    const matchesStatus = !filters.status ||
-      (filters.status === 'active' && company.currentApiRequests < company.maxApiRequests) ||
-      (filters.status === 'limit-reached' && company.currentApiRequests >= company.maxApiRequests);
-
-    return matchesArchived && matchesSearch && matchesContractType && matchesBusinessSector && matchesParentCompany && matchesStatus;
+    return matchesArchived && matchesSearch && matchesContractType && matchesHierarchy;
   });
 
   // Apply sorting
@@ -339,9 +329,8 @@ export default function CompaniesPage() {
   const clearFilters = () => {
     setFilters({
       contractType: '',
-      businessSector: '',
-      parentCompany: '',
-      status: '',
+      companyHierarchy: '',
+      fastTrack: '',
       archived: 'active'
     });
     setSearchTerm('');
@@ -552,44 +541,28 @@ export default function CompaniesPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Business Sector</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Company Hierarchy</label>
                   <select
-                    value={filters.businessSector}
-                    onChange={(e) => setFilters(prev => ({ ...prev, businessSector: e.target.value }))}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">All Sectors</option>
-                    <option value="Insurance">Insurance</option>
-                    <option value="Leasing">Leasing</option>
-                    <option value="Rental">Rental</option>
-                    <option value="Fleet Management">Fleet Management</option>
-                    <option value="Automotive">Automotive</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Company Type</label>
-                  <select
-                    value={filters.parentCompany}
-                    onChange={(e) => setFilters(prev => ({ ...prev, parentCompany: e.target.value }))}
+                    value={filters.companyHierarchy}
+                    onChange={(e) => setFilters(prev => ({ ...prev, companyHierarchy: e.target.value }))}
                     className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="">All Companies</option>
-                    <option value="root">Root Companies</option>
+                    <option value="root">Parent Companies</option>
                     <option value="child">Child Companies</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">API Status</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Fast Track</label>
                   <select
-                    value={filters.status}
-                    onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+                    value={filters.fastTrack}
+                    onChange={(e) => setFilters(prev => ({ ...prev, fastTrack: e.target.value }))}
                     className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="">All Status</option>
-                    <option value="active">Active (Under Limit)</option>
-                    <option value="limit-reached">Limit Reached</option>
+                    <option value="">All</option>
+                    <option value="enabled">Enabled</option>
+                    <option value="disabled">Disabled</option>
                   </select>
                 </div>
 
