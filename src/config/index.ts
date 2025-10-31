@@ -22,6 +22,7 @@ export const isApiMode = (): boolean => config.mode === 'api';
 export const API_ENDPOINTS = {
   	companies: {
     	list: '/company',
+    	light: '/company/light',
    		detail: (id: string) => `/company/${id}`,
   	},
   	users: {

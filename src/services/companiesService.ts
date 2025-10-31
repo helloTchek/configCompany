@@ -78,9 +78,27 @@ class CompaniesService {
       return [...mockCompanies];
     }
 
-    // Fetch first page to get total count
-    const firstPage = await this.getCompanies({ page: 1, limit: 1000 });
-    return firstPage.data;
+    // Fetch all companies with a high limit in a single request for better performance
+    const response = await this.getCompanies({ page: 1, limit: 10000 });
+    return response.data;
+  }
+
+  // Fetch all companies in light format (only id and name) - optimized for dropdowns
+  async getAllCompaniesLight(): Promise<Array<{ objectId: string; id: string; name: string; identifier?: string }>> {
+    if (isMockMode()) {
+      await mockDelay(config.mock.delay);
+      return mockCompanies.map(c => ({
+        objectId: getCompanyId(c),
+        id: getCompanyId(c),
+        name: c.name,
+        identifier: c.identifier
+      }));
+    }
+
+    const companies = await apiClient.get<Array<{ objectId: string; id: string; name: string; identifier?: string }>>(
+      API_ENDPOINTS.companies.light
+    );
+    return companies;
   }
 
   async getCompanyById(id: string): Promise<Company | null> {

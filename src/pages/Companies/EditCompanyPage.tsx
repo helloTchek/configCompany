@@ -634,36 +634,95 @@ const EventsWebhooksTab = ({
   );
 };
 
-const HierarchyTab = ({ handleInputChange, formData, handleFieldChange, companies, currentCompanyId }) => (
-  <div className="space-y-6">
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Company Hierarchy</h3>
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Parent Company (optional)</label>
-          <select
-            value={formData.parentCompanyId || ''}
-            onChange={(e) => {
-              handleFieldChange('parentCompanyId', e.target.value);
-              handleInputChange();
-            }}
-            className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="">None - This will be a root company</option>
-            {companies
-              .filter(company => (company.objectId || company.id) !== currentCompanyId)
-              .map((company) => (
-                <option key={company.objectId || company.id} value={company.objectId || company.id}>
-                  {company.name}
-                </option>
-              ))}
-          </select>
-          <p className="text-sm text-gray-500 mt-1">Select a parent company to create a hierarchical structure</p>
+const HierarchyTab = ({ handleInputChange, formData, handleFieldChange, companies, currentCompanyId, loadingCompanies }) => {
+  const [searchTerm, setSearchTerm] = React.useState('');
+
+  const availableCompanies = (companies || []).filter(company => (company?.objectId || company?.id) !== currentCompanyId);
+
+  const filteredCompanies = availableCompanies.filter(company =>
+    company?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (company?.objectId || company?.id || '').toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const selectedCompany = (companies || []).find(c => (c?.objectId || c?.id) === formData.parentCompanyId);
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Company Hierarchy</h3>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Parent Company (optional)</label>
+
+            {loadingCompanies ? (
+              <div className="flex items-center justify-center py-8 border border-gray-300 rounded-lg bg-gray-50">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <span className="ml-3 text-gray-600">Loading companies...</span>
+              </div>
+            ) : (
+              <>
+                <div className="relative mb-2">
+                  <input
+                    type="text"
+                    placeholder="Search companies..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="block w-full px-3 py-2 pl-10 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  />
+                  <svg
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+
+                <select
+                  value={formData.parentCompanyId || ''}
+                  onChange={(e) => {
+                    handleFieldChange('parentCompanyId', e.target.value);
+                    handleInputChange();
+                  }}
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">None - This will be a root company</option>
+                  {filteredCompanies.length === 0 ? (
+                    <option disabled>No companies found</option>
+                  ) : (
+                    filteredCompanies.map((company) => (
+                      <option key={company.objectId || company.id} value={company.objectId || company.id}>
+                        {company.name} {company.objectId ? `(${company.objectId})` : ''}
+                      </option>
+                    ))
+                  )}
+                </select>
+
+                {selectedCompany && (
+                  <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      <span className="font-semibold">Selected parent:</span> {selectedCompany.name}
+                    </p>
+                  </div>
+                )}
+
+                <p className="text-sm text-gray-500 mt-2">
+                  {availableCompanies.length} companies available · {filteredCompanies.length} shown
+                </p>
+              </>
+            )}
+
+            <p className="text-sm text-gray-500 mt-1">
+              Select a parent company to create a hierarchical structure
+              {currentCompanyId && <span className="block text-xs text-orange-600 mt-1">Note: You cannot select this company as its own parent</span>}
+            </p>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default function EditCompanyPage() {
   const navigate = useNavigate();
@@ -674,6 +733,7 @@ export default function EditCompanyPage() {
   const [companyEmailEnabled, setCompanyEmailEnabled] = useState({});
   const [loading, setLoading] = useState(true);
   const [companies, setCompanies] = useState<any[]>([]);
+  const [loadingCompanies, setLoadingCompanies] = useState(true);
 
   // Define events and languages before using them
   const events = [
@@ -976,10 +1036,13 @@ export default function EditCompanyPage() {
   useEffect(() => {
     const loadCompanies = async () => {
       try {
-        const allCompanies = await companiesService.getAllCompanies();
+        setLoadingCompanies(true);
+        const allCompanies = await companiesService.getAllCompaniesLight();
         setCompanies(allCompanies);
       } catch (error) {
         console.error('Error loading companies:', error);
+      } finally {
+        setLoadingCompanies(false);
       }
     };
     loadCompanies();
@@ -1284,6 +1347,7 @@ export default function EditCompanyPage() {
         handleFieldChange={handleFieldChange}
         companies={companies}
         currentCompanyId={id}
+        loadingCompanies={loadingCompanies}
       />
     }
   ];

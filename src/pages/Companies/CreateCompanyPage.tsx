@@ -588,34 +588,90 @@ const EventsWebhooksTab = ({
   );
 };
 
-const HierarchyTab = ({ formData, handleFieldChange, handleInputChange, companies }) => (
-  <div className="space-y-6">
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Company Hierarchy</h3>
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Parent Company (optional)</label>
-          <select
-            className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            value={formData.parentCompanyId || ''}
-            onChange={(e) => {
-              handleFieldChange('parentCompanyId', e.target.value);
-              handleInputChange();
-            }}
-          >
-            <option value="">None - This will be a root company</option>
-            {companies.map((company) => (
-              <option key={company.objectId || company.id} value={company.objectId || company.id}>
-                {company.name}
-              </option>
-            ))}
-          </select>
-          <p className="text-sm text-gray-500 mt-1">Select a parent company to create a hierarchical structure</p>
+const HierarchyTab = ({ formData, handleFieldChange, handleInputChange, companies, loadingCompanies }) => {
+  const [searchTerm, setSearchTerm] = React.useState('');
+
+  const filteredCompanies = (companies || []).filter(company =>
+    company?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (company?.objectId || company?.id || '').toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const selectedCompany = (companies || []).find(c => (c.objectId || c.id) === formData.parentCompanyId);
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Company Hierarchy</h3>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Parent Company (optional)</label>
+
+            {loadingCompanies ? (
+              <div className="flex items-center justify-center py-8 border border-gray-300 rounded-lg bg-gray-50">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <span className="ml-3 text-gray-600">Loading companies...</span>
+              </div>
+            ) : (
+              <>
+                <div className="relative mb-2">
+                  <input
+                    type="text"
+                    placeholder="Search companies..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="block w-full px-3 py-2 pl-10 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  />
+                  <svg
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+
+                <select
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={formData.parentCompanyId || ''}
+                  onChange={(e) => {
+                    handleFieldChange('parentCompanyId', e.target.value);
+                    handleInputChange();
+                  }}
+                >
+                  <option value="">None - This will be a root company</option>
+                  {filteredCompanies.length === 0 ? (
+                    <option disabled>No companies found</option>
+                  ) : (
+                    filteredCompanies.map((company) => (
+                      <option key={company.objectId || company.id} value={company.objectId || company.id}>
+                        {company.name} {company.objectId ? `(${company.objectId})` : ''}
+                      </option>
+                    ))
+                  )}
+                </select>
+
+                {selectedCompany && (
+                  <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      <span className="font-semibold">Selected parent:</span> {selectedCompany.name}
+                    </p>
+                  </div>
+                )}
+
+                <p className="text-sm text-gray-500 mt-2">
+                  {companies.length} companies available · {filteredCompanies.length} shown
+                </p>
+              </>
+            )}
+
+            <p className="text-sm text-gray-500 mt-1">Select a parent company to create a hierarchical structure</p>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default function CreateCompanyPage() {
   const navigate = useNavigate();
@@ -624,6 +680,7 @@ export default function CreateCompanyPage() {
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   const [companyEmailEnabled, setCompanyEmailEnabled] = useState({});
   const [companies, setCompanies] = useState<any[]>([]);
+  const [loadingCompanies, setLoadingCompanies] = useState(true);
 
   // State for events and webhooks templates - must be in parent to persist across tab changes
   const events = [
@@ -728,10 +785,13 @@ export default function CreateCompanyPage() {
   useEffect(() => {
     const loadCompanies = async () => {
       try {
-        const allCompanies = await companiesService.getAllCompanies();
+        setLoadingCompanies(true);
+        const allCompanies = await companiesService.getAllCompaniesLight();
         setCompanies(allCompanies);
       } catch (error) {
         console.error('Error loading companies:', error);
+      } finally {
+        setLoadingCompanies(false);
       }
     };
     loadCompanies();
@@ -1028,6 +1088,7 @@ export default function CreateCompanyPage() {
         handleFieldChange={handleFieldChange}
         handleInputChange={handleInputChange}
         companies={companies}
+        loadingCompanies={loadingCompanies}
       />
     }
   ];
