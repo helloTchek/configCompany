@@ -18,6 +18,7 @@ export default function CompaniesPage() {
   const navigate = useNavigate();
   const { user, hasPermission } = useAuth();
   const [companies, setCompanies] = useState<Company[]>([]);
+  const [allCompaniesLight, setAllCompaniesLight] = useState<Array<{ objectId: string; id: string; name: string; identifier?: string }>>([]);
   const [loading, setLoading] = useState(true);
   const [totalCompanies, setTotalCompanies] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -40,12 +41,14 @@ export default function CompaniesPage() {
     companyName: '',
     senderName: '',
     webhookUrl: '',
+    parentCompanyId: '',
     errors: {
       companyName: '',
       senderName: '',
       webhookUrl: ''
     }
   });
+  const [parentCompanySearch, setParentCompanySearch] = useState('');
 
   // Chargement des données avec pagination
   const loadCompanies = async (page: number = currentPage) => {
@@ -76,6 +79,19 @@ export default function CompaniesPage() {
   const handlePageChange = (newPage: number) => {
     loadCompanies(newPage);
   };
+
+  // Load all companies light (for dropdowns)
+  useEffect(() => {
+    const loadAllCompaniesLight = async () => {
+      try {
+        const lightCompanies = await companiesService.getAllCompaniesLight();
+        setAllCompaniesLight(lightCompanies);
+      } catch (error) {
+        console.error('Error loading all companies light:', error);
+      }
+    };
+    loadAllCompaniesLight();
+  }, []);
 
   // Effect pour charger les données au montage
   useEffect(() => {
@@ -131,18 +147,63 @@ export default function CompaniesPage() {
     }
   };
 
-  const handleDuplicate = (company: Company) => {
-    setDuplicateForm({
-      companyName: `${company.name} (Copy)`,
-      senderName: '',
-      webhookUrl: '',
-      errors: {
-        companyName: '',
-        senderName: '',
-        webhookUrl: ''
+  const handleDuplicate = async (company: Company) => {
+    try {
+      setLoading(true);
+      // Fetch full company data with EventManager and Settings
+      const companyId = getCompanyId(company);
+      const fullCompanyData = await companiesService.getCompanyById(companyId);
+
+      if (!fullCompanyData) {
+        alert('Failed to load company data');
+        return;
       }
-    });
-    setDuplicateModal({ open: true, company });
+
+      // Pre-fill form with company data
+      const senderName = (fullCompanyData as any).eventManagerPtr?.tradeinVehicleConfig?.senderName ||
+                         (fullCompanyData as any).eventManagerPtr?.chaseUpVehicleConfig?.senderName || '';
+      const webhookUrl = (fullCompanyData as any).eventManagerPtr?.webhookUrlV2 || '';
+
+      // Extract report settings and config modules from settingsPtr
+      const reportSettings = (fullCompanyData as any).settingsPtr?.report;
+      const configModules = (fullCompanyData as any).settingsPtr?.configModules;
+      const parentCompanyId = (fullCompanyData as any).parentCompanyId;
+
+      console.log('=== DUPLICATE MODAL DEBUG ===');
+      console.log('Full company data:', fullCompanyData);
+      console.log('parentCompanyId extracted:', parentCompanyId);
+
+      // Convert objects to JSON strings for textarea display
+      const reportSettingsStr = reportSettings ? JSON.stringify(reportSettings, null, 2) : '';
+      const configModulesStr = configModules ? JSON.stringify(configModules, null, 2) : '';
+
+      // Create an enriched company object with the formatted data
+      const enrichedCompanyData = {
+        ...fullCompanyData,
+        reportSettings: reportSettingsStr,
+        configModules: configModulesStr,
+        parentCompanyId: parentCompanyId
+      };
+
+      setDuplicateForm({
+        companyName: `${company.name} (Copy)`,
+        senderName,
+        webhookUrl,
+        parentCompanyId: parentCompanyId || '',
+        errors: {
+          companyName: '',
+          senderName: '',
+          webhookUrl: ''
+        }
+      });
+      setParentCompanySearch('');
+      setDuplicateModal({ open: true, company: enrichedCompanyData as Company });
+    } catch (error) {
+      console.error('Error loading company for duplication:', error);
+      alert('Failed to load company data');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const validateDuplicateForm = () => {
@@ -189,18 +250,23 @@ export default function CompaniesPage() {
 
     try {
       setLoading(true);
-      const duplicatedCompanyData = {
-        ...duplicateModal.company,
-        name: duplicateForm.companyName,
-        identifier: `${duplicateModal.company.identifier}_COPY`,
-        companyCode: `${duplicateModal.company.companyCode}_COPY`,
-        apiToken: `${duplicateModal.company.apiToken ? duplicateModal.company.apiToken.split('_')[0] : 'atk'}_copy_${Date.now()}`,
-        currentApiRequests: 0, // Reset API usage for new company
-        isArchived: false,
-      };
 
-      const duplicatedCompany = await companiesService.createCompany(duplicatedCompanyData);
-      
+      const companyId = getCompanyId(duplicateModal.company);
+      console.log('=== CONFIRM DUPLICATE - Frontend ===');
+      console.log('companyId:', companyId);
+      console.log('companyName:', duplicateForm.companyName);
+      console.log('senderName:', duplicateForm.senderName);
+      console.log('webhookUrl:', duplicateForm.webhookUrl);
+      console.log('parentCompanyId:', duplicateForm.parentCompanyId);
+
+      const duplicatedCompany = await companiesService.duplicateCompany(
+        companyId,
+        duplicateForm.companyName,
+        duplicateForm.senderName,
+        duplicateForm.webhookUrl,
+        duplicateForm.parentCompanyId || undefined
+      );
+
       if (duplicatedCompany) {
         console.log('Company duplicated successfully:', duplicatedCompany);
         setDuplicateModal({ open: false });
@@ -208,13 +274,15 @@ export default function CompaniesPage() {
           companyName: '',
           senderName: '',
           webhookUrl: '',
+          parentCompanyId: '',
           errors: {
             companyName: '',
             senderName: '',
             webhookUrl: ''
           }
         });
-        
+        setParentCompanySearch('');
+
         // Recharger les données pour voir la nouvelle company
         await loadCompanies();
       }
@@ -835,22 +903,66 @@ export default function CompaniesPage() {
             <div className="space-y-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Parent Company (optional)</label>
-                <select className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+
+                {/* Search Input */}
+                <div className="relative mb-2">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                  <input
+                    type="text"
+                    placeholder="Search companies..."
+                    value={parentCompanySearch}
+                    onChange={(e) => setParentCompanySearch(e.target.value)}
+                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                {/* Company Select with filtered options */}
+                <select
+                  value={duplicateForm.parentCompanyId}
+                  onChange={(e) => setDuplicateForm({ ...duplicateForm, parentCompanyId: e.target.value })}
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
                   <option value="">None</option>
-                  {companies
-                    .filter(c => c.id !== duplicateModal.company?.id)
+                  {allCompaniesLight
+                    .filter(c => {
+                      // Filter out the current company
+                      if ((c.objectId || c.id) === (duplicateModal.company?.objectId || duplicateModal.company?.id)) {
+                        return false;
+                      }
+                      // Filter by search term
+                      if (parentCompanySearch) {
+                        const searchLower = parentCompanySearch.toLowerCase();
+                        return (
+                          c.name?.toLowerCase().includes(searchLower) ||
+                          c.identifier?.toLowerCase().includes(searchLower) ||
+                          (c.objectId || c.id)?.toLowerCase().includes(searchLower)
+                        );
+                      }
+                      return true;
+                    })
                     .map(c => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
+                      <option key={c.objectId || c.id} value={c.objectId || c.id}>{c.name}</option>
                     ))}
                 </select>
+
+                {/* Show count of filtered results */}
+                <p className="mt-1 text-xs text-gray-500">
+                  {allCompaniesLight.filter(c => {
+                    if ((c.objectId || c.id) === (duplicateModal.company?.objectId || duplicateModal.company?.id)) {
+                      return false;
+                    }
+                    if (parentCompanySearch) {
+                      const searchLower = parentCompanySearch.toLowerCase();
+                      return (
+                        c.name?.toLowerCase().includes(searchLower) ||
+                        c.identifier?.toLowerCase().includes(searchLower) ||
+                        (c.objectId || c.id)?.toLowerCase().includes(searchLower)
+                      );
+                    }
+                    return true;
+                  }).length} companies available · {parentCompanySearch ? 'filtered' : 'showing all'}
+                </p>
               </div>
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
-                />
-                <span className="ml-2 text-sm text-gray-700">Duplicate Children Companies</span>
-              </label>
             </div>
           </div>
 

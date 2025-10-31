@@ -174,6 +174,33 @@ class CompaniesService {
     }
   }
 
+  async duplicateCompany(id: string, newName: string, senderName?: string, webhookUrl?: string, parentCompanyId?: string): Promise<Company | null> {
+    if (isMockMode()) {
+      await mockDelay(config.mock.delay);
+      const sourceCompany = mockCompanies.find(c => getCompanyId(c) === id);
+      if (!sourceCompany) throw new Error(`Company with id ${id} not found`);
+
+      const duplicatedCompany: Company = {
+        ...sourceCompany,
+        objectId: `company_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        name: newName,
+        identifier: newName.toUpperCase().replace(/\s+/g, '_'),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      } as Company;
+
+      mockCompanies.push(duplicatedCompany);
+      return duplicatedCompany;
+    }
+
+    return apiClient.post<Company>(`${API_ENDPOINTS.companies.detail(id)}/duplicate`, {
+      newName,
+      senderName,
+      webhookUrl,
+      parentCompanyId
+    });
+  }
+
   async archiveCompany(id: string, archived: boolean): Promise<Company | null> {
     if (isMockMode()) {
       await mockDelay(config.mock.delay);
