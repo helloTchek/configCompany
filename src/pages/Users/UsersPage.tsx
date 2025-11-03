@@ -256,7 +256,7 @@ export default function UsersPage() {
     }
 
     try {
-      await usersService.deleteUser(user.id, 'Deleted by admin');
+      await usersService.deleteUser(user.id, 'Disabled');
       await loadUsers(); // Reload users
     } catch (err: any) {
       console.error('Error deleting user:', err);
