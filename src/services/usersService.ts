@@ -82,7 +82,8 @@ class UsersService {
       company: companyName,
       status: apiUser.isDeleted ? 'inactive' : 'active',
       isDeleted: apiUser.isDeleted || false,
-      disabledReason: apiUser.disabledReason || undefined
+      disabledReason: apiUser.disabledReason || undefined,
+      roleCompany: apiUser.roleCompany || undefined
     };
   }
 

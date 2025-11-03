@@ -35,6 +35,7 @@ export interface User {
   status: 'active' | 'inactive';
   isDeleted?: boolean;
   disabledReason?: string;
+  roleCompany?: string;  // Parse Role (e.g., "R_SkodaFinancialServices" or "R_superAdmin")
 }
 
 export interface InspectionJourney {
