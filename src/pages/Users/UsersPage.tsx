@@ -309,76 +309,6 @@ export default function UsersPage() {
     }
   };
 
-  const CreateUserModal = () => (
-    <Modal
-      isOpen={createModal}
-      onClose={() => setCreateModal(false)}
-      title="Create New User"
-      size="md"
-    >
-      <div className="space-y-4">
-        <Input
-          label="Email"
-          type="email"
-          placeholder="john@example.com"
-          value={createFormData.email}
-          onChange={(e) => {
-            setCreateFormData(prev => ({ ...prev, email: e.target.value }));
-            setCreateErrors(prev => ({ ...prev, email: '' }));
-          }}
-          error={createErrors.email}
-        />
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-          <select
-            value={createFormData.role}
-            onChange={(e) => {
-              setCreateFormData(prev => ({ ...prev, role: e.target.value }));
-              setCreateErrors(prev => ({ ...prev, role: '' }));
-            }}
-            className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-              createErrors.role ? 'border-red-500' : 'border-gray-300'
-            }`}
-          >
-            <option value="">Select role</option>
-            <option value="user">User</option>
-            <option value="admin">Admin</option>
-            <option value="superadmin">Super Admin</option>
-          </select>
-          {createErrors.role && <p className="text-sm text-red-600 mt-1">{createErrors.role}</p>}
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
-          <input
-            type="text"
-            value={createFormData.company}
-            onChange={(e) => {
-              setCreateFormData(prev => ({ ...prev, company: e.target.value }));
-              setCreateErrors(prev => ({ ...prev, company: '' }));
-            }}
-            className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-              createErrors.company ? 'border-red-500' : 'border-gray-300'
-            }`}
-            placeholder="Company ID"
-          />
-          {createErrors.company && <p className="text-sm text-red-600 mt-1">{createErrors.company}</p>}
-        </div>
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-          <p className="text-sm text-blue-800">
-            <strong>📧 Password Setup:</strong> The user will receive an email with instructions to set their password after account creation.
-          </p>
-        </div>
-        <div className="flex gap-3 justify-end pt-4">
-          <Button variant="secondary" onClick={() => setCreateModal(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleCreateUser}>
-            Create User
-          </Button>
-        </div>
-      </div>
-    </Modal>
-  );
 
   if (loading) {
     return (
@@ -533,7 +463,75 @@ export default function UsersPage() {
         </div>
       </div>
 
-      <CreateUserModal />
+      {/* Create User Modal */}
+      <Modal
+        isOpen={createModal}
+        onClose={() => setCreateModal(false)}
+        title="Create New User"
+        size="md"
+      >
+        <div className="space-y-4">
+          <Input
+            label="Email"
+            type="email"
+            placeholder="john@example.com"
+            value={createFormData.email}
+            onChange={(e) => {
+              setCreateFormData(prev => ({ ...prev, email: e.target.value }));
+              setCreateErrors(prev => ({ ...prev, email: '' }));
+            }}
+            error={createErrors.email}
+          />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+            <select
+              value={createFormData.role}
+              onChange={(e) => {
+                setCreateFormData(prev => ({ ...prev, role: e.target.value }));
+                setCreateErrors(prev => ({ ...prev, role: '' }));
+              }}
+              className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                createErrors.role ? 'border-red-500' : 'border-gray-300'
+              }`}
+            >
+              <option value="">Select role</option>
+              <option value="user">User</option>
+              <option value="admin">Admin</option>
+              <option value="superadmin">Super Admin</option>
+            </select>
+            {createErrors.role && <p className="text-sm text-red-600 mt-1">{createErrors.role}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
+            <input
+              type="text"
+              value={createFormData.company}
+              onChange={(e) => {
+                setCreateFormData(prev => ({ ...prev, company: e.target.value }));
+                setCreateErrors(prev => ({ ...prev, company: '' }));
+              }}
+              className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                createErrors.company ? 'border-red-500' : 'border-gray-300'
+              }`}
+              placeholder="Company ID"
+            />
+            {createErrors.company && <p className="text-sm text-red-600 mt-1">{createErrors.company}</p>}
+          </div>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <p className="text-sm text-blue-800">
+              <strong>📧 Password Setup:</strong> The user will receive an email with instructions to set their password after account creation.
+            </p>
+          </div>
+          <div className="flex gap-3 justify-end pt-4">
+            <Button variant="secondary" onClick={() => setCreateModal(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateUser}>
+              Create User
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Password Reset Confirmation Modal */}
       <Modal
