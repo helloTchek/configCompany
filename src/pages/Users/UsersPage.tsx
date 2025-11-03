@@ -1,17 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/auth/AuthContext';
 import Header from '../../components/Layout/Header';
 import Table from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
 import Modal from '../../components/UI/Modal';
 import Input from '../../components/UI/Input';
-import { mockUsers } from '../../data/mockData';
 import { User } from '../../types';
+import { usersService } from '../../services/usersService';
 import { CreditCard as Edit, Trash2, Plus, Search, ListFilter as Filter, X, Mail } from 'lucide-react';
 
 export default function UsersPage() {
   const { user } = useAuth();
-  const [users] = useState<User[]>(mockUsers);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
@@ -20,6 +22,16 @@ export default function UsersPage() {
     company: ''
   });
   const [createModal, setCreateModal] = useState(false);
+  const [createFormData, setCreateFormData] = useState({
+    email: '',
+    role: 'user',
+    company: ''
+  });
+  const [createErrors, setCreateErrors] = useState({
+    email: '',
+    role: '',
+    company: ''
+  });
   const [editModal, setEditModal] = useState<{ open: boolean; user?: User }>({ open: false });
   const [passwordResetModal, setPasswordResetModal] = useState<{ open: boolean; user?: User }>({ open: false });
   const [passwordResetSuccessModal, setPasswordResetSuccessModal] = useState<{ open: boolean; user?: User }>({ open: false });
@@ -34,6 +46,28 @@ export default function UsersPage() {
     role: '',
     company: ''
   });
+
+  // Load users on mount
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  const loadUsers = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await usersService.getUsers({
+        page: 1,
+        limit: 1000
+      });
+      setUsers(response.data);
+    } catch (err: any) {
+      setError(err.message || 'Failed to load users');
+      console.error('Error loading users:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const clearFilters = () => {
     setFilters({
@@ -50,9 +84,9 @@ export default function UsersPage() {
   let filteredUsers = users.filter(userItem => {
     // Search filter
     const matchesSearch = !searchTerm ||
-      userItem.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      userItem.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       userItem.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      userItem.company.toLowerCase().includes(searchTerm.toLowerCase());
+      userItem.company?.toLowerCase().includes(searchTerm.toLowerCase());
 
     // Role filter
     const matchesRole = !filters.role || userItem.role === filters.role;
@@ -103,9 +137,6 @@ export default function UsersPage() {
         </div>
       )
     },
-    { key: 'lastLogin', label: 'Last Login',
-      render: (value: string) => value ? new Date(value).toLocaleDateString() : 'Never'
-    },
     {
       key: 'actions',
       label: 'Actions',
@@ -126,7 +157,7 @@ export default function UsersPage() {
             <Mail size={16} />
           </button>
           <button
-            onClick={() => {/* Handle delete */}}
+            onClick={() => handleDeleteUser(row)}
             className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
             title="Delete User"
           >
@@ -141,14 +172,17 @@ export default function UsersPage() {
     setPasswordResetModal({ open: true, user });
   };
 
-  const confirmPasswordReset = () => {
+  const confirmPasswordReset = async () => {
     if (!passwordResetModal.user) return;
 
-    // In a real app, this would send a password reset email
-    console.log('Sending password reset email to:', passwordResetModal.user.email);
-    
-    setPasswordResetModal({ open: false });
-    setPasswordResetSuccessModal({ open: true, user: passwordResetModal.user });
+    try {
+      await usersService.sendPasswordReset(passwordResetModal.user.id);
+      setPasswordResetModal({ open: false });
+      setPasswordResetSuccessModal({ open: true, user: passwordResetModal.user });
+    } catch (err: any) {
+      console.error('Error sending password reset:', err);
+      alert('Failed to send password reset email');
+    }
   };
 
   const handleEditUser = (user: User) => {
@@ -196,14 +230,83 @@ export default function UsersPage() {
     return !newErrors.email && !newErrors.role && !newErrors.company;
   };
 
-  const handleSaveEdit = () => {
-    if (!validateEditForm()) {
+  const handleSaveEdit = async () => {
+    if (!validateEditForm() || !editModal.user) {
       return;
     }
 
-    // In a real app, this would make an API call to update the user
-    console.log('Updating user:', editFormData);
-    setEditModal({ open: false });
+    try {
+      await usersService.updateUser(editModal.user.id, {
+        email: editFormData.email,
+        role: editFormData.role as 'superadmin' | 'admin' | 'user',
+        companyId: editFormData.company,
+        status: editFormData.status as 'active' | 'inactive'
+      });
+      setEditModal({ open: false });
+      await loadUsers(); // Reload users
+    } catch (err: any) {
+      console.error('Error updating user:', err);
+      alert('Failed to update user');
+    }
+  };
+
+  const handleDeleteUser = async (user: User) => {
+    if (!confirm(`Are you sure you want to delete ${user.email}?`)) {
+      return;
+    }
+
+    try {
+      await usersService.deleteUser(user.id, 'Deleted by admin');
+      await loadUsers(); // Reload users
+    } catch (err: any) {
+      console.error('Error deleting user:', err);
+      alert('Failed to delete user');
+    }
+  };
+
+  const validateCreateForm = () => {
+    const newErrors = {
+      email: '',
+      role: '',
+      company: ''
+    };
+
+    if (!createFormData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(createFormData.email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+
+    if (!createFormData.role) {
+      newErrors.role = 'Role is required';
+    }
+
+    if (!createFormData.company) {
+      newErrors.company = 'Company is required';
+    }
+
+    setCreateErrors(newErrors);
+    return !newErrors.email && !newErrors.role && !newErrors.company;
+  };
+
+  const handleCreateUser = async () => {
+    if (!validateCreateForm()) {
+      return;
+    }
+
+    try {
+      await usersService.createUser({
+        email: createFormData.email,
+        role: createFormData.role as 'superadmin' | 'admin' | 'user',
+        companyId: createFormData.company
+      });
+      setCreateModal(false);
+      setCreateFormData({ email: '', role: 'user', company: '' });
+      await loadUsers(); // Reload users
+    } catch (err: any) {
+      console.error('Error creating user:', err);
+      alert('Failed to create user');
+    }
   };
 
   const CreateUserModal = () => (
@@ -214,21 +317,51 @@ export default function UsersPage() {
       size="md"
     >
       <div className="space-y-4">
-        <Input label="Email" type="email" placeholder="john@example.com" />
+        <Input
+          label="Email"
+          type="email"
+          placeholder="john@example.com"
+          value={createFormData.email}
+          onChange={(e) => {
+            setCreateFormData(prev => ({ ...prev, email: e.target.value }));
+            setCreateErrors(prev => ({ ...prev, email: '' }));
+          }}
+          error={createErrors.email}
+        />
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-          <select className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          <select
+            value={createFormData.role}
+            onChange={(e) => {
+              setCreateFormData(prev => ({ ...prev, role: e.target.value }));
+              setCreateErrors(prev => ({ ...prev, role: '' }));
+            }}
+            className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              createErrors.role ? 'border-red-500' : 'border-gray-300'
+            }`}
+          >
+            <option value="">Select role</option>
             <option value="user">User</option>
             <option value="admin">Admin</option>
             <option value="superadmin">Super Admin</option>
           </select>
+          {createErrors.role && <p className="text-sm text-red-600 mt-1">{createErrors.role}</p>}
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
-          <select className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-            <option value="AutoCorp Insurance">AutoCorp Insurance</option>
-            <option value="FleetMax Leasing">FleetMax Leasing</option>
-          </select>
+          <input
+            type="text"
+            value={createFormData.company}
+            onChange={(e) => {
+              setCreateFormData(prev => ({ ...prev, company: e.target.value }));
+              setCreateErrors(prev => ({ ...prev, company: '' }));
+            }}
+            className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              createErrors.company ? 'border-red-500' : 'border-gray-300'
+            }`}
+            placeholder="Company ID"
+          />
+          {createErrors.company && <p className="text-sm text-red-600 mt-1">{createErrors.company}</p>}
         </div>
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
           <p className="text-sm text-blue-800">
@@ -239,7 +372,7 @@ export default function UsersPage() {
           <Button variant="secondary" onClick={() => setCreateModal(false)}>
             Cancel
           </Button>
-          <Button onClick={() => setCreateModal(false)}>
+          <Button onClick={handleCreateUser}>
             Create User
           </Button>
         </div>
@@ -247,10 +380,32 @@ export default function UsersPage() {
     </Modal>
   );
 
+  if (loading) {
+    return (
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header title="Users" />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-gray-500">Loading users...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header title="Users" />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-red-600">Error: {error}</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <Header title="Users" />
-      
+
       <div className="flex-1 overflow-y-auto p-6">
         <div className="mb-6 flex justify-between items-center">
           <div>

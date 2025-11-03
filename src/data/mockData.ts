@@ -9,8 +9,7 @@ export const mockUsers: User[] = [
     email: 'john@autocorp.com',
     role: 'admin',
     company: 'AutoCorp Insurance',
-    status: 'active',
-    lastLogin: '2024-01-15T10:30:00Z'
+    status: 'active'
   },
   {
     id: '2',
@@ -18,8 +17,7 @@ export const mockUsers: User[] = [
     email: 'jane@fleetmax.com',
     role: 'user',
     company: 'FleetMax Leasing',
-    status: 'active',
-    lastLogin: '2024-01-14T14:22:00Z'
+    status: 'active'
   }
 ];
 

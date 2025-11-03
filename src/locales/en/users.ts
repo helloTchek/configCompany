@@ -9,7 +9,6 @@ export const users = {
     role: 'Role',
     company: 'Company',
     status: 'Status',
-    lastLogin: 'Last Login',
     password: 'Password',
     confirmPassword: 'Confirm Password'
   },

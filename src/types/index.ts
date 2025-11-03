@@ -35,7 +35,6 @@ export interface User {
   status: 'active' | 'inactive';
   isDeleted?: boolean;
   disabledReason?: string;
-  lastLogin?: string;
 }
 
 export interface InspectionJourney {
