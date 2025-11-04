@@ -564,7 +564,7 @@ export default function UsersPage() {
                 {companies
                   .filter(company => {
                     const searchLower = (companySearchTerm || '').toLowerCase();
-                    return company.name.toLowerCase().includes(searchLower) ||
+                    return (company.name && company.name.toLowerCase().includes(searchLower)) ||
                       (company.identifier && company.identifier.toLowerCase().includes(searchLower));
                   })
                   .map((company) => (
@@ -586,7 +586,7 @@ export default function UsersPage() {
                   ))}
                 {companies.filter(company => {
                   const searchLower = (companySearchTerm || '').toLowerCase();
-                  return company.name.toLowerCase().includes(searchLower) ||
+                  return (company.name && company.name.toLowerCase().includes(searchLower)) ||
                     (company.identifier && company.identifier.toLowerCase().includes(searchLower));
                 }).length === 0 && (
                   <div className="px-3 py-2 text-sm text-gray-500">No companies found</div>
