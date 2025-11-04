@@ -184,7 +184,7 @@ class CompaniesService {
         ...sourceCompany,
         objectId: `company_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         name: newName,
-        identifier: newName.toUpperCase().replace(/\s+/g, '_'),
+        identifier: newName.replace(/\s+/g, ''),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       } as Company;

@@ -948,8 +948,8 @@ export default function CreateCompanyPage() {
     }
 
     try {
-      // Generate identifier from company name (uppercase, replace spaces with underscores)
-      const identifier = formData.companyName.toUpperCase().replace(/\s+/g, '_');
+      // Generate identifier from company name (remove spaces, keep original case)
+      const identifier = formData.companyName.replace(/\s+/g, '');
 
       // Parse JSON fields
       let parsedStyles, parsedReportSettings, parsedConfigModules;
