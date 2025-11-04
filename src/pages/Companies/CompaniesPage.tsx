@@ -25,6 +25,7 @@ export default function CompaniesPage() {
   const [itemsPerPage] = useState(50);
   const [totalPages, setTotalPages] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     contractType: '',
@@ -48,11 +49,35 @@ export default function CompaniesPage() {
   });
   const [parentCompanySearch, setParentCompanySearch] = useState('');
 
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Reset to page 1 when search/filters change
+  useEffect(() => {
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    }
+  }, [debouncedSearchTerm, filters.archived]);
+
   // Chargement des données avec pagination
   const loadCompanies = async (page: number = currentPage) => {
     try {
       setLoading(true);
-      const response = await companiesService.getCompanies({ page, limit: itemsPerPage });
+      const params: any = {
+        page,
+        limit: itemsPerPage
+      };
+
+      if (debouncedSearchTerm) params.search = debouncedSearchTerm;
+      if (filters.archived) params.archived = filters.archived;
+
+      const response = await companiesService.getCompanies(params);
 
       // Filtrage par company pour les utilisateurs non-superAdmin
       let filteredCompanies = response.data;
@@ -91,10 +116,10 @@ export default function CompaniesPage() {
     loadAllCompaniesLight();
   }, []);
 
-  // Effect pour charger les données au montage
+  // Effect pour charger les données avec debounce et filtres
   useEffect(() => {
-    loadCompanies();
-  }, [user?.role, user?.companyId, user?.companyName]);
+    loadCompanies(currentPage);
+  }, [currentPage, debouncedSearchTerm, filters.archived, user?.role, user?.companyId, user?.companyName]);
 
   const handleSort = (key: string) => {
     if (sortKey === key) {
@@ -280,19 +305,8 @@ export default function CompaniesPage() {
     }
   };
 
-  // Filter and search logic
+  // Filter logic (client-side filters not handled by backend)
   const filteredCompanies = companies.filter(company => {
-    // Archive filter - check both archived and isArchived fields
-    const isArchived = company.archived || company.isArchived;
-    const matchesArchived = filters.archived === 'all' ||
-      (filters.archived === 'active' && !isArchived) ||
-      (filters.archived === 'archived' && isArchived);
-
-    // Search filter
-    const matchesSearch = !searchTerm ||
-      company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      company.identifier.toLowerCase().includes(searchTerm.toLowerCase());
-
     // Contract type filter
     const matchesContractType = !filters.contractType || company.contractType === filters.contractType;
 
@@ -301,7 +315,7 @@ export default function CompaniesPage() {
       (filters.companyHierarchy === 'root' && !company.parentCompanyId) ||
       (filters.companyHierarchy === 'child' && company.parentCompanyId);
 
-    return matchesArchived && matchesSearch && matchesContractType && matchesHierarchy;
+    return matchesContractType && matchesHierarchy;
   });
 
   // Apply sorting

@@ -16,12 +16,18 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     role: '',
     status: '',
     company: ''
   });
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [pageSize, setPageSize] = useState(20);
   const [createModal, setCreateModal] = useState(false);
   const [createFormData, setCreateFormData] = useState({
     email: '',
@@ -55,9 +61,27 @@ export default function UsersPage() {
     company: ''
   });
 
-  // Load users on mount
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Reset to page 1 when search/filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchTerm, filters.role, filters.status, filters.company]);
+
+  // Load users on mount and when filters/pagination changes
   useEffect(() => {
     loadUsers();
+  }, [currentPage, pageSize, debouncedSearchTerm, filters.role, filters.status, filters.company]);
+
+  // Load companies on mount
+  useEffect(() => {
     loadCompanies();
   }, []);
 
@@ -80,11 +104,20 @@ export default function UsersPage() {
     try {
       setLoading(true);
       setError(null);
-      const response = await usersService.getUsers({
-        page: 1,
-        limit: 1000
-      });
+      const params: any = {
+        page: currentPage,
+        limit: pageSize
+      };
+
+      if (debouncedSearchTerm) params.search = debouncedSearchTerm;
+      if (filters.role) params.role = filters.role;
+      if (filters.status) params.status = filters.status;
+      if (filters.company) params.companyId = filters.company;
+
+      const response = await usersService.getUsers(params);
       setUsers(response.data);
+      setTotalPages(response.pagination.totalPages);
+      setTotalUsers(response.pagination.total);
     } catch (err: any) {
       setError(err.message || 'Failed to load users');
       console.error('Error loading users:', err);
@@ -113,32 +146,7 @@ export default function UsersPage() {
 
   const hasActiveFilters = searchTerm || Object.values(filters).some(filter => filter !== '');
 
-  // Filter and search logic
-  let filteredUsers = users.filter(userItem => {
-    // Search filter
-    const matchesSearch = !searchTerm ||
-      userItem.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      userItem.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      userItem.company?.toLowerCase().includes(searchTerm.toLowerCase());
-
-    // Role filter
-    const matchesRole = !filters.role || userItem.role === filters.role;
-
-    // Status filter
-    const matchesStatus = !filters.status || userItem.status === filters.status;
-
-    // Company filter
-    const matchesCompany = !filters.company || userItem.company === filters.company;
-
-    return matchesSearch && matchesRole && matchesStatus && matchesCompany;
-  });
-
-  // Apply company-based filtering for non-superAdmin users
-  if (user?.role !== 'superAdmin') {
-    filteredUsers = filteredUsers.filter(userItem => 
-      userItem.company === user?.companyName
-    );
-  }
+  // Filtering is now done on the backend via the API
 
   const columns = [
     { key: 'email', label: 'Email', sortable: true },
@@ -482,7 +490,7 @@ export default function UsersPage() {
               {hasActiveFilters && (
                 <div className="mt-4 flex justify-between items-center">
                   <span className="text-sm text-gray-600">
-                    Showing {filteredUsers.length} of {users.length} users
+                    Showing {users.length} of {totalUsers} users
                   </span>
                   <Button variant="secondary" size="sm" onClick={clearFilters}>
                     Clear All Filters
@@ -494,9 +502,9 @@ export default function UsersPage() {
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200">
-          <Table columns={columns} data={filteredUsers} />
-          
-          {filteredUsers.length === 0 && (
+          <Table columns={columns} data={users} />
+
+          {users.length === 0 && !loading && (
             <div className="text-center py-8 text-gray-500">
               <p>No users found matching your criteria.</p>
               {hasActiveFilters && (
@@ -504,6 +512,97 @@ export default function UsersPage() {
                   Clear Filters
                 </Button>
               )}
+            </div>
+          )}
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="border-t border-gray-200 px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <span>Show</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="border border-gray-300 rounded px-2 py-1"
+                >
+                  <option value="10">10</option>
+                  <option value="20">20</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                </select>
+                <span>per page</span>
+                <span className="ml-4">
+                  Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalUsers)} of {totalUsers} users
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setCurrentPage(1)}
+                  disabled={currentPage === 1}
+                >
+                  First
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`px-3 py-1 text-sm rounded ${
+                          currentPage === pageNum
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setCurrentPage(totalPages)}
+                  disabled={currentPage === totalPages}
+                >
+                  Last
+                </Button>
+              </div>
             </div>
           )}
         </div>

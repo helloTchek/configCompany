@@ -28,6 +28,11 @@ export interface PaginationParams {
   limit?: number;
 }
 
+export interface CompanyFilters {
+  search?: string;
+  archived?: string;
+}
+
 export interface PaginatedResponse<T> {
   data: T[];
   pagination: {
@@ -41,23 +46,41 @@ export interface PaginatedResponse<T> {
 }
 
 class CompaniesService {
-  async getCompanies(params?: PaginationParams): Promise<PaginatedResponse<Company>> {
+  async getCompanies(params?: PaginationParams & CompanyFilters): Promise<PaginatedResponse<Company>> {
     if (isMockMode()) {
       await mockDelay(config.mock.delay);
       const page = params?.page || 1;
       const limit = params?.limit || 50;
+
+      // Apply filters to mock data
+      let filteredData = [...mockCompanies];
+
+      if (params?.search) {
+        const searchLower = params.search.toLowerCase();
+        filteredData = filteredData.filter(c =>
+          c.name?.toLowerCase().includes(searchLower) ||
+          c.identifier?.toLowerCase().includes(searchLower)
+        );
+      }
+
+      if (params?.archived === 'archived') {
+        filteredData = filteredData.filter(c => c.archived === true);
+      } else if (params?.archived === 'active') {
+        filteredData = filteredData.filter(c => !c.archived);
+      }
+
       const start = (page - 1) * limit;
       const end = start + limit;
-      const paginatedData = mockCompanies.slice(start, end);
+      const paginatedData = filteredData.slice(start, end);
 
       return {
         data: paginatedData,
         pagination: {
           page,
           limit,
-          total: mockCompanies.length,
-          totalPages: Math.ceil(mockCompanies.length / limit),
-          hasNext: end < mockCompanies.length,
+          total: filteredData.length,
+          totalPages: Math.ceil(filteredData.length / limit),
+          hasNext: end < filteredData.length,
           hasPrev: page > 1
         }
       };
@@ -66,6 +89,8 @@ class CompaniesService {
     const queryParams: Record<string, unknown> = {};
     if (params?.page !== undefined) queryParams.page = params.page;
     if (params?.limit !== undefined) queryParams.limit = params.limit;
+    if (params?.search) queryParams.search = params.search;
+    if (params?.archived) queryParams.archived = params.archived;
 
     const response = await apiClient.get<PaginatedResponse<Company>>(API_ENDPOINTS.companies.list, queryParams);
     return response;
