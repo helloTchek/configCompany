@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/auth/AuthContext';
 import Header from '../../components/Layout/Header';
 import Table from '../../components/UI/Table';
@@ -7,7 +7,8 @@ import Modal from '../../components/UI/Modal';
 import Input from '../../components/UI/Input';
 import { User } from '../../types';
 import { usersService } from '../../services/usersService';
-import { CreditCard as Edit, Trash2, Plus, Search, ListFilter as Filter, X, Mail } from 'lucide-react';
+import { companiesService } from '../../services/companiesService';
+import { CreditCard as Edit, Trash2, Plus, Search, ListFilter as Filter, X, Mail, ChevronDown } from 'lucide-react';
 
 export default function UsersPage() {
   const { user } = useAuth();
@@ -32,6 +33,10 @@ export default function UsersPage() {
     role: '',
     company: ''
   });
+  const [companies, setCompanies] = useState<Array<{ objectId: string; id: string; name: string; identifier?: string }>>([]);
+  const [companySearchTerm, setCompanySearchTerm] = useState('');
+  const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
+  const companyDropdownRef = useRef<HTMLDivElement>(null);
   const [editModal, setEditModal] = useState<{ open: boolean; user?: User }>({ open: false });
   const [passwordResetModal, setPasswordResetModal] = useState<{ open: boolean; user?: User }>({ open: false });
   const [passwordResetSuccessModal, setPasswordResetSuccessModal] = useState<{ open: boolean; user?: User }>({ open: false });
@@ -50,6 +55,19 @@ export default function UsersPage() {
   // Load users on mount
   useEffect(() => {
     loadUsers();
+    loadCompanies();
+  }, []);
+
+  // Close company dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (companyDropdownRef.current && !companyDropdownRef.current.contains(event.target as Node)) {
+        setShowCompanyDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const loadUsers = async () => {
@@ -66,6 +84,15 @@ export default function UsersPage() {
       console.error('Error loading users:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadCompanies = async () => {
+    try {
+      const companiesData = await companiesService.getAllCompaniesLight();
+      setCompanies(companiesData);
+    } catch (err: any) {
+      console.error('Error loading companies:', err);
     }
   };
 
@@ -302,6 +329,8 @@ export default function UsersPage() {
       });
       setCreateModal(false);
       setCreateFormData({ email: '', role: 'user', company: '' });
+      setCompanySearchTerm('');
+      setShowCompanyDropdown(false);
       await loadUsers(); // Reload users
     } catch (err: any) {
       console.error('Error creating user:', err);
@@ -343,7 +372,12 @@ export default function UsersPage() {
             <p className="text-sm text-gray-600">Manage user accounts and permissions</p>
           </div>
           <Button
-            onClick={() => setCreateModal(true)}
+            onClick={() => {
+              setCreateModal(true);
+              setCompanySearchTerm('');
+              setCreateFormData({ email: '', role: 'user', company: '' });
+              setCreateErrors({ email: '', role: '', company: '' });
+            }}
             className="flex items-center gap-2"
           >
             <Plus size={16} />
@@ -466,7 +500,11 @@ export default function UsersPage() {
       {/* Create User Modal */}
       <Modal
         isOpen={createModal}
-        onClose={() => setCreateModal(false)}
+        onClose={() => {
+          setCreateModal(false);
+          setCompanySearchTerm('');
+          setShowCompanyDropdown(false);
+        }}
         title="Create New User"
         size="md"
       >
@@ -501,21 +539,60 @@ export default function UsersPage() {
             </select>
             {createErrors.role && <p className="text-sm text-red-600 mt-1">{createErrors.role}</p>}
           </div>
-          <div>
+          <div className="relative" ref={companyDropdownRef}>
             <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
-            <input
-              type="text"
-              value={createFormData.company}
-              onChange={(e) => {
-                setCreateFormData(prev => ({ ...prev, company: e.target.value }));
-                setCreateErrors(prev => ({ ...prev, company: '' }));
-              }}
-              className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                createErrors.company ? 'border-red-500' : 'border-gray-300'
-              }`}
-              placeholder="Company ID"
-            />
+            <div className="relative">
+              <input
+                type="text"
+                value={companySearchTerm}
+                onChange={(e) => {
+                  setCompanySearchTerm(e.target.value);
+                  setShowCompanyDropdown(true);
+                }}
+                onFocus={() => setShowCompanyDropdown(true)}
+                className={`block w-full px-3 py-2 pr-10 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  createErrors.company ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder="Search company..."
+              />
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
             {createErrors.company && <p className="text-sm text-red-600 mt-1">{createErrors.company}</p>}
+
+            {showCompanyDropdown && (
+              <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+                {companies
+                  .filter(company => {
+                    const searchLower = (companySearchTerm || '').toLowerCase();
+                    return company.name.toLowerCase().includes(searchLower) ||
+                      (company.identifier && company.identifier.toLowerCase().includes(searchLower));
+                  })
+                  .map((company) => (
+                    <div
+                      key={company.objectId || company.id}
+                      onClick={() => {
+                        setCreateFormData(prev => ({ ...prev, company: company.objectId || company.id }));
+                        setCompanySearchTerm(company.name);
+                        setShowCompanyDropdown(false);
+                        setCreateErrors(prev => ({ ...prev, company: '' }));
+                      }}
+                      className="px-3 py-2 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                    >
+                      <div className="font-medium text-sm text-gray-900">{company.name}</div>
+                      {company.identifier && (
+                        <div className="text-xs text-gray-500">{company.identifier}</div>
+                      )}
+                    </div>
+                  ))}
+                {companies.filter(company => {
+                  const searchLower = (companySearchTerm || '').toLowerCase();
+                  return company.name.toLowerCase().includes(searchLower) ||
+                    (company.identifier && company.identifier.toLowerCase().includes(searchLower));
+                }).length === 0 && (
+                  <div className="px-3 py-2 text-sm text-gray-500">No companies found</div>
+                )}
+              </div>
+            )}
           </div>
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
             <p className="text-sm text-blue-800">
@@ -523,7 +600,11 @@ export default function UsersPage() {
             </p>
           </div>
           <div className="flex gap-3 justify-end pt-4">
-            <Button variant="secondary" onClick={() => setCreateModal(false)}>
+            <Button variant="secondary" onClick={() => {
+              setCreateModal(false);
+              setCompanySearchTerm('');
+              setShowCompanyDropdown(false);
+            }}>
               Cancel
             </Button>
             <Button onClick={handleCreateUser}>
