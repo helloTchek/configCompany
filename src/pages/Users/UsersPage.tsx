@@ -37,6 +37,9 @@ export default function UsersPage() {
   const [companySearchTerm, setCompanySearchTerm] = useState('');
   const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
   const companyDropdownRef = useRef<HTMLDivElement>(null);
+  const [editCompanySearchTerm, setEditCompanySearchTerm] = useState('');
+  const [showEditCompanyDropdown, setShowEditCompanyDropdown] = useState(false);
+  const editCompanyDropdownRef = useRef<HTMLDivElement>(null);
   const [editModal, setEditModal] = useState<{ open: boolean; user?: User }>({ open: false });
   const [passwordResetModal, setPasswordResetModal] = useState<{ open: boolean; user?: User }>({ open: false });
   const [passwordResetSuccessModal, setPasswordResetSuccessModal] = useState<{ open: boolean; user?: User }>({ open: false });
@@ -63,6 +66,9 @@ export default function UsersPage() {
     const handleClickOutside = (event: MouseEvent) => {
       if (companyDropdownRef.current && !companyDropdownRef.current.contains(event.target as Node)) {
         setShowCompanyDropdown(false);
+      }
+      if (editCompanyDropdownRef.current && !editCompanyDropdownRef.current.contains(event.target as Node)) {
+        setShowEditCompanyDropdown(false);
       }
     };
 
@@ -213,12 +219,16 @@ export default function UsersPage() {
   };
 
   const handleEditUser = (user: User) => {
+    // Find the company objectId from the company name
+    const foundCompany = companies.find(c => c.name === user.company);
+
     setEditFormData({
       email: user.email,
       role: user.role,
-      company: user.company,
+      company: foundCompany ? (foundCompany.objectId || foundCompany.id) : '',
       status: user.status
     });
+    setEditCompanySearchTerm(user.company || '');
     setEditErrors({
       email: '',
       role: '',
@@ -270,6 +280,8 @@ export default function UsersPage() {
         status: editFormData.status as 'active' | 'inactive'
       });
       setEditModal({ open: false });
+      setEditCompanySearchTerm('');
+      setShowEditCompanyDropdown(false);
       await loadUsers(); // Reload users
     } catch (err: any) {
       console.error('Error updating user:', err);
@@ -695,7 +707,11 @@ export default function UsersPage() {
       {/* Edit User Modal */}
       <Modal
         isOpen={editModal.open}
-        onClose={() => setEditModal({ open: false })}
+        onClose={() => {
+          setEditModal({ open: false });
+          setEditCompanySearchTerm('');
+          setShowEditCompanyDropdown(false);
+        }}
         title="Edit User"
         size="md"
       >
@@ -724,20 +740,60 @@ export default function UsersPage() {
             </select>
             {editErrors.role && <p className="text-sm text-red-600 mt-1">{editErrors.role}</p>}
           </div>
-          <div>
+          <div className="relative" ref={editCompanyDropdownRef}>
             <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
-            <select 
-              value={editFormData.company}
-              onChange={(e) => handleEditFormChange('company', e.target.value)}
-              className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                editErrors.company ? 'border-red-500' : 'border-gray-300'
-              }`}
-            >
-              <option value="">Select company</option>
-              <option value="AutoCorp Insurance">AutoCorp Insurance</option>
-              <option value="FleetMax Leasing">FleetMax Leasing</option>
-            </select>
+            <div className="relative">
+              <input
+                type="text"
+                value={editCompanySearchTerm}
+                onChange={(e) => {
+                  setEditCompanySearchTerm(e.target.value);
+                  setShowEditCompanyDropdown(true);
+                }}
+                onFocus={() => setShowEditCompanyDropdown(true)}
+                className={`block w-full px-3 py-2 pr-10 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  editErrors.company ? 'border-red-500' : 'border-gray-300'
+                }`}
+                placeholder="Search company..."
+              />
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
             {editErrors.company && <p className="text-sm text-red-600 mt-1">{editErrors.company}</p>}
+
+            {showEditCompanyDropdown && (
+              <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+                {companies
+                  .filter(company => {
+                    const searchLower = (editCompanySearchTerm || '').toLowerCase();
+                    return (company.name && company.name.toLowerCase().includes(searchLower)) ||
+                      (company.identifier && company.identifier.toLowerCase().includes(searchLower));
+                  })
+                  .map((company) => (
+                    <div
+                      key={company.objectId || company.id}
+                      onClick={() => {
+                        setEditFormData(prev => ({ ...prev, company: company.objectId || company.id }));
+                        setEditCompanySearchTerm(company.name);
+                        setShowEditCompanyDropdown(false);
+                        setEditErrors(prev => ({ ...prev, company: '' }));
+                      }}
+                      className="px-3 py-2 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                    >
+                      <div className="font-medium text-sm text-gray-900">{company.name}</div>
+                      {company.identifier && (
+                        <div className="text-xs text-gray-500">{company.identifier}</div>
+                      )}
+                    </div>
+                  ))}
+                {companies.filter(company => {
+                  const searchLower = (editCompanySearchTerm || '').toLowerCase();
+                  return (company.name && company.name.toLowerCase().includes(searchLower)) ||
+                    (company.identifier && company.identifier.toLowerCase().includes(searchLower));
+                }).length === 0 && (
+                  <div className="px-3 py-2 text-sm text-gray-500">No companies found</div>
+                )}
+              </div>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
@@ -751,7 +807,11 @@ export default function UsersPage() {
             </select>
           </div>
           <div className="flex gap-3 justify-end pt-4">
-            <Button variant="secondary" onClick={() => setEditModal({ open: false })}>
+            <Button variant="secondary" onClick={() => {
+              setEditModal({ open: false });
+              setEditCompanySearchTerm('');
+              setShowEditCompanyDropdown(false);
+            }}>
               Cancel
             </Button>
             <Button onClick={handleSaveEdit}>

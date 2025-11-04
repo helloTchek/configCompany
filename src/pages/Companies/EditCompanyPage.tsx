@@ -35,12 +35,6 @@ const GeneralSettingsTab = ({
           required
         />
         <Input
-          label="Company Code"
-          value={formData.companyCode}
-          onChange={(e) => handleFieldChange('companyCode', e.target.value)}
-          placeholder="Company code"
-        />
-        <Input
           label="Logo URL"
           value={formData.logoUrl}
           onChange={handleLogoUrlChange}
@@ -808,7 +802,6 @@ export default function EditCompanyPage() {
   // Initialize form data - will be loaded from API
   const [formData, setFormData] = useState({
     companyName: '',
-    companyCode: '',
     logoUrl: '',
     retentionPeriod: 24,
     maxApiRequests: 30,
@@ -992,7 +985,6 @@ export default function EditCompanyPage() {
 
         setFormData({
           companyName: company.name || '',
-          companyCode: company.identifier || '',
           logoUrl: company.logo?.url || '',
           retentionPeriod: company.retentionPeriod ?? 24,
           maxApiRequests: company.apiToken?.maxRequestAPI ?? 30,
@@ -1226,7 +1218,6 @@ export default function EditCompanyPage() {
       // Prepare update data
       const updateData: any = {
         name: formData.companyName,
-        identifier: formData.companyCode,
         logoUrl: formData.logoUrl,
         retentionPeriod: formData.retentionPeriod,
         isFastTrackDisabled: formData.isFastTrackDisabled,

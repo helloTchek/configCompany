@@ -7,7 +7,6 @@ export const company = {
   fields: {
     name: 'Company Name',
     identifier: 'Company Identifier',
-    companyCode: 'Company Code',
     contractType: 'Contract Type',
     businessSector: 'Business Sector',
     logoUrl: 'Logo URL',

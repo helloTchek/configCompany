@@ -5,7 +5,6 @@ export interface Company {
   companyObjectId: string;
   identifier: string;
   name: string;
-  companyCode: string;
   contractType: 'Client' | 'Prospect' | 'Test' | 'Demo';
   businessSector: 'Insurance' | 'Leasing' | 'Rental' | 'Fleet Management' | 'Automotive';
   logo?: string;

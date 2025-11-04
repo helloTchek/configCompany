@@ -17,7 +17,6 @@ export interface Company {
   configShootInspect?: any[];
   // Legacy fields for backwards compatibility
   id?: string;
-  companyCode?: string;
   contractType?: 'Client' | 'Prospect' | 'Partner';
   businessSector?: string;
   retentionPeriod?: number;

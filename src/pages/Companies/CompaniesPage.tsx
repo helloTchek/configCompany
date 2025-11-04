@@ -291,8 +291,7 @@ export default function CompaniesPage() {
     // Search filter
     const matchesSearch = !searchTerm ||
       company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      company.identifier.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (company.companyCode && company.companyCode.toLowerCase().includes(searchTerm.toLowerCase()));
+      company.identifier.toLowerCase().includes(searchTerm.toLowerCase());
 
     // Contract type filter
     const matchesContractType = !filters.contractType || company.contractType === filters.contractType;

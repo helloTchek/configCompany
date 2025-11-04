@@ -7,7 +7,6 @@ export interface Company {
   currentApiRequests: number;
   maxApiRequests: number;
   requestsExpiryDate: string;
-  companyCode: string;
   parentCompanyId?: string;
   childCompanyIds?: string[];
   contractType: 'Client' | 'Prospect' | 'Test' | 'Demo';
