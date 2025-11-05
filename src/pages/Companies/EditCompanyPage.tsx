@@ -631,6 +631,11 @@ const EventsWebhooksTab = ({
 const HierarchyTab = ({ handleInputChange, formData, handleFieldChange, companies, currentCompanyId, loadingCompanies }) => {
   const [searchTerm, setSearchTerm] = React.useState('');
 
+  // Reset search term when company changes
+  React.useEffect(() => {
+    setSearchTerm('');
+  }, [currentCompanyId]);
+
   const availableCompanies = (companies || []).filter(company => (company?.objectId || company?.id) !== currentCompanyId);
 
   const filteredCompanies = availableCompanies.filter(company =>
