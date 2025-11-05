@@ -827,9 +827,6 @@ export default function EditCompanyPage() {
 
   // Load event templates from backend EventManager and transform to frontend format
   const loadEventTemplatesFromBackend = (eventManager: any) => {
-    console.log('🔄 loadEventTemplatesFromBackend CALLED');
-    console.log('eventManager received:', eventManager);
-    console.log('eventManager JSON:', JSON.stringify(eventManager, null, 2));
 
     const backendToFrontendEventMapping = {
       tradeinVehicle: 'selfInspectionCreation',
@@ -858,18 +855,8 @@ export default function EditCompanyPage() {
       const config = eventManager[`${backendEventKey}Config`];
       const templatesData = eventManager[`${backendEventKey}Templates`];
 
-      console.log(`🔍 Processing ${backendEventKey}:`);
-      console.log(`  - config found:`, !!config, config);
-      console.log(`  - templates found:`, !!templatesData, templatesData);
-
       if (config) {
         // Map config to frontend format
-        console.log(`✏️ Updating ${frontendEventKey} config:`, {
-          webhook: config.webhook,
-          companyEmail: config.companyEmail,
-          agentEmail: config.agentEmail,
-          customerEmail: config.customerEmail
-        });
 
         newTemplates[frontendEventKey].webhook.enabled = config.webhook || false;
         newTemplates[frontendEventKey].emailAddress.email = config.companyEmail || false;
@@ -884,7 +871,6 @@ export default function EditCompanyPage() {
       }
 
       if (templatesData && Object.keys(templatesData).length > 0) {
-        console.log(`📧 Loading templates for ${backendEventKey}:`, Object.keys(templatesData));
         // Map templates to frontend format
         Object.keys(templatesData).forEach(templateKey => {
           // Parse template key: "customerEmail_EN" or "customerSMS_FR"
@@ -903,12 +889,9 @@ export default function EditCompanyPage() {
 
           let addressee = addresseeType === 'customer' ? 'customer' : addresseeType === 'company' ? 'emailAddress' : 'agent';
 
-          console.log(`  ✅ Parsing ${templateKey} -> ${frontendEventKey}.${addressee}.${frontendLang}.${channel.toLowerCase()}`);
-
           if (channel === 'Email') {
             const emailData = templatesData[templateKey];
             if (emailData && typeof emailData === 'object') {
-              console.log(`    📝 Email data:`, { subject: emailData.subject, hasText: !!emailData.text, hasHtml: !!emailData.html });
               newTemplates[frontendEventKey][addressee].templates[frontendLang].email = {
                 subject: emailData.subject || '',
                 content: emailData.text || emailData.html || ''
@@ -917,23 +900,16 @@ export default function EditCompanyPage() {
           } else if (channel === 'SMS') {
             const smsData = templatesData[templateKey];
             if (typeof smsData === 'string') {
-              console.log(`    📱 SMS data:`, smsData.substring(0, 50));
               newTemplates[frontendEventKey][addressee].templates[frontendLang].sms = {
                 content: smsData
               };
             }
           }
         });
-      } else {
-        console.log(`ℹ️ No templates found for ${backendEventKey}`);
       }
     });
 
-    console.log('📝 Setting new templates:', newTemplates);
-    console.log('📝 selfInspectionCreation webhook enabled:', newTemplates.selfInspectionCreation.webhook.enabled);
     setTemplates(newTemplates);
-
-    console.log('✅ Templates state updated');
   };
 
   // Load company data from API
@@ -944,22 +920,6 @@ export default function EditCompanyPage() {
       try {
         setLoading(true);
         const company = await companiesService.getCompanyById(id);
-
-        console.log('=== COMPANY DATA RECEIVED ===', company);
-        console.log('processingParams:', company?.processingParams);
-        console.log('settingsPtr:', company?.settingsPtr);
-        console.log('eventManagerPtr:', company?.eventManagerPtr);
-
-        // Log specific EventManager fields
-        if (company?.eventManagerPtr) {
-          console.log('🔍 EventManager configs:');
-          console.log('  - tradeinVehicleConfig:', company.eventManagerPtr.tradeinVehicleConfig);
-          console.log('  - tradeinVehicleTemplates:', company.eventManagerPtr.tradeinVehicleTemplates);
-          console.log('  - chaseUpVehicleConfig:', company.eventManagerPtr.chaseUpVehicleConfig);
-          console.log('  - webhookUrlV2:', company.eventManagerPtr.webhookUrlV2);
-        } else {
-          console.warn('⚠️ eventManagerPtr is NULL or UNDEFINED');
-        }
 
         // Transform backend data to frontend format
         // Helper function to safely parse dates
@@ -1253,9 +1213,7 @@ export default function EditCompanyPage() {
         parentCompanyId: formData.parentCompanyId || undefined,
       };
 
-      console.log('Updating company:', updateData);
       const updatedCompany = await companiesService.updateCompany(id, updateData);
-      console.log('Company updated successfully:', updatedCompany);
 
       setHasUnsavedChanges(false);
       // Navigate back to companies list after save

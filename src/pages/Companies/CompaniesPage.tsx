@@ -153,7 +153,6 @@ export default function CompaniesPage() {
         }
       });
 
-      console.log(`Company ${!isCurrentlyArchived ? 'archived' : 'unarchived'} successfully:`, archiveModal.company);
       setArchiveModal({ open: false });
 
       // If archiving, switch filter to show archived companies
@@ -280,7 +279,6 @@ export default function CompaniesPage() {
       );
 
       if (duplicatedCompany) {
-        console.log('Company duplicated successfully:', duplicatedCompany);
         setDuplicateModal({ open: false });
         setDuplicateForm({
           companyName: '',

@@ -142,10 +142,6 @@ class CompaniesService {
   }
 
   async createCompany(data: CreateCompanyData): Promise<Company> {
-    console.log('=== CREATE COMPANY - Data being sent to API ===', data);
-    console.log('eventsConfig:', data.eventsConfig);
-    console.log('parentCompanyId:', data.parentCompanyId);
-
     if (isMockMode()) {
       await mockDelay(config.mock.delay);
       const newCompany: Company = {
@@ -161,10 +157,6 @@ class CompaniesService {
   }
 
   async updateCompany(id: string, data: UpdateCompanyData): Promise<Company | null> {
-    console.log('=== UPDATE COMPANY - Data being sent to API ===', data);
-    console.log('eventsConfig:', data.eventsConfig);
-    console.log('parentCompanyId:', data.parentCompanyId);
-
     if (isMockMode()) {
       await mockDelay(config.mock.delay);
       const index = mockCompanies.findIndex(c => getCompanyId(c) === id);

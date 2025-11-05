@@ -1005,9 +1005,7 @@ export default function CreateCompanyPage() {
         parentCompanyId: formData.parentCompanyId || undefined,
       };
 
-      console.log('Creating company with all relations:', companyData);
       const newCompany = await companiesService.createCompany(companyData);
-      console.log('Company created successfully:', newCompany);
 
       // Navigate back to companies list after save
       navigate('/companies');
