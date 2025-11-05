@@ -343,7 +343,6 @@ export default function CompaniesPage() {
     setFilters({
       contractType: '',
       companyHierarchy: '',
-      fastTrack: '',
       archived: 'active'
     });
     setSearchTerm('');
@@ -537,7 +536,7 @@ export default function CompaniesPage() {
           {/* Filters Panel */}
           {showFilters && (
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Contract Type</label>
                   <select
@@ -563,19 +562,6 @@ export default function CompaniesPage() {
                     <option value="">All Companies</option>
                     <option value="root">Parent Companies</option>
                     <option value="child">Child Companies</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Fast Track</label>
-                  <select
-                    value={filters.fastTrack}
-                    onChange={(e) => setFilters(prev => ({ ...prev, fastTrack: e.target.value }))}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">All</option>
-                    <option value="enabled">Enabled</option>
-                    <option value="disabled">Disabled</option>
                   </select>
                 </div>
 
@@ -1096,6 +1082,7 @@ export default function CompaniesPage() {
                 companyName: '',
                 senderName: '',
                 webhookUrl: '',
+                parentCompanyId: '',
                 errors: {
                   companyName: '',
                   senderName: '',
