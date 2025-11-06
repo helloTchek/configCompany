@@ -865,6 +865,8 @@ export default function CreateCompanyPage() {
         companySMSNumber: '',
         agentSMS: eventData.agent?.sms || false,
         agentEmail: eventData.agent?.email || false,
+        agentEmailAddress: eventData.agent?.address || '',
+        agentSMSNumber: '',
         customerEmail: eventData.customer?.email || false,
         customerSMS: eventData.customer?.sms || false,
         senderEmail: '',

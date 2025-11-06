@@ -869,6 +869,7 @@ export default function EditCompanyPage() {
         newTemplates[frontendEventKey].emailAddress.address = config.companyEmailAddress || '';
         newTemplates[frontendEventKey].agent.email = config.agentEmail || false;
         newTemplates[frontendEventKey].agent.sms = config.agentSMS || false;
+        newTemplates[frontendEventKey].agent.address = config.agentEmailAddress || '';
         newTemplates[frontendEventKey].customer.email = config.customerEmail || false;
         newTemplates[frontendEventKey].customer.sms = config.customerSMS || false;
         newTemplates[frontendEventKey].user.email = config.customerEmail || false;
@@ -1083,6 +1084,8 @@ export default function EditCompanyPage() {
         companySMSNumber: '',
         agentSMS: eventData.agent?.sms || false,
         agentEmail: eventData.agent?.email || false,
+        agentEmailAddress: eventData.agent?.address || '',
+        agentSMSNumber: '',
         customerEmail: eventData.customer?.email || false,
         customerSMS: eventData.customer?.sms || false,
         senderEmail: '',
