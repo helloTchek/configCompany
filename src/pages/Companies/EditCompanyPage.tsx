@@ -833,14 +833,6 @@ export default function EditCompanyPage() {
   // Load event templates from backend EventManager and transform to frontend format
   const loadEventTemplatesFromBackend = (eventManager: any) => {
 
-    const backendToFrontendEventMapping = {
-      tradeinVehicle: 'selfInspectionCreation',
-      chaseUpVehicle: 'manualChaseUp',
-      detectionFinished: 'inspectionFinished',
-      createReport: 'damageReviewFinished',
-      shareUpdatedReport: 'shareUpdatedReport'
-    };
-
     const backendToFrontendLangMapping = {
       EN: 'en',
       FR: 'fr',
@@ -855,14 +847,31 @@ export default function EditCompanyPage() {
     // Deep clone templates to ensure React detects changes
     const newTemplates = JSON.parse(JSON.stringify(templates));
 
-    Object.keys(backendToFrontendEventMapping).forEach(backendEventKey => {
-      const frontendEventKey = backendToFrontendEventMapping[backendEventKey];
+    // Mapping Frontend → Backend event names
+    const frontendToBackendEventMapping: { [key: string]: string } = {
+      selfInspectionCreation: 'tradeinVehicle',
+      manualChaseUp: 'chaseUpVehicle',
+      inspectionFinished: 'detectionFinished',
+      damageReviewFinished: 'createReport',
+      shareUpdatedReport: 'shareUpdatedReport',
+    };
+
+    // Frontend event keys
+    const frontendEventKeys = ['selfInspectionCreation', 'manualChaseUp', 'inspectionFinished', 'damageReviewFinished', 'shareUpdatedReport'];
+
+    frontendEventKeys.forEach(frontendEventKey => {
+      // Map to backend event name to read from Parse
+      const backendEventKey = frontendToBackendEventMapping[frontendEventKey];
+      if (!backendEventKey) {
+        console.warn(`Unknown frontend event key: ${frontendEventKey}`);
+        return;
+      }
+
       const config = eventManager[`${backendEventKey}Config`];
       const templatesData = eventManager[`${backendEventKey}Templates`];
 
       if (config) {
-        // Map config to frontend format
-
+        // Map config to frontend format (use frontendEventKey to store in frontend state)
         newTemplates[frontendEventKey].webhook.enabled = config.webhook || false;
         newTemplates[frontendEventKey].emailAddress.email = config.companyEmail || false;
         newTemplates[frontendEventKey].emailAddress.sms = config.companySMS || false;
@@ -898,6 +907,10 @@ export default function EditCompanyPage() {
           if (channel === 'Email') {
             const emailData = templatesData[templateKey];
             if (emailData && typeof emailData === 'object') {
+              // Auto-enable flags if template exists
+              newTemplates[frontendEventKey][addressee].enabled = true;
+              newTemplates[frontendEventKey][addressee].email = true;
+
               newTemplates[frontendEventKey][addressee].templates[frontendLang].email = {
                 subject: emailData.subject || '',
                 content: emailData.text || emailData.html || ''
@@ -906,6 +919,10 @@ export default function EditCompanyPage() {
           } else if (channel === 'SMS') {
             const smsData = templatesData[templateKey];
             if (typeof smsData === 'string') {
+              // Auto-enable flags if template exists
+              newTemplates[frontendEventKey][addressee].enabled = true;
+              newTemplates[frontendEventKey][addressee].sms = true;
+
               newTemplates[frontendEventKey][addressee].templates[frontendLang].sms = {
                 content: smsData
               };
@@ -1044,15 +1061,6 @@ export default function EditCompanyPage() {
     setHasUnsavedChanges(true);
   };
 
-  // Event name mapping: Frontend → Backend
-  const eventNameMapping = {
-    selfInspectionCreation: 'tradeinVehicle',
-    manualChaseUp: 'chaseUpVehicle',
-    inspectionFinished: 'detectionFinished',
-    damageReviewFinished: 'createReport',
-    shareUpdatedReport: 'shareUpdatedReport'
-  };
-
   // Language code mapping: Frontend → Backend
   const languageMapping = {
     en: 'EN',
@@ -1065,36 +1073,39 @@ export default function EditCompanyPage() {
     no: 'NO'
   };
 
+  // Event name mapping: Frontend → Backend (must match backend Parse field names)
+  const eventNameMapping: { [key: string]: string } = {
+    selfInspectionCreation: 'tradeinVehicle',
+    manualChaseUp: 'chaseUpVehicle',
+    inspectionFinished: 'detectionFinished',
+    damageReviewFinished: 'createReport',
+    shareUpdatedReport: 'shareUpdatedReport',
+  };
+
   // Transform frontend templates to backend event configuration
   const transformTemplatesToBackendFormat = () => {
     const eventsConfig: any = {};
 
     Object.keys(templates).forEach(frontendEventKey => {
-      const backendEventKey = eventNameMapping[frontendEventKey];
-      if (!backendEventKey) return;
-
       const eventData = templates[frontendEventKey];
 
-      // Build config object
-      const config: any = {
-        webhook: eventData.webhook?.enabled || false,
-        companyEmail: eventData.emailAddress?.email || false,
-        companyEmailAddress: eventData.emailAddress?.address || '',
-        companySMS: eventData.emailAddress?.sms || false,
-        companySMSNumber: '',
-        agentSMS: eventData.agent?.sms || false,
-        agentEmail: eventData.agent?.email || false,
-        agentEmailAddress: eventData.agent?.address || '',
-        agentSMSNumber: '',
-        customerEmail: eventData.customer?.email || false,
-        customerSMS: eventData.customer?.sms || false,
-        senderEmail: '',
-        senderName: formData.senderName || '',
-        pdfGeneration: false
-      };
+      // Map frontend event name to backend Parse field name
+      const backendEventKey = eventNameMapping[frontendEventKey];
+      if (!backendEventKey) {
+        console.warn(`Unknown event key: ${frontendEventKey}`);
+        return;
+      }
 
-      // Build templates object
+      // Build templates object first to check which flags should be enabled
       const templatesObj: any = {};
+      const detectedFlags: any = {
+        companyEmail: false,
+        companySMS: false,
+        agentEmail: false,
+        agentSMS: false,
+        customerEmail: false,
+        customerSMS: false,
+      };
 
       // Process each addressee (user, customer, emailAddress, agent)
       ['user', 'customer', 'emailAddress', 'agent'].forEach(addressee => {
@@ -1116,21 +1127,53 @@ export default function EditCompanyPage() {
 
           // Email template
           if (addresseeData.email && langTemplates.email) {
-            templatesObj[`${fieldPrefix}Email_${backendLangCode}`] = {
-              subject: langTemplates.email.subject || '',
-              text: langTemplates.email.content || '',
-              html: langTemplates.email.content || '' // Using same content for HTML
-            };
+            const emailContent = langTemplates.email.subject || langTemplates.email.content;
+            if (emailContent && emailContent.trim() !== '') {
+              templatesObj[`${fieldPrefix}Email_${backendLangCode}`] = {
+                subject: langTemplates.email.subject || '',
+                text: langTemplates.email.content || '',
+                html: langTemplates.email.content || ''
+              };
+              // Auto-enable flag if template has content
+              if (fieldPrefix === 'company') detectedFlags.companyEmail = true;
+              else if (fieldPrefix === 'agent') detectedFlags.agentEmail = true;
+              else if (fieldPrefix === 'customer') detectedFlags.customerEmail = true;
+            }
           }
 
           // SMS template
           if (addresseeData.sms && langTemplates.sms) {
-            templatesObj[`${fieldPrefix}SMS_${backendLangCode}`] = langTemplates.sms.content || '';
+            const smsContent = langTemplates.sms.content;
+            if (smsContent && smsContent.trim() !== '') {
+              templatesObj[`${fieldPrefix}SMS_${backendLangCode}`] = smsContent;
+              // Auto-enable flag if template has content
+              if (fieldPrefix === 'company') detectedFlags.companySMS = true;
+              else if (fieldPrefix === 'agent') detectedFlags.agentSMS = true;
+              else if (fieldPrefix === 'customer') detectedFlags.customerSMS = true;
+            }
           }
         });
       });
 
-      // Store in eventsConfig
+      // Build config object with auto-detected flags
+      const config: any = {
+        webhook: eventData.webhook?.enabled || false,
+        companyEmail: detectedFlags.companyEmail || eventData.emailAddress?.email || false,
+        companyEmailAddress: eventData.emailAddress?.address || '',
+        companySMS: detectedFlags.companySMS || eventData.emailAddress?.sms || false,
+        companySMSNumber: '',
+        agentSMS: detectedFlags.agentSMS || eventData.agent?.sms || false,
+        agentEmail: detectedFlags.agentEmail || eventData.agent?.email || false,
+        agentEmailAddress: eventData.agent?.address || '',
+        agentSMSNumber: '',
+        customerEmail: detectedFlags.customerEmail || eventData.customer?.email || false,
+        customerSMS: detectedFlags.customerSMS || eventData.customer?.sms || false,
+        senderEmail: '',
+        senderName: formData.senderName || '',
+        pdfGeneration: false
+      };
+
+      // Store in eventsConfig using backend Parse field names
       eventsConfig[`${backendEventKey}Config`] = config;
       eventsConfig[`${backendEventKey}Templates`] = templatesObj;
     });
