@@ -8,8 +8,8 @@ export type CreateChaseUpRuleData = {
   active?: boolean;
   activationDate?: string;
   inspectionStatuses?: number[];
-  autoChaseUpConfig?: any[];
-  autoChaseUpTemplates?: any[];
+  config?: any[];  // EventOptionsModel[]
+  templates?: any[];  // EventTemplatesModel[]
   firstChaseUpDelayInDays?: number;
   firstChaseUpDelayInMinutes?: number;
   periodSubsequentSendingsInDays?: number;

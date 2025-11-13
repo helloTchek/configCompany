@@ -1,10 +1,12 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/Layout/Header';
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
 import { ArrowLeft, Save } from 'lucide-react';
 import { ChaseupRule, ChaseupReminder, ChaseupTemplates } from '../../types';
+import chaseUpRulesService, { CreateChaseUpRuleData } from '../../services/chaseupRulesService';
+import companiesService from '../../services/companiesService';
 
 const languages = [
   { code: 'en', name: 'English' },
@@ -98,6 +100,28 @@ export default function CreateChaseupRulePage() {
     company: '',
     activationDate: ''
   });
+
+  const [allCompaniesLight, setAllCompaniesLight] = useState<Array<{ id: string; name: string }>>([]);
+  const [loadingCompanies, setLoadingCompanies] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [companySearchTerm, setCompanySearchTerm] = useState('');
+  const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
+
+  // Load all companies light (for dropdown) - REUSING CompaniesPage logic
+  useEffect(() => {
+    const loadAllCompaniesLight = async () => {
+      try {
+        setLoadingCompanies(true);
+        const lightCompanies = await companiesService.getAllCompaniesLight();
+        setAllCompaniesLight(lightCompanies);
+      } catch (error) {
+        console.error('Error loading all companies light:', error);
+      } finally {
+        setLoadingCompanies(false);
+      }
+    };
+    loadAllCompaniesLight();
+  }, []);
 
   // Auto-adjust max sendings and second reminder based on delays
   React.useEffect(() => {
@@ -197,17 +221,164 @@ export default function CreateChaseupRulePage() {
     return !newErrors.company && !newErrors.activationDate;
   };
 
-  const handleSave = () => {
+  /**
+   * Transform frontend formData to backend API format
+   * Backend expects EventOptionsModel[] with boolean flags
+   */
+  const transformFrontendToBackend = (): CreateChaseUpRuleData => {
+    // Convert affectedStatuses object to inspectionStatuses array
+    const inspectionStatuses: number[] = [];
+    if (formData.affectedStatuses.inspectionCreated) inspectionStatuses.push(0);
+    if (formData.affectedStatuses.inspectionInProgress) inspectionStatuses.push(1);
+    if (formData.affectedStatuses.detectionFinished) inspectionStatuses.push(2);
+    if (formData.affectedStatuses.damageReviewOngoing) inspectionStatuses.push(3);
+    if (formData.affectedStatuses.completed) inspectionStatuses.push(4);
+    if (formData.affectedStatuses.chasedUpManually) inspectionStatuses.push(5);
+
+    // Build config array in EventOptionsModel format
+    const config: any[] = [];
+    const templates: any[] = [];
+
+    // Helper function to build config object for a reminder
+    const buildConfigObject = (reminder: ChaseupReminder | undefined) => {
+      if (!reminder) return null;
+
+      return {
+        webhook: reminder.webhook.enabled,
+        companyEmail: reminder.emailAddress.enabled && reminder.emailAddress.email,
+        companyEmailAddress: reminder.emailAddress.address || '',
+        companySMSNumber: '',
+        companySMS: reminder.emailAddress.enabled && reminder.emailAddress.sms,
+        agentEmail: reminder.user.enabled && reminder.user.email,
+        agentSMS: reminder.user.enabled && reminder.user.sms,
+        customerEmail: reminder.customer.enabled && reminder.customer.email,
+        customerSMS: reminder.customer.enabled && reminder.customer.sms,
+        senderEmail: '',
+        senderName: ''
+      };
+    };
+
+    // Helper function to build templates array for a reminder
+    const buildTemplatesArray = (reminder: ChaseupReminder | undefined, templates: any[]) => {
+      if (!reminder) return;
+
+      // User templates
+      if (reminder.user.enabled) {
+        Object.entries(reminder.user.templates).forEach(([lang, tmpl]) => {
+          if (reminder.user.sms && tmpl.sms?.content) {
+            templates.push({
+              agentSMS: tmpl.sms.content,
+              locale: lang
+            });
+          }
+          if (reminder.user.email && (tmpl.email?.subject || tmpl.email?.content)) {
+            templates.push({
+              agentEmailSubject: tmpl.email.subject || '',
+              agentEmailBody: tmpl.email.content || '',
+              locale: lang
+            });
+          }
+        });
+      }
+
+      // Customer templates
+      if (reminder.customer.enabled) {
+        Object.entries(reminder.customer.templates).forEach(([lang, tmpl]) => {
+          if (reminder.customer.sms && tmpl.sms?.content) {
+            templates.push({
+              customerSMS: tmpl.sms.content,
+              locale: lang
+            });
+          }
+          if (reminder.customer.email && (tmpl.email?.subject || tmpl.email?.content)) {
+            templates.push({
+              customerEmailSubject: tmpl.email.subject || '',
+              customerEmailBody: tmpl.email.content || '',
+              locale: lang
+            });
+          }
+        });
+      }
+
+      // Email Address (company) templates
+      if (reminder.emailAddress.enabled) {
+        Object.entries(reminder.emailAddress.templates).forEach(([lang, tmpl]) => {
+          if (reminder.emailAddress.sms && tmpl.sms?.content) {
+            templates.push({
+              companySMS: tmpl.sms.content,
+              locale: lang
+            });
+          }
+          if (reminder.emailAddress.email && (tmpl.email?.subject || tmpl.email?.content)) {
+            templates.push({
+              companyEmailSubject: tmpl.email.subject || '',
+              companyEmailBody: tmpl.email.content || '',
+              locale: lang
+            });
+          }
+        });
+      }
+    };
+
+    // Build config for first reminder
+    const firstConfig = buildConfigObject(formData.firstReminder);
+    if (firstConfig) {
+      config.push(firstConfig);
+      buildTemplatesArray(formData.firstReminder, templates);
+    }
+
+    // Build config for second reminder if exists
+    if (formData.secondReminder) {
+      const secondConfig = buildConfigObject(formData.secondReminder);
+      if (secondConfig) {
+        config.push(secondConfig);
+        buildTemplatesArray(formData.secondReminder, templates);
+      }
+    }
+
+    const result: CreateChaseUpRuleData = {
+      companyId: formData.company,
+      actionType: formData.type,
+      active: true,
+      activationDate: formData.activationDate,
+      inspectionStatuses,
+      config,
+      templates,
+      sendingUTCTimeHour: formData.utcSendingTime.hour,
+      sendingUTCTimeMinute: formData.utcSendingTime.minute,
+      maxSendingsNb: formData.maxSendings
+    };
+
+    // Only add optional delay fields if they have values
+    if (formData.firstDelayDays !== undefined) {
+      result.firstChaseUpDelayInDays = formData.firstDelayDays;
+    }
+    if (formData.firstDelayMinutes !== undefined) {
+      result.firstChaseUpDelayInMinutes = formData.firstDelayMinutes;
+    }
+    if (formData.secondDelayDays !== undefined) {
+      result.periodSubsequentSendingsInDays = formData.secondDelayDays;
+    }
+
+    return result;
+  };
+
+  const handleSave = async () => {
     if (!validateForm()) {
       return;
     }
 
-    const newRule: Omit<ChaseupRule, 'id' | 'createdAt' | 'updatedAt'> = {
-      ...formData
-    };
-
-    console.log('Creating chase-up rule:', newRule);
-    navigate('/chaseup-rules');
+    try {
+      setIsSaving(true);
+      const backendData = transformFrontendToBackend();
+      await chaseUpRulesService.createChaseUpRule(backendData);
+      navigate('/chaseup-rules');
+    } catch (error) {
+      console.error('Error creating chase-up rule:', error);
+      alert('Failed to create chase-up rule. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const renderRecipientConfig = (
@@ -391,20 +562,61 @@ export default function CreateChaseupRulePage() {
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Configuration</h3>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div>
+              <div className="relative">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
-                <select
-                  value={formData.company}
-                  onChange={(e) => handleInputChange('company', e.target.value)}
+                <input
+                  type="text"
+                  value={companySearchTerm}
+                  onChange={(e) => {
+                    setCompanySearchTerm(e.target.value);
+                    setShowCompanyDropdown(true);
+                  }}
+                  onFocus={() => setShowCompanyDropdown(true)}
+                  placeholder={loadingCompanies ? 'Loading companies...' : 'Search company...'}
+                  disabled={loadingCompanies}
                   className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                     errors.company ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                >
-                  <option value="">Select Company</option>
-                  <option value="AutoCorp Insurance">AutoCorp Insurance</option>
-                  <option value="FleetMax Leasing">FleetMax Leasing</option>
-                </select>
+                  } ${loadingCompanies ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                />
                 {errors.company && <p className="text-sm text-red-600 mt-1">{errors.company}</p>}
+
+                {/* Dropdown with filtered companies */}
+                {showCompanyDropdown && !loadingCompanies && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setShowCompanyDropdown(false)}
+                    />
+                    <div className="absolute z-20 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      {allCompaniesLight
+                        .filter(company =>
+                          company.name?.toLowerCase().includes((companySearchTerm || '').toLowerCase())
+                        )
+                        .map((company) => (
+                          <div
+                            key={company.id}
+                            onClick={() => {
+                              handleInputChange('company', company.id);
+                              setCompanySearchTerm(company.name);
+                              setShowCompanyDropdown(false);
+                            }}
+                            className={`px-3 py-2 cursor-pointer hover:bg-blue-50 ${
+                              formData.company === company.id ? 'bg-blue-100' : ''
+                            }`}
+                          >
+                            <div className="font-medium">{company.name}</div>
+                          </div>
+                        ))}
+                      {allCompaniesLight.filter(company =>
+                        company.name?.toLowerCase().includes((companySearchTerm || '').toLowerCase())
+                      ).length === 0 && (
+                        <div className="px-3 py-2 text-gray-500 text-sm">
+                          No companies found
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
               </div>
 
               <div>
@@ -622,15 +834,20 @@ export default function CreateChaseupRulePage() {
 
           {/* Save Buttons */}
           <div className="flex gap-4 justify-end sticky bottom-0 bg-white py-4 border-t border-gray-200">
-            <Button variant="secondary" onClick={() => navigate('/chaseup-rules')}>
+            <Button
+              variant="secondary"
+              onClick={() => navigate('/chaseup-rules')}
+              disabled={isSaving}
+            >
               Cancel
             </Button>
-            <Button 
-              className="flex items-center gap-2" 
+            <Button
+              className="flex items-center gap-2"
               onClick={handleSave}
+              disabled={isSaving || loadingCompanies}
             >
               <Save size={16} />
-              Create Rule
+              {isSaving ? 'Creating...' : 'Create Rule'}
             </Button>
           </div>
         </div>
