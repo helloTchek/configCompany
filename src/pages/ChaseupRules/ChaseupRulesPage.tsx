@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthContext';
 import Header from '../../components/Layout/Header';
@@ -6,20 +6,25 @@ import Table from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
 import Modal from '../../components/UI/Modal';
 import Input from '../../components/UI/Input';
-import { mockChaseupRules } from '../../data/mockData';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { ChaseupRule } from '../../types';
+import chaseUpRulesService from '../../services/chaseupRulesService';
+import companiesService from '../../services/companiesService';
 import { CreditCard as Edit, Copy, Trash2, Plus, Search, ListFilter as Filter, X } from 'lucide-react';
 
 export default function ChaseupRulesPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+
   // Check for company filter from URL params
   const urlParams = new URLSearchParams(window.location.search);
   const companyFromUrl = urlParams.get('company');
-  
-  const [rules, setRules] = useState<ChaseupRule[]>([...mockChaseupRules]);
+
+  const [rules, setRules] = useState<ChaseupRule[]>([]);
+  const [allCompaniesLight, setAllCompaniesLight] = useState<Array<{ objectId: string; id: string; name: string; identifier?: string }>>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(!!companyFromUrl);
   const [filters, setFilters] = useState({
     type: '',
@@ -29,6 +34,61 @@ export default function ChaseupRulesPage() {
   const [duplicateModal, setDuplicateModal] = useState<{ open: boolean; rule?: ChaseupRule }>({ open: false });
   const [duplicateName, setDuplicateName] = useState('');
   const [deleteModal, setDeleteModal] = useState<{ open: boolean; rule?: ChaseupRule }>({ open: false });
+
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Load all companies light (for dropdowns) - REUSING CompaniesPage logic
+  useEffect(() => {
+    const loadAllCompaniesLight = async () => {
+      try {
+        const lightCompanies = await companiesService.getAllCompaniesLight();
+        setAllCompaniesLight(lightCompanies);
+      } catch (error) {
+        console.error('Error loading all companies light:', error);
+      }
+    };
+    loadAllCompaniesLight();
+  }, []);
+
+  // Load chase-up rules
+  const loadChaseUpRules = async () => {
+    try {
+      setLoading(true);
+      const params: any = {};
+
+      if (debouncedSearchTerm) params.search = debouncedSearchTerm;
+      if (filters.company) params.companyId = filters.company;
+      if (filters.type) params.actionType = filters.type;
+
+      const response = await chaseUpRulesService.getChaseUpRules(params);
+
+      // Filter by company for non-superAdmin users
+      let filteredRules = response.data;
+      if (user?.role !== 'superAdmin') {
+        filteredRules = filteredRules.filter(rule =>
+          rule.company === user?.companyId || rule.company === user?.companyName
+        );
+      }
+
+      setRules(filteredRules);
+    } catch (error) {
+      console.error('Error loading chase-up rules:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Effect to load data with debounce and filters
+  useEffect(() => {
+    loadChaseUpRules();
+  }, [debouncedSearchTerm, filters.company, filters.type, user?.role, user?.companyId, user?.companyName]);
 
   const clearFilters = () => {
     setFilters({
@@ -41,31 +101,11 @@ export default function ChaseupRulesPage() {
 
   const hasActiveFilters = searchTerm || Object.values(filters).some(filter => filter !== '');
 
-  // Filter and search logic
-  let filteredRules = rules.filter(rule => {
-    // Search filter
-    const matchesSearch = !searchTerm ||
-      rule.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      rule.type.toLowerCase().includes(searchTerm.toLowerCase());
-
-    // Type filter
-    const matchesType = !filters.type || rule.type === filters.type;
-
-    // Company filter
-    const matchesCompany = !filters.company || rule.company === filters.company;
-
-    // Max sendings filter
+  // Client-side filter for maxSendings (not handled by backend)
+  const filteredRules = rules.filter(rule => {
     const matchesMaxSendings = !filters.maxSendings || rule.maxSendings.toString() === filters.maxSendings;
-
-    return matchesSearch && matchesType && matchesCompany && matchesMaxSendings;
+    return matchesMaxSendings;
   });
-
-  // Apply company-based filtering for non-superAdmin users
-  if (user?.role !== 'superAdmin') {
-    filteredRules = filteredRules.filter(rule => 
-      rule.company === user?.companyName
-    );
-  }
 
   const handleDuplicate = (rule: ChaseupRule) => {
     setDuplicateName(`${rule.company} - Copy`);
@@ -76,12 +116,20 @@ export default function ChaseupRulesPage() {
     setDeleteModal({ open: true, rule });
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!deleteModal.rule) return;
 
-    setRules(prevRules => prevRules.filter(r => r.id !== deleteModal.rule!.id));
-    
-    setDeleteModal({ open: false });
+    try {
+      setLoading(true);
+      await chaseUpRulesService.deleteChaseUpRule(deleteModal.rule.id);
+      setDeleteModal({ open: false });
+      // Reload rules after deletion
+      await loadChaseUpRules();
+    } catch (error) {
+      console.error('Error deleting chase-up rule:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const confirmDuplicate = () => {
@@ -251,8 +299,11 @@ export default function ChaseupRulesPage() {
                     className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="">All Companies</option>
-                    <option value="AutoCorp Insurance">AutoCorp Insurance</option>
-                    <option value="FleetMax Leasing">FleetMax Leasing</option>
+                    {allCompaniesLight.map(company => (
+                      <option key={company.objectId || company.id} value={company.objectId || company.id}>
+                        {company.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -286,17 +337,25 @@ export default function ChaseupRulesPage() {
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200">
-          <Table columns={columns} data={filteredRules} />
-          
-          {filteredRules.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              <p>No chase-up rules found matching your criteria.</p>
-              {hasActiveFilters && (
-                <Button variant="secondary" onClick={clearFilters} className="mt-2">
-                  Clear Filters
-                </Button>
-              )}
+          {loading ? (
+            <div className="flex justify-center items-center py-8">
+              <LoadingSpinner />
             </div>
+          ) : (
+            <>
+              <Table columns={columns} data={filteredRules} />
+
+              {filteredRules.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  <p>No chase-up rules found matching your criteria.</p>
+                  {hasActiveFilters && (
+                    <Button variant="secondary" onClick={clearFilters} className="mt-2">
+                      Clear Filters
+                    </Button>
+                  )}
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

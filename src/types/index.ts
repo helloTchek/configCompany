@@ -200,13 +200,36 @@ export interface ChaseupReminder {
 }
 
 export interface ChaseupTemplates {
-  [language: string]: {
-    email: {
-      subject: string;
-      content: string;
-    };
-    sms: {
-      content: string;
-    };
+  sms: string;
+  email: string;
+}
+
+/**
+ * ChaseUpRule as returned by the backend (Parse fields)
+ */
+export interface ChaseUpRuleBackend {
+  objectId: string;
+  companyPtr: {
+    objectId: string;
+    name?: string;
   };
+  APITokenPtr?: {
+    objectId: string;
+  };
+  active: boolean;
+  type: 'relativeDate';
+  actionType: 'event' | 'anonymization';
+  inspectionStatuses: number[];
+  autoChaseUpConfig?: any[];
+  autoChaseUpTemplates?: any[];
+  firstChaseUpDelayInDays?: number;
+  firstChaseUpDelayInMinutes?: number;
+  periodSubsequentSendingsInDays?: number;
+  sendingUTCTimeHour?: number;
+  sendingUTCTimeMinute?: number;
+  activationDate?: string;
+  maxSendingsNb: number;
+  createdAt: string;
+  updatedAt: string;
+  ACL?: any;
 }

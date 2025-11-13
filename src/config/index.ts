@@ -33,6 +33,12 @@ export const API_ENDPOINTS = {
     	list: '/inspections',
     	byCompany: (companyId: string) => `/companies/${companyId}/inspections`,
   	},
+  	chaseupRules: {
+    	list: '/chaseup',
+    	detail: (id: string) => `/chaseup/${id}`,
+    	byCompany: (companyId: string) => `/chaseup/company/${companyId}`,
+    	plannedChaseUps: (ruleId: string) => `/chaseup/list/${ruleId}`,
+  	},
 } as const;
 
 export type Config = typeof config;
