@@ -70,7 +70,8 @@ const createEmptyReminder = (): ChaseupReminder => ({
 
 export default function CreateChaseupRulePage() {
   const navigate = useNavigate();
-  const [selectedLanguage, setSelectedLanguage] = useState('en');
+  // Store selected language per reminder/recipient combination
+  const [selectedLanguages, setSelectedLanguages] = useState<Record<string, string>>({});
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const fieldRefs = useRef<Record<string, HTMLInputElement | HTMLTextAreaElement>>({});
 
@@ -166,13 +167,19 @@ export default function CreateChaseupRulePage() {
     const keys = path.split('.');
     const result = { ...obj };
     let current = result;
-    
+
     for (let i = 0; i < keys.length - 1; i++) {
-      current[keys[i]] = { ...current[keys[i]] };
-      current = current[keys[i]];
+      const key = keys[i];
+      if (key) {
+        current[key] = { ...current[key] };
+        current = current[key];
+      }
     }
-    
-    current[keys[keys.length - 1]] = value;
+
+    const lastKey = keys[keys.length - 1];
+    if (lastKey) {
+      current[lastKey] = value;
+    }
     return result;
   };
 
@@ -259,65 +266,90 @@ export default function CreateChaseupRulePage() {
     };
 
     // Helper function to build templates array for a reminder
-    const buildTemplatesArray = (reminder: ChaseupReminder | undefined, templates: any[]) => {
+    const buildTemplatesArray = (reminder: ChaseupReminder | undefined, templatesArray: any[]) => {
       if (!reminder) return;
 
-      // User templates
-      if (reminder.user.enabled) {
+      // Build templates in EventTemplatesModel format
+      // Backend expects: { agentEmail_FR: {subject, text, html}, agentSMS_EN: "text", ... }
+
+      // Map frontend language codes to backend format (fr -> FR, nlbe -> NL-BE, etc.)
+      const langCodeMap: Record<string, string> = {
+        'fr': 'FR',
+        'en': 'EN',
+        'de': 'DE',
+        'it': 'IT',
+        'es': 'ES',
+        'nlbe': 'NL-BE',
+        'sv': 'SV',
+        'no': 'NO'
+      };
+
+      // Collect all templates per language into a single object
+      const templatesByLang: Record<string, any> = {};
+
+      // Process user/agent templates
+      if (reminder.user.enabled && reminder.user.templates) {
         Object.entries(reminder.user.templates).forEach(([lang, tmpl]) => {
-          if (reminder.user.sms && tmpl.sms?.content) {
-            templates.push({
-              agentSMS: tmpl.sms.content,
-              locale: lang
-            });
-          }
+          const langCode = langCodeMap[lang] || lang.toUpperCase();
+          if (!templatesByLang[langCode]) templatesByLang[langCode] = {};
+
           if (reminder.user.email && (tmpl.email?.subject || tmpl.email?.content)) {
-            templates.push({
-              agentEmailSubject: tmpl.email.subject || '',
-              agentEmailBody: tmpl.email.content || '',
-              locale: lang
-            });
+            templatesByLang[langCode][`agentEmail_${langCode}`] = {
+              subject: tmpl.email.subject || '',
+              text: tmpl.email.content || '',
+              html: tmpl.email.content || ''
+            };
+          }
+          if (reminder.user.sms && tmpl.sms?.content) {
+            templatesByLang[langCode][`agentSMS_${langCode}`] = tmpl.sms.content;
           }
         });
       }
 
-      // Customer templates
-      if (reminder.customer.enabled) {
+      // Process customer templates
+      if (reminder.customer.enabled && reminder.customer.templates) {
         Object.entries(reminder.customer.templates).forEach(([lang, tmpl]) => {
-          if (reminder.customer.sms && tmpl.sms?.content) {
-            templates.push({
-              customerSMS: tmpl.sms.content,
-              locale: lang
-            });
-          }
+          const langCode = langCodeMap[lang] || lang.toUpperCase();
+          if (!templatesByLang[langCode]) templatesByLang[langCode] = {};
+
           if (reminder.customer.email && (tmpl.email?.subject || tmpl.email?.content)) {
-            templates.push({
-              customerEmailSubject: tmpl.email.subject || '',
-              customerEmailBody: tmpl.email.content || '',
-              locale: lang
-            });
+            templatesByLang[langCode][`customerEmail_${langCode}`] = {
+              subject: tmpl.email.subject || '',
+              text: tmpl.email.content || '',
+              html: tmpl.email.content || ''
+            };
+          }
+          if (reminder.customer.sms && tmpl.sms?.content) {
+            templatesByLang[langCode][`customerSMS_${langCode}`] = tmpl.sms.content;
           }
         });
       }
 
-      // Email Address (company) templates
-      if (reminder.emailAddress.enabled) {
+      // Process company templates
+      if (reminder.emailAddress.enabled && reminder.emailAddress.templates) {
         Object.entries(reminder.emailAddress.templates).forEach(([lang, tmpl]) => {
-          if (reminder.emailAddress.sms && tmpl.sms?.content) {
-            templates.push({
-              companySMS: tmpl.sms.content,
-              locale: lang
-            });
-          }
+          const langCode = langCodeMap[lang] || lang.toUpperCase();
+          if (!templatesByLang[langCode]) templatesByLang[langCode] = {};
+
           if (reminder.emailAddress.email && (tmpl.email?.subject || tmpl.email?.content)) {
-            templates.push({
-              companyEmailSubject: tmpl.email.subject || '',
-              companyEmailBody: tmpl.email.content || '',
-              locale: lang
-            });
+            templatesByLang[langCode][`companyEmail_${langCode}`] = {
+              subject: tmpl.email.subject || '',
+              text: tmpl.email.content || '',
+              html: tmpl.email.content || ''
+            };
+          }
+          if (reminder.emailAddress.sms && tmpl.sms?.content) {
+            templatesByLang[langCode][`companySMS_${langCode}`] = tmpl.sms.content;
           }
         });
       }
+
+      // Convert to array format expected by backend (one object per language with all templates)
+      Object.values(templatesByLang).forEach(langTemplates => {
+        if (Object.keys(langTemplates).length > 0) {
+          templatesArray.push(langTemplates);
+        }
+      });
     };
 
     // Build config for first reminder
@@ -391,6 +423,14 @@ export default function CreateChaseupRulePage() {
 
     const recipient = reminder[recipientType];
 
+    // Create unique key for this reminder/recipient combination
+    const sectionKey = `${reminderType}-${recipientType}`;
+    // Get or initialize the selected language for this specific section
+    const selectedLanguage = selectedLanguages[sectionKey] || 'en';
+    const setSelectedLanguage = (lang: string) => {
+      setSelectedLanguages(prev => ({ ...prev, [sectionKey]: lang }));
+    };
+
     return (
       <div className="border border-gray-200 rounded-lg p-4">
         <div className="flex items-center justify-between mb-4">
@@ -408,7 +448,7 @@ export default function CreateChaseupRulePage() {
 
         {recipient.enabled && (
           <div className="space-y-4">
-            {recipientType === 'emailAddress' && (
+            {recipientType === 'emailAddress' && 'address' in recipient && (
               <Input
                 label="Email Address"
                 type="email"

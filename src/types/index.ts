@@ -148,7 +148,8 @@ export interface CostMatrixPart {
 
 export interface ChaseupRule {
   id: string;
-  company: string;
+  company: string;  // Company name (for display)
+  companyId?: string;  // Company ID (for edit/create)
   type: 'event' | 'anonymization';
   activationDate: string;
   utcSendingTime: {
@@ -200,8 +201,10 @@ export interface ChaseupReminder {
 }
 
 export interface ChaseupTemplates {
-  sms: string;
-  email: string;
+  [languageCode: string]: {
+    sms: { content: string };
+    email: { subject: string; content: string };
+  };
 }
 
 /**

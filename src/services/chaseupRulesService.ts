@@ -47,11 +47,25 @@ export interface PaginatedResponse<T> {
  * Transform backend ChaseUpRule to frontend ChaseupRule format
  */
 const transformBackendToFrontend = (backendRule: any): ChaseupRule => {
+  // Handle Parse Date objects
+  const formatDate = (dateValue: any): string => {
+    if (!dateValue) return '';
+    if (typeof dateValue === 'string') return dateValue;
+    if (dateValue.iso) return dateValue.iso; // Parse Date format
+    if (dateValue instanceof Date) return dateValue.toISOString();
+    try {
+      return new Date(dateValue).toISOString();
+    } catch {
+      return '';
+    }
+  };
+
   return {
-    id: backendRule.objectId,
-    company: backendRule.companyPtr?.name || backendRule.companyPtr?.objectId || '',
+    id: backendRule.id || backendRule.objectId,
+    company: backendRule.companyPtr?.name || backendRule.companyPtr?.id || backendRule.companyPtr?.objectId || '',
+    companyId: backendRule.companyPtr?.id || backendRule.companyPtr?.objectId,
     type: backendRule.actionType,
-    activationDate: backendRule.activationDate,
+    activationDate: formatDate(backendRule.activationDate),
     utcSendingTime: {
       hour: backendRule.sendingUTCTimeHour || 0,
       minute: backendRule.sendingUTCTimeMinute || 0
@@ -68,14 +82,109 @@ const transformBackendToFrontend = (backendRule: any): ChaseupRule => {
     firstDelayMinutes: backendRule.firstChaseUpDelayInMinutes,
     secondDelayDays: backendRule.periodSubsequentSendingsInDays,
     maxSendings: (backendRule.maxSendingsNb as 0 | 1 | 2) || 0,
-    firstReminder: {
-      webhook: { enabled: false },
-      user: { enabled: false, sms: false, email: false, templates: { sms: '', email: '' } },
-      customer: { enabled: false, sms: false, email: false, templates: { sms: '', email: '' } },
-      emailAddress: { enabled: false, address: '', sms: false, email: false, templates: { sms: '', email: '' } },
-    },
+    firstReminder: transformBackendReminder(backendRule.autoChaseUpConfig?.[0], backendRule.autoChaseUpTemplates),
+    secondReminder: backendRule.autoChaseUpConfig?.length > 1
+      ? transformBackendReminder(backendRule.autoChaseUpConfig[1], backendRule.autoChaseUpTemplates)
+      : undefined,
     createdAt: backendRule.createdAt,
     updatedAt: backendRule.updatedAt,
+  };
+};
+
+/**
+ * Transform backend reminder config to frontend format
+ */
+const transformBackendReminder = (config: any, templates: any[]): any => {
+  if (!config) {
+    return {
+      webhook: { enabled: false },
+      user: { enabled: false, sms: false, email: false, templates: {} },
+      customer: { enabled: false, sms: false, email: false, templates: {} },
+      emailAddress: { enabled: false, address: '', sms: false, email: false, templates: {} },
+    };
+  }
+
+  // Build templates by language
+  const userTemplates: any = {};
+  const customerTemplates: any = {};
+  const companyTemplates: any = {};
+
+  // Define all supported languages
+  const languageCodes = ['FR', 'EN', 'DE', 'IT', 'ES', 'NL-BE', 'SV', 'NO'];
+
+  // Initialize ALL languages first (so they're always available in the UI)
+  languageCodes.forEach(langCode => {
+    const lang = langCode.toLowerCase().replace('-', '');
+    userTemplates[lang] = { sms: { content: '' }, email: { subject: '', content: '' } };
+    customerTemplates[lang] = { sms: { content: '' }, email: { subject: '', content: '' } };
+    companyTemplates[lang] = { sms: { content: '' }, email: { subject: '', content: '' } };
+  });
+
+  // Process templates - backend format: customerEmail_FR, agentSMS_EN, etc.
+  if (templates && Array.isArray(templates)) {
+    templates.forEach((tmpl: any) => {
+      languageCodes.forEach(langCode => {
+        const lang = langCode.toLowerCase().replace('-', '');
+
+        // Agent/User templates
+        const agentEmailKey = `agentEmail_${langCode}`;
+        const agentSMSKey = `agentSMS_${langCode}`;
+        if (tmpl[agentEmailKey]) {
+          userTemplates[lang].email.subject = tmpl[agentEmailKey].subject || '';
+          userTemplates[lang].email.content = tmpl[agentEmailKey].text || tmpl[agentEmailKey].html || '';
+        }
+        if (tmpl[agentSMSKey]) {
+          userTemplates[lang].sms.content = tmpl[agentSMSKey];
+        }
+
+        // Customer templates
+        const customerEmailKey = `customerEmail_${langCode}`;
+        const customerSMSKey = `customerSMS_${langCode}`;
+        if (tmpl[customerEmailKey]) {
+          customerTemplates[lang].email.subject = tmpl[customerEmailKey].subject || '';
+          customerTemplates[lang].email.content = tmpl[customerEmailKey].text || tmpl[customerEmailKey].html || '';
+        }
+        if (tmpl[customerSMSKey]) {
+          customerTemplates[lang].sms.content = tmpl[customerSMSKey];
+        }
+
+        // Company templates
+        const companyEmailKey = `companyEmail_${langCode}`;
+        const companySMSKey = `companySMS_${langCode}`;
+        if (tmpl[companyEmailKey]) {
+          companyTemplates[lang].email.subject = tmpl[companyEmailKey].subject || '';
+          companyTemplates[lang].email.content = tmpl[companyEmailKey].text || tmpl[companyEmailKey].html || '';
+        }
+        if (tmpl[companySMSKey]) {
+          companyTemplates[lang].sms.content = tmpl[companySMSKey];
+        }
+      });
+    });
+  }
+
+  return {
+    webhook: {
+      enabled: config.webhook || false
+    },
+    user: {
+      enabled: config.agentEmail || config.agentSMS || false,
+      sms: config.agentSMS || false,
+      email: config.agentEmail || false,
+      templates: userTemplates
+    },
+    customer: {
+      enabled: config.customerEmail || config.customerSMS || false,
+      sms: config.customerSMS || false,
+      email: config.customerEmail || false,
+      templates: customerTemplates
+    },
+    emailAddress: {
+      enabled: config.companyEmail || config.companySMS || false,
+      address: config.companyEmailAddress || '',
+      sms: config.companySMS || false,
+      email: config.companyEmail || false,
+      templates: companyTemplates
+    },
   };
 };
 
@@ -184,9 +293,9 @@ class ChaseUpRulesService {
         maxSendings: (data.maxSendingsNb as 0 | 1 | 2) || 0,
         firstReminder: {
           webhook: { enabled: false },
-          user: { enabled: false, sms: false, email: false, templates: { sms: '', email: '' } },
-          customer: { enabled: false, sms: false, email: false, templates: { sms: '', email: '' } },
-          emailAddress: { enabled: false, address: '', sms: false, email: false, templates: { sms: '', email: '' } },
+          user: { enabled: false, sms: false, email: false, templates: {} },
+          customer: { enabled: false, sms: false, email: false, templates: {} },
+          emailAddress: { enabled: false, address: '', sms: false, email: false, templates: {} },
         },
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
