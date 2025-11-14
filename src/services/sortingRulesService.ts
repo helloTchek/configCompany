@@ -43,10 +43,11 @@ const transformBackendToFrontend = (backendRule: SortingRuleBackend): SortingRul
 /**
  * Transform frontend SortingRule to backend format for create/update
  */
-const transformFrontendToBackend = (frontendData: CreateSortingRuleData | UpdateSortingRuleData): any => {
+const transformFrontendToBackend = (frontendData: CreateSortingRuleData | UpdateSortingRuleData, isUpdate = false): any => {
   const payload: any = {};
 
-  if (frontendData.companyId) payload.companyId = frontendData.companyId;
+  // Don't send companyId on update (company cannot be changed)
+  if (!isUpdate && frontendData.companyId) payload.companyId = frontendData.companyId;
   if (frontendData.type) payload.type = frontendData.type;
   if (frontendData.fromCollection) payload.fromCollection = frontendData.fromCollection;
   if (frontendData.targetCollection) payload.targetCollection = frontendData.targetCollection;
@@ -190,7 +191,7 @@ class SortingRulesService {
       return rule;
     }
 
-    const payload = transformFrontendToBackend(data);
+    const payload = transformFrontendToBackend(data, true);  // true = isUpdate
     const response = await apiClient.put<SortingRuleBackend>(
       `${this.baseEndpoint}/${id}`,
       payload
