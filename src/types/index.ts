@@ -138,7 +138,7 @@ export interface SortingRuleBackend {
   referenceKey: string;
   referencePrefix?: string;
   filters: string;  // JSON string
-  updates: Record<string, any>;  // Object in backend
+  updates: Record<string, any>;  // Object with field updates (no MongoDB operators)
   createdAt: string;
   updatedAt: string;
   ACL?: any;

@@ -10,7 +10,7 @@ export type CreateSortingRuleData = {
   referenceKey: string;
   referencePrefix?: string;
   filters: string;  // JSON string
-  updates: string;  // JSON string (will be parsed to object by backend)
+  updates: string;  // JSON string from form (will be parsed to object before sending to backend)
 };
 
 export type UpdateSortingRuleData = Partial<CreateSortingRuleData>;
@@ -28,9 +28,7 @@ const transformBackendToFrontend = (backendRule: SortingRuleBackend): SortingRul
     targetCollection: backendRule.targetCollection,
     referenceKey: backendRule.referenceKey,
     filters: backendRule.filters,
-    updates: typeof backendRule.updates === 'string'
-      ? backendRule.updates
-      : JSON.stringify(backendRule.updates),
+    updates: JSON.stringify(backendRule.updates),  // Convert object to JSON string for display/editing
     createdAt: backendRule.createdAt,
     updatedAt: backendRule.updatedAt,
   };
@@ -56,14 +54,23 @@ const transformFrontendToBackend = (frontendData: CreateSortingRuleData | Update
   if (frontendData.referencePrefix !== undefined) payload.referencePrefix = frontendData.referencePrefix;
   if (frontendData.filters) payload.filters = frontendData.filters;
 
-  // Backend expects 'updates' as a JSON string that will be validated
+  // Backend expects 'updates' as an object (parse JSON string from form)
   if (frontendData.updates) {
     try {
-      // Validate JSON before sending
-      const parsedUpdates = JSON.parse(frontendData.updates);
-      payload.updates = parsedUpdates;
+      const updatesObj = JSON.parse(frontendData.updates);
+
+      // Validate no MongoDB operators or dot notation
+      const hasInvalidKeys = Object.keys(updatesObj).some(key => key.startsWith('$') || key.includes('.'));
+      if (hasInvalidKeys) {
+        throw new Error('updates object cannot contain keys starting with $ or containing . characters');
+      }
+
+      payload.updates = updatesObj;  // Send as object
     } catch (error) {
-      throw new Error('Invalid JSON format for updates field');
+      if (error instanceof SyntaxError) {
+        throw new Error('Invalid JSON format for updates field');
+      }
+      throw error;
     }
   }
 
