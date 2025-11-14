@@ -350,6 +350,30 @@ class ChaseUpRulesService {
 
     return apiClient.get<any[]>(`/chaseup/list/${ruleId}`);
   }
+
+  /**
+   * Duplicate a chase-up rule to another company
+   */
+  async duplicateChaseUpRule(ruleId: string, targetCompanyId: string): Promise<{ message: string; duplicatedCount: number; rules: ChaseupRule[] }> {
+    if (isMockMode()) {
+      const { mockDelay } = await import('@/mocks/companies.mock');
+      await mockDelay(config.mock.delay);
+      return {
+        message: 'Chase-up rule(s) duplicated successfully',
+        duplicatedCount: 1,
+        rules: []
+      };
+    }
+
+    const response = await apiClient.post<any>(`/chaseup/${ruleId}/duplicate`, { targetCompanyId });
+
+    // Transform backend rules to frontend format
+    return {
+      message: response.message,
+      duplicatedCount: response.duplicatedCount,
+      rules: response.rules.map(transformBackendToFrontend)
+    };
+  }
 }
 
 export const chaseUpRulesService = new ChaseUpRulesService();

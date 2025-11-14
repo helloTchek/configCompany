@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthContext';
 import Header from '../../components/Layout/Header';
 import Table from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
 import Modal from '../../components/UI/Modal';
-import Input from '../../components/UI/Input';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import CompanySelector from '../../components/UI/CompanySelector';
 import { ChaseupRule } from '../../types';
 import chaseUpRulesService from '../../services/chaseupRulesService';
 import companiesService from '../../services/companiesService';
@@ -32,7 +32,7 @@ export default function ChaseupRulesPage() {
     maxSendings: ''
   });
   const [duplicateModal, setDuplicateModal] = useState<{ open: boolean; rule?: ChaseupRule }>({ open: false });
-  const [duplicateName, setDuplicateName] = useState('');
+  const [targetCompanyId, setTargetCompanyId] = useState('');
   const [deleteModal, setDeleteModal] = useState<{ open: boolean; rule?: ChaseupRule }>({ open: false });
 
   // Debounce search term
@@ -108,7 +108,7 @@ export default function ChaseupRulesPage() {
   });
 
   const handleDuplicate = (rule: ChaseupRule) => {
-    setDuplicateName(`${rule.company} - Copy`);
+    setTargetCompanyId('');
     setDuplicateModal({ open: true, rule });
   };
 
@@ -132,23 +132,23 @@ export default function ChaseupRulesPage() {
     }
   };
 
-  const confirmDuplicate = () => {
-    if (!duplicateModal.rule || !duplicateName.trim()) {
+  const confirmDuplicate = async () => {
+    if (!duplicateModal.rule || !targetCompanyId.trim()) {
       return;
     }
 
-    const duplicatedRule: ChaseupRule = {
-      ...duplicateModal.rule,
-      id: `chaseup-rule-${Date.now()}`,
-      company: duplicateName,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    setRules(prevRules => [...prevRules, duplicatedRule]);
-    
-    setDuplicateModal({ open: false });
-    setDuplicateName('');
+    try {
+      setLoading(true);
+      await chaseUpRulesService.duplicateChaseUpRule(duplicateModal.rule.id, targetCompanyId);
+      setDuplicateModal({ open: false });
+      setTargetCompanyId('');
+      // Reload rules after duplication
+      await loadChaseUpRules();
+    } catch (error) {
+      console.error('Error duplicating chase-up rule:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const columns = [
@@ -369,17 +369,21 @@ export default function ChaseupRulesPage() {
       >
         <div className="space-y-4">
           <p className="text-gray-600">
-            Create a copy of the chase-up rule for <strong>{duplicateModal.rule?.company}</strong>
+            Duplicate the chase-up rule from <strong>{duplicateModal.rule?.company}</strong> to a company
           </p>
-          <Input
-            label="New Company Name"
-            value={duplicateName}
-            onChange={(e) => setDuplicateName(e.target.value)}
-            placeholder="Enter company name for the duplicated rule"
+
+          <CompanySelector
+            companies={allCompaniesLight}
+            selectedCompanyId={targetCompanyId}
+            onSelect={setTargetCompanyId}
+            excludeCompanyIds={[]}
+            placeholder="Search and select a company..."
+            label="Target Company"
           />
+
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
             <p className="text-sm text-blue-800">
-              <strong>Note:</strong> All settings, delays, and message templates will be copied to the new rule.
+              <strong>Note:</strong> The chase-up rule will be duplicated to the selected company with all its settings, delays, and message templates. You can select the same company to create a copy.
             </p>
           </div>
           <div className="flex gap-3 justify-end pt-4">
@@ -387,14 +391,14 @@ export default function ChaseupRulesPage() {
               variant="secondary"
               onClick={() => {
                 setDuplicateModal({ open: false });
-                setDuplicateName('');
+                setTargetCompanyId('');
               }}
             >
               Cancel
             </Button>
             <Button
               onClick={confirmDuplicate}
-              disabled={!duplicateName.trim()}
+              disabled={!targetCompanyId.trim()}
             >
               Duplicate Rule
             </Button>
