@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Header from '../../components/Layout/Header';
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
+import CompanySelector from '../../components/UI/CompanySelector';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { ArrowLeft, Save } from 'lucide-react';
 import { ChaseupRule, ChaseupReminder, ChaseupTemplates } from '../../types';
@@ -106,11 +107,9 @@ export default function EditChaseupRulePage() {
     activationDate: ''
   });
 
-  const [allCompaniesLight, setAllCompaniesLight] = useState<Array<{ id: string; name: string }>>([]);
+  const [allCompaniesLight, setAllCompaniesLight] = useState<Array<{ id: string; name: string; identifier?: string }>>([]);
   const [loadingCompanies, setLoadingCompanies] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [companySearchTerm, setCompanySearchTerm] = useState('');
-  const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
 
   // Load existing rule data
   useEffect(() => {
@@ -161,9 +160,6 @@ export default function EditChaseupRulePage() {
           firstReminder: rule.firstReminder || createEmptyReminder(),
           secondReminder: rule.secondReminder
         });
-
-        // Set company search term to the company name (for display in autocomplete)
-        setCompanySearchTerm(rule.company || '');
       } catch (error) {
         console.error('Error loading chase-up rule:', error);
         setRuleNotFound(true);
@@ -704,62 +700,15 @@ export default function EditChaseupRulePage() {
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Configuration</h3>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="relative">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
-                <input
-                  type="text"
-                  value={companySearchTerm}
-                  onChange={(e) => {
-                    setCompanySearchTerm(e.target.value);
-                    setShowCompanyDropdown(true);
-                  }}
-                  onFocus={() => setShowCompanyDropdown(true)}
-                  placeholder={loadingCompanies ? 'Loading companies...' : 'Search company...'}
-                  disabled={loadingCompanies}
-                  className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    errors.company ? 'border-red-500' : 'border-gray-300'
-                  } ${loadingCompanies ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                />
-                {errors.company && <p className="text-sm text-red-600 mt-1">{errors.company}</p>}
-
-                {/* Dropdown with filtered companies */}
-                {showCompanyDropdown && !loadingCompanies && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-10"
-                      onClick={() => setShowCompanyDropdown(false)}
-                    />
-                    <div className="absolute z-20 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                      {allCompaniesLight
-                        .filter(company =>
-                          company.name?.toLowerCase().includes((companySearchTerm || '').toLowerCase())
-                        )
-                        .map((company) => (
-                          <div
-                            key={company.id}
-                            onClick={() => {
-                              handleInputChange('company', company.id);
-                              setCompanySearchTerm(company.name);
-                              setShowCompanyDropdown(false);
-                            }}
-                            className={`px-3 py-2 cursor-pointer hover:bg-blue-50 ${
-                              formData.company === company.id ? 'bg-blue-100' : ''
-                            }`}
-                          >
-                            <div className="font-medium">{company.name}</div>
-                          </div>
-                        ))}
-                      {allCompaniesLight.filter(company =>
-                        company.name?.toLowerCase().includes((companySearchTerm || '').toLowerCase())
-                      ).length === 0 && (
-                        <div className="px-3 py-2 text-gray-500 text-sm">
-                          No companies found
-                        </div>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
+              <CompanySelector
+                companies={allCompaniesLight}
+                selectedCompanyId={formData.company}
+                onSelect={(companyId) => handleInputChange('company', companyId)}
+                placeholder={loadingCompanies ? 'Loading companies...' : 'Search and select a company...'}
+                label="Company"
+                error={errors.company}
+                disabled={loadingCompanies}
+              />
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
