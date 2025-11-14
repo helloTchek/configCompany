@@ -109,15 +109,39 @@ export interface ShootInspectionData {
 
 export interface SortingRule {
   id: string;
-  company: string;
+  company: string;  // Company name for display
+  companyId?: string;  // Company ID for create/edit operations
   type: string;
   fromCollection: string;
   targetCollection: string;
   referenceKey: string;
-  referencePrefix: string;
-  filters: string;
-  updates: string;
-  processingPriority: number;
+  referencePrefix?: string;
+  filters: string;  // JSON string
+  updates: string;  // JSON string for display/edit
+  processingPriority?: number;  // Frontend-only field for UI
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/**
+ * SortingRule as returned by the backend (Parse format)
+ */
+export interface SortingRuleBackend {
+  objectId: string;
+  companyPtr: {
+    objectId: string;
+    name?: string;
+  };
+  type: string;
+  fromCollection: string;
+  targetCollection: string;
+  referenceKey: string;
+  referencePrefix?: string;
+  filters: string;  // JSON string
+  updates: Record<string, any>;  // Object in backend
+  createdAt: string;
+  updatedAt: string;
+  ACL?: any;
 }
 
 export interface CostMatrix {

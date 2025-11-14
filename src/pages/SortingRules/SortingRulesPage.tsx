@@ -1,27 +1,97 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/auth/AuthContext';
 import Header from '../../components/Layout/Header';
 import Table from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
-import Input from '../../components/UI/Input';
-import { mockSortingRules } from '../../data/mockData';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import Modal from '../../components/UI/Modal';
+import CompanySelector from '../../components/UI/CompanySelector';
 import { SortingRule } from '../../types';
-import { CreditCard as Edit, Copy, Plus, Search, ListFilter as Filter, X } from 'lucide-react';
+import sortingRulesService from '../../services/sortingRulesService';
+import { CreditCard as Edit, Plus, Search, ListFilter as Filter, X, Trash2 } from 'lucide-react';
 
 export default function SortingRulesPage() {
   const navigate = useNavigate();
   const { t } = useTranslation(['sortingRules', 'common']);
   const { user } = useAuth();
-  const [rules] = useState<SortingRule[]>(mockSortingRules);
+
+  // Check for company filter from URL params
+  const urlParams = new URLSearchParams(window.location.search);
+  const companyFromUrl = urlParams.get('company');
+
+  const [rules, setRules] = useState<SortingRule[]>([]);
+  const [allRules, setAllRules] = useState<SortingRule[]>([]); // Store all rules for filtering
+  const [companiesWithRules, setCompaniesWithRules] = useState<Array<{ objectId: string; id: string; name: string }>>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(!!companyFromUrl);
   const [filters, setFilters] = useState({
     type: '',
-    company: '',
+    company: companyFromUrl || '',
     priority: ''
   });
+  const [deleteModal, setDeleteModal] = useState<{ open: boolean; rule?: SortingRule }>({ open: false });
+
+  // Load sorting rules and extract unique companies
+  const loadSortingRules = async () => {
+    try {
+      setLoading(true);
+
+      let loadedRules: SortingRule[] = [];
+
+      if (user?.role === 'superAdmin') {
+        // SuperAdmin: Get all rules in one call
+        loadedRules = await sortingRulesService.getAll();
+
+        // Extract unique companies that have rules
+        const uniqueCompanies = new Map<string, { objectId: string; id: string; name: string }>();
+        loadedRules.forEach(rule => {
+          if (rule.companyId && rule.company && !uniqueCompanies.has(rule.companyId)) {
+            uniqueCompanies.set(rule.companyId, {
+              objectId: rule.companyId,
+              id: rule.companyId,
+              name: rule.company
+            });
+          }
+        });
+        setCompaniesWithRules(Array.from(uniqueCompanies.values()));
+      } else if (user?.companyId) {
+        // Regular user: load only their company's rules
+        loadedRules = await sortingRulesService.getByCompanyId(user.companyId);
+      }
+
+      setAllRules(loadedRules);
+
+      // Apply company filter if set
+      if (filters.company) {
+        setRules(loadedRules.filter(rule => rule.companyId === filters.company));
+      } else {
+        setRules(loadedRules);
+      }
+    } catch (error) {
+      console.error('Error loading sorting rules:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Effect to load data initially
+  useEffect(() => {
+    if (user?.companyId || user?.role === 'superAdmin') {
+      loadSortingRules();
+    }
+  }, [user?.role, user?.companyId]);
+
+  // Effect to apply company filter
+  useEffect(() => {
+    if (filters.company) {
+      setRules(allRules.filter(rule => rule.companyId === filters.company));
+    } else {
+      setRules(allRules);
+    }
+  }, [filters.company, allRules]);
 
   const clearFilters = () => {
     setFilters({
@@ -34,8 +104,8 @@ export default function SortingRulesPage() {
 
   const hasActiveFilters = searchTerm || Object.values(filters).some(filter => filter !== '');
 
-  // Filter and search logic
-  let filteredRules = rules.filter(rule => {
+  // Client-side filtering for search, type, and priority
+  const filteredRules = rules.filter(rule => {
     // Search filter
     const matchesSearch = !searchTerm ||
       rule.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -46,24 +116,34 @@ export default function SortingRulesPage() {
     // Type filter
     const matchesType = !filters.type || rule.type === filters.type;
 
-    // Company filter
-    const matchesCompany = !filters.company || rule.company === filters.company;
-
-    // Priority filter
+    // Priority filter (frontend-only field)
     const matchesPriority = !filters.priority ||
-      (filters.priority === 'high' && rule.processingPriority <= 2) ||
-      (filters.priority === 'medium' && rule.processingPriority >= 3 && rule.processingPriority <= 4) ||
-      (filters.priority === 'low' && rule.processingPriority >= 5);
+      (filters.priority === 'high' && rule.processingPriority && rule.processingPriority <= 2) ||
+      (filters.priority === 'medium' && rule.processingPriority && rule.processingPriority >= 3 && rule.processingPriority <= 4) ||
+      (filters.priority === 'low' && rule.processingPriority && rule.processingPriority >= 5);
 
-    return matchesSearch && matchesType && matchesCompany && matchesPriority;
+    return matchesSearch && matchesType && matchesPriority;
   });
 
-  // Apply company-based filtering for non-superAdmin users
-  if (user?.role !== 'superAdmin') {
-    filteredRules = filteredRules.filter(rule => 
-      rule.company === user?.companyName
-    );
-  }
+  const handleDelete = (rule: SortingRule) => {
+    setDeleteModal({ open: true, rule });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteModal.rule) return;
+
+    try {
+      setLoading(true);
+      await sortingRulesService.delete(deleteModal.rule.id);
+      setDeleteModal({ open: false });
+      // Reload rules after deletion
+      await loadSortingRules();
+    } catch (error) {
+      console.error('Error deleting sorting rule:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const columns = [
     { key: 'company', label: t('sortingRules:fields.company'), sortable: true },
@@ -78,17 +158,6 @@ export default function SortingRulesPage() {
     { key: 'targetCollection', label: t('sortingRules:fields.targetCollection'), sortable: true },
     { key: 'referenceKey', label: t('sortingRules:fields.referenceKey'), sortable: true },
     { key: 'referencePrefix', label: t('sortingRules:fields.referencePrefix') },
-    { key: 'processingPriority', label: t('sortingRules:fields.priority'), sortable: true,
-      render: (value: number) => (
-        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-          value === 1 ? 'bg-red-100 text-red-800' :
-          value <= 3 ? 'bg-orange-100 text-orange-800' :
-          'bg-green-100 text-green-800'
-        }`}>
-          {value}
-        </span>
-      )
-    },
     {
       key: 'actions',
       label: t('common:fields.actions'),
@@ -102,21 +171,32 @@ export default function SortingRulesPage() {
             <Edit size={16} />
           </button>
           <button
-            onClick={() => {/* Handle duplicate */}}
-            className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
-            title={t('common:actions.duplicate')}
+            onClick={() => handleDelete(row)}
+            className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+            title={t('common:actions.delete')}
           >
-            <Copy size={16} />
+            <Trash2 size={16} />
           </button>
         </div>
       ),
     },
   ];
 
+  if (loading) {
+    return (
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header title={t('sortingRules:title')} />
+        <div className="flex-1 flex items-center justify-center">
+          <LoadingSpinner />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <Header title={t('sortingRules:title')} />
-      
+
       <div className="flex-1 overflow-y-auto p-6">
         <div className="mb-6 flex justify-between items-center">
           <div>
@@ -184,17 +264,17 @@ export default function SortingRulesPage() {
                     <option value="detectionPhase">{t('sortingRules:types.detectionPhase')}</option>
                   </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('sortingRules:fields.company')}</label>
-                  <select
-                    value={filters.company}
-                    onChange={(e) => setFilters(prev => ({ ...prev, company: e.target.value }))}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">{t('common:filters.allCompanies')}</option>
-                    <option value="FleetMax Leasing">FleetMax Leasing</option>
-                  </select>
-                </div>
+
+                {user?.role === 'superAdmin' && (
+                  <div>
+                    <CompanySelector
+                      companies={companiesWithRules}
+                      selectedCompanyId={filters.company}
+                      onSelect={(companyId: string) => setFilters(prev => ({ ...prev, company: companyId }))}
+                      placeholder={t('common:filters.allCompanies')}
+                    />
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">{t('sortingRules:fields.priority')} {t('common:fields.level')}</label>
@@ -239,6 +319,27 @@ export default function SortingRulesPage() {
           </div>
         )}
       </div>
+
+      {/* Delete Modal */}
+      <Modal
+        isOpen={deleteModal.open}
+        onClose={() => setDeleteModal({ open: false })}
+        title={t('common:actions.delete') + ' ' + t('sortingRules:title')}
+      >
+        <div className="space-y-4">
+          <p className="text-gray-700">
+            {t('common:messages.confirmDelete')} {deleteModal.rule?.type} ({deleteModal.rule?.fromCollection} → {deleteModal.rule?.targetCollection})?
+          </p>
+          <div className="flex justify-end gap-2">
+            <Button variant="secondary" onClick={() => setDeleteModal({ open: false })}>
+              {t('common:actions.cancel')}
+            </Button>
+            <Button variant="danger" onClick={confirmDelete}>
+              {t('common:actions.delete')}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

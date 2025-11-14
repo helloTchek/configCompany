@@ -30,18 +30,18 @@ export const mockJourneys: InspectionJourney[] = [
     blocks: [
       {
         id: 'b1',
-        type: 'onboarding',
+        type: 'form',
         name: 'Customer Onboarding',
         description: 'Collect customer information',
-        config: { fields: ['name', 'email', 'phone'] },
+        configId: 'form-1',
         order: 1
       },
       {
         id: 'b2',
-        type: 'shootInspection',
+        type: 'shootInspect',
         name: 'Vehicle Photography',
         description: 'Capture vehicle images',
-        config: { angles: ['front', 'back', 'sides'], mandatory: true },
+        configId: 'shoot-1',
         order: 2
       }
     ],
@@ -53,6 +53,7 @@ export const mockSortingRules: SortingRule[] = [
   {
     id: '1',
     company: 'AutoCorp Insurance',
+    companyId: '1',
     type: 'detectionPhase',
     fromCollection: 'ROI',
     targetCollection: 'ROI',
@@ -60,7 +61,9 @@ export const mockSortingRules: SortingRule[] = [
     referencePrefix: 'DMG_',
     filters: '{"severity": {"$gte": 3}}',
     updates: '{"priority": "high"}',
-    processingPriority: 1
+    processingPriority: 1,
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-15T10:30:00Z'
   }
 ];
 

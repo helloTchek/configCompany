@@ -1,27 +1,35 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '@/auth/AuthContext';
 import Header from '../../components/Layout/Header';
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import CompanySelector from '../../components/UI/CompanySelector';
+import sortingRulesService from '../../services/sortingRulesService';
+import companiesService from '../../services/companiesService';
 import { ArrowLeft, Save } from 'lucide-react';
 
 export default function CreateSortingRulePage() {
   const navigate = useNavigate();
   const { t } = useTranslation(['sortingRules', 'common']);
+  const { user } = useAuth();
+
+  const [allCompaniesLight, setAllCompaniesLight] = useState<Array<{ objectId: string; id: string; name: string; identifier?: string }>>([]);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    company: '',
+    companyId: user?.companyId || '',
     type: '',
     fromCollection: '',
     targetCollection: '',
     referenceKey: '',
     referencePrefix: '',
     filters: '',
-    updates: '',
-    processingPriority: 3
+    updates: ''
   });
   const [errors, setErrors] = useState({
-    company: '',
+    companyId: '',
     type: '',
     fromCollection: '',
     targetCollection: '',
@@ -30,14 +38,29 @@ export default function CreateSortingRulePage() {
     updates: ''
   });
 
-  const handleInputChange = (field: string, value: string | number) => {
+  // Load all companies light (for superAdmin)
+  useEffect(() => {
+    const loadAllCompaniesLight = async () => {
+      try {
+        const lightCompanies = await companiesService.getAllCompaniesLight();
+        setAllCompaniesLight(lightCompanies);
+      } catch (error) {
+        console.error('Error loading all companies light:', error);
+      }
+    };
+    if (user?.role === 'superAdmin') {
+      loadAllCompaniesLight();
+    }
+  }, [user?.role]);
+
+  const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setErrors(prev => ({ ...prev, [field]: '' }));
   };
 
   const validateForm = () => {
     const newErrors = {
-      company: '',
+      companyId: '',
       type: '',
       fromCollection: '',
       targetCollection: '',
@@ -46,8 +69,8 @@ export default function CreateSortingRulePage() {
       updates: ''
     };
 
-    if (!formData.company.trim()) {
-      newErrors.company = t('common:validation.required');
+    if (!formData.companyId.trim()) {
+      newErrors.companyId = t('common:validation.required');
     }
 
     if (!formData.type.trim()) {
@@ -90,26 +113,40 @@ export default function CreateSortingRulePage() {
     return !Object.values(newErrors).some(error => error !== '');
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!validateForm()) {
       return;
     }
 
-    const newRule = {
-      id: `rule-${Date.now()}`,
-      ...formData,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-
-    console.log('Creating sorting rule:', newRule);
-    navigate('/sorting-rules');
+    try {
+      setLoading(true);
+      await sortingRulesService.create(formData);
+      // Navigate back to the list page
+      navigate('/sorting-rules');
+    } catch (error) {
+      console.error('Error creating sorting rule:', error);
+      // Show error message to user
+      alert(t('sortingRules:messages.createError') || 'Failed to create sorting rule');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header title={t('sortingRules:create')} />
+        <div className="flex-1 flex items-center justify-center">
+          <LoadingSpinner />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <Header title={t('sortingRules:create')} />
-      
+
       <div className="flex-1 overflow-y-auto p-6">
         <div className="mb-6">
           <Button
@@ -118,7 +155,7 @@ export default function CreateSortingRulePage() {
             className="flex items-center gap-2 mb-4"
           >
             <ArrowLeft size={16} />
-            {t('common:actions.back')} {t('sortingRules:title')}
+            {t('common:actions.back')}
           </Button>
         </div>
 
@@ -127,21 +164,24 @@ export default function CreateSortingRulePage() {
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('common:sections.basicInformation')}</h3>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t('sortingRules:fields.company')}</label>
-                <select
-                  value={formData.company}
-                  onChange={(e) => handleInputChange('company', e.target.value)}
-                  className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    errors.company ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                >
-                  <option value="">{t('common:actions.select')} {t('sortingRules:fields.company')}</option>
-                  <option value="AutoCorp Insurance">AutoCorp Insurance</option>
-                  <option value="FleetMax Leasing">FleetMax Leasing</option>
-                </select>
-                {errors.company && <p className="text-sm text-red-600 mt-1">{errors.company}</p>}
-              </div>
+              {user?.role === 'superAdmin' ? (
+                <div>
+                  <CompanySelector
+                    companies={allCompaniesLight}
+                    selectedCompanyId={formData.companyId}
+                    onSelect={(companyId: string) => handleInputChange('companyId', companyId)}
+                    placeholder={t('common:actions.select') + ' ' + t('sortingRules:fields.company')}
+                    label={t('sortingRules:fields.company')}
+                    error={errors.companyId}
+                  />
+                </div>
+              ) : (
+                <Input
+                  label={t('sortingRules:fields.company')}
+                  value={user?.companyName || ''}
+                  disabled
+                />
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">{t('sortingRules:fields.type')}</label>
@@ -154,8 +194,6 @@ export default function CreateSortingRulePage() {
                 >
                   <option value="">{t('common:actions.select')} {t('sortingRules:fields.type')}</option>
                   <option value="detectionPhase">{t('sortingRules:types.detectionPhase')}</option>
-                  <option value="validationPhase">{t('sortingRules:types.validationPhase')}</option>
-                  <option value="reportGeneration">{t('sortingRules:types.reportGeneration')}</option>
                 </select>
                 {errors.type && <p className="text-sm text-red-600 mt-1">{errors.type}</p>}
               </div>
@@ -200,21 +238,6 @@ export default function CreateSortingRulePage() {
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('common:sections.configuration')}</h3>
             <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t('sortingRules:fields.processingPriority')}</label>
-                <select
-                  value={formData.processingPriority}
-                  onChange={(e) => handleInputChange('processingPriority', parseInt(e.target.value))}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value={1}>{t('sortingRules:priorities.highest')}</option>
-                  <option value={2}>{t('sortingRules:priorities.high')}</option>
-                  <option value={3}>{t('sortingRules:priorities.medium')}</option>
-                  <option value={4}>{t('sortingRules:priorities.low')}</option>
-                  <option value={5}>{t('sortingRules:priorities.lowest')}</option>
-                </select>
-              </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">{t('sortingRules:fields.filters')}</label>
                 <textarea
@@ -273,9 +296,10 @@ export default function CreateSortingRulePage() {
             <Button variant="secondary" onClick={() => navigate('/sorting-rules')}>
               {t('common:actions.cancel')}
             </Button>
-            <Button 
-              className="flex items-center gap-2" 
+            <Button
+              className="flex items-center gap-2"
               onClick={handleSave}
+              disabled={loading}
             >
               <Save size={16} />
               {t('sortingRules:create')}
