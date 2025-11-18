@@ -50,6 +50,8 @@ const createEmptyReminder = (): ChaseupReminder => ({
   webhook: { enabled: false },
   user: {
     enabled: false,
+    address: '',
+    smsNumber: '',
     sms: false,
     email: false,
     templates: createEmptyTemplates()
@@ -63,6 +65,7 @@ const createEmptyReminder = (): ChaseupReminder => ({
   emailAddress: {
     enabled: false,
     address: '',
+    smsNumber: '',
     sms: false,
     email: false,
     templates: createEmptyTemplates()
@@ -253,13 +256,15 @@ export default function CreateChaseupRulePage() {
         webhook: reminder.webhook.enabled,
         companyEmail: reminder.emailAddress.enabled && reminder.emailAddress.email,
         companyEmailAddress: reminder.emailAddress.address || '',
-        companySMSNumber: '',
+        companySMSNumber: reminder.emailAddress.smsNumber || '',
         companySMS: reminder.emailAddress.enabled && reminder.emailAddress.sms,
         agentEmail: reminder.user.enabled && reminder.user.email,
+        agentEmailAddress: reminder.user.address || '',
         agentSMS: reminder.user.enabled && reminder.user.sms,
+        agentSMSNumber: reminder.user.smsNumber || '',
         customerEmail: reminder.customer.enabled && reminder.customer.email,
         customerSMS: reminder.customer.enabled && reminder.customer.sms,
-        senderEmail: '',
+        senderEmail: 'noreply@tchek.ai',
         senderName: ''
       };
     };
@@ -447,14 +452,23 @@ export default function CreateChaseupRulePage() {
 
         {recipient.enabled && (
           <div className="space-y-4">
-            {recipientType === 'emailAddress' && 'address' in recipient && (
-              <Input
-                label="Email Address"
-                type="email"
-                value={recipient.address}
-                onChange={(e) => handleReminderChange(reminderType, `${recipientType}.address`, e.target.value)}
-                placeholder="recipient@example.com"
-              />
+            {(recipientType === 'emailAddress' || recipientType === 'user') && 'address' in recipient && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <Input
+                  label={recipientType === 'emailAddress' ? 'Email Address' : 'User Email Address'}
+                  type="email"
+                  value={recipient.address}
+                  onChange={(e) => handleReminderChange(reminderType, `${recipientType}.address`, e.target.value)}
+                  placeholder={recipientType === 'emailAddress' ? 'recipient@example.com' : 'user@example.com'}
+                />
+                <Input
+                  label={recipientType === 'emailAddress' ? 'SMS Number' : 'User SMS Number'}
+                  type="tel"
+                  value={recipient.smsNumber || ''}
+                  onChange={(e) => handleReminderChange(reminderType, `${recipientType}.smsNumber`, e.target.value)}
+                  placeholder="+33612345678"
+                />
+              </div>
             )}
 
             <div className="flex gap-4">

@@ -51,6 +51,8 @@ const createEmptyReminder = (): ChaseupReminder => ({
   webhook: { enabled: false },
   user: {
     enabled: false,
+    address: '',
+    smsNumber: '',
     sms: false,
     email: false,
     templates: createEmptyTemplates()
@@ -64,11 +66,43 @@ const createEmptyReminder = (): ChaseupReminder => ({
   emailAddress: {
     enabled: false,
     address: '',
+    smsNumber: '',
     sms: false,
     email: false,
     templates: createEmptyTemplates()
   }
 });
+
+// Normalize reminder to ensure all fields exist (for backward compatibility with old data)
+const normalizeReminder = (reminder: any): ChaseupReminder => {
+  if (!reminder) return createEmptyReminder();
+
+  return {
+    webhook: reminder.webhook || { enabled: false },
+    user: {
+      enabled: reminder.user?.enabled || false,
+      address: reminder.user?.address || '',
+      smsNumber: reminder.user?.smsNumber || '',
+      sms: reminder.user?.sms || false,
+      email: reminder.user?.email || false,
+      templates: reminder.user?.templates || createEmptyTemplates()
+    },
+    customer: {
+      enabled: reminder.customer?.enabled || false,
+      sms: reminder.customer?.sms || false,
+      email: reminder.customer?.email || false,
+      templates: reminder.customer?.templates || createEmptyTemplates()
+    },
+    emailAddress: {
+      enabled: reminder.emailAddress?.enabled || false,
+      address: reminder.emailAddress?.address || '',
+      smsNumber: reminder.emailAddress?.smsNumber || '',
+      sms: reminder.emailAddress?.sms || false,
+      email: reminder.emailAddress?.email || false,
+      templates: reminder.emailAddress?.templates || createEmptyTemplates()
+    }
+  };
+};
 
 export default function EditChaseupRulePage() {
   const navigate = useNavigate();
@@ -157,8 +191,8 @@ export default function EditChaseupRulePage() {
           secondDelayDays: rule.secondDelayDays,
           secondDelayMinutes: undefined,
           maxSendings: rule.maxSendings,
-          firstReminder: rule.firstReminder || createEmptyReminder(),
-          secondReminder: rule.secondReminder
+          firstReminder: normalizeReminder(rule.firstReminder),
+          secondReminder: rule.secondReminder ? normalizeReminder(rule.secondReminder) : undefined
         });
       } catch (error) {
         console.error('Error loading chase-up rule:', error);
@@ -317,13 +351,15 @@ export default function EditChaseupRulePage() {
         webhook: reminder.webhook.enabled,
         companyEmail: reminder.emailAddress.enabled && reminder.emailAddress.email,
         companyEmailAddress: reminder.emailAddress.address || '',
-        companySMSNumber: '',
+        companySMSNumber: reminder.emailAddress.smsNumber || '',
         companySMS: reminder.emailAddress.enabled && reminder.emailAddress.sms,
         agentEmail: reminder.user.enabled && reminder.user.email,
+        agentEmailAddress: reminder.user.address || '',
         agentSMS: reminder.user.enabled && reminder.user.sms,
+        agentSMSNumber: reminder.user.smsNumber || '',
         customerEmail: reminder.customer.enabled && reminder.customer.email,
         customerSMS: reminder.customer.enabled && reminder.customer.sms,
-        senderEmail: '',
+        senderEmail: 'noreply@tchek.ai',
         senderName: ''
       };
     };
@@ -516,14 +552,23 @@ export default function EditChaseupRulePage() {
 
         {recipient.enabled && (
           <div className="space-y-4">
-            {recipientType === 'emailAddress' && 'address' in recipient && (
-              <Input
-                label="Email Address"
-                type="email"
-                value={recipient.address}
-                onChange={(e) => handleReminderChange(reminderType, `${recipientType}.address`, e.target.value)}
-                placeholder="recipient@example.com"
-              />
+            {(recipientType === 'emailAddress' || recipientType === 'user') && 'address' in recipient && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <Input
+                  label={recipientType === 'emailAddress' ? 'Email Address' : 'User Email Address'}
+                  type="email"
+                  value={recipient.address}
+                  onChange={(e) => handleReminderChange(reminderType, `${recipientType}.address`, e.target.value)}
+                  placeholder={recipientType === 'emailAddress' ? 'recipient@example.com' : 'user@example.com'}
+                />
+                <Input
+                  label={recipientType === 'emailAddress' ? 'SMS Number' : 'User SMS Number'}
+                  type="tel"
+                  value={recipient.smsNumber || ''}
+                  onChange={(e) => handleReminderChange(reminderType, `${recipientType}.smsNumber`, e.target.value)}
+                  placeholder="+33612345678"
+                />
+              </div>
             )}
 
             <div className="flex gap-4">

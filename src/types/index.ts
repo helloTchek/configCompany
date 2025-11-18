@@ -205,6 +205,8 @@ export interface ChaseupReminder {
   };
   user: {
     enabled: boolean;
+    address: string;
+    smsNumber: string;
     sms: boolean;
     email: boolean;
     templates: ChaseupTemplates;
@@ -218,6 +220,7 @@ export interface ChaseupReminder {
   emailAddress: {
     enabled: boolean;
     address: string;
+    smsNumber: string;
     sms: boolean;
     email: boolean;
     templates: ChaseupTemplates;

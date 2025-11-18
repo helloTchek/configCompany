@@ -168,6 +168,8 @@ const transformBackendReminder = (config: any, templates: any[]): any => {
     },
     user: {
       enabled: config.agentEmail || config.agentSMS || false,
+      address: config.agentEmailAddress || '',
+      smsNumber: config.agentSMSNumber || '',
       sms: config.agentSMS || false,
       email: config.agentEmail || false,
       templates: userTemplates
@@ -181,6 +183,7 @@ const transformBackendReminder = (config: any, templates: any[]): any => {
     emailAddress: {
       enabled: config.companyEmail || config.companySMS || false,
       address: config.companyEmailAddress || '',
+      smsNumber: config.companySMSNumber || '',
       sms: config.companySMS || false,
       email: config.companyEmail || false,
       templates: companyTemplates
