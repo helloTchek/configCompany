@@ -1,24 +1,24 @@
-import React, { ReactNode } from 'react';
+import { ReactNode } from 'react';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 
-interface Column {
+export interface Column<T = object> {
   key: string;
   label: string;
   sortable?: boolean;
-  render?: (value: any, row: any) => ReactNode;
+  render?: (value: unknown, row: T) => ReactNode;
 }
 
-interface TableProps {
-  columns: Column[];
-  data: any[];
+export interface TableProps<T = object> {
+  columns: Column<T>[];
+  data: T[];
   sortKey?: string;
   sortDirection?: 'asc' | 'desc';
   onSort?: (key: string) => void;
   className?: string;
-  getRowClassName?: (row: any) => string;
+  getRowClassName?: (row: T) => string;
 }
 
-export default function Table({
+export default function Table<T extends object>({
   columns,
   data,
   sortKey,
@@ -26,7 +26,7 @@ export default function Table({
   onSort,
   className = '',
   getRowClassName
-}: TableProps) {
+}: TableProps<T>) {
   return (
     <div className={`overflow-x-auto ${className}`}>
       <table className="min-w-full bg-white border border-gray-200 rounded-lg">
@@ -44,21 +44,21 @@ export default function Table({
                   {column.label}
                   {column.sortable && (
                     <div className="flex flex-col">
-                      <ChevronUp 
-                        size={12} 
+                      <ChevronUp
+                        size={12}
                         className={`${
-                          sortKey === column.key && sortDirection === 'asc' 
-                            ? 'text-blue-600' 
+                          sortKey === column.key && sortDirection === 'asc'
+                            ? 'text-blue-600'
                             : 'text-gray-400'
-                        }`} 
+                        }`}
                       />
-                      <ChevronDown 
-                        size={12} 
+                      <ChevronDown
+                        size={12}
                         className={`${
-                          sortKey === column.key && sortDirection === 'desc' 
-                            ? 'text-blue-600' 
+                          sortKey === column.key && sortDirection === 'desc'
+                            ? 'text-blue-600'
                             : 'text-gray-400'
-                        }`} 
+                        }`}
                       />
                     </div>
                   )}
@@ -72,11 +72,15 @@ export default function Table({
             const rowClassName = getRowClassName ? getRowClassName(row) : '';
             return (
               <tr key={rowIndex} className={`hover:bg-gray-50 ${rowClassName}`}>
-                {columns.map((column) => (
-                  <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {column.render ? column.render(row[column.key], row) : row[column.key]}
-                  </td>
-                ))}
+                {columns.map((column) => {
+                  const value = row[column.key];
+                  const content = column.render ? column.render(value, row) : value;
+                  return (
+                    <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {content as ReactNode}
+                    </td>
+                  );
+                })}
               </tr>
             );
           })}

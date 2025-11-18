@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/auth/AuthContext';
 import Header from '../../components/Layout/Header';
-import Table from '../../components/UI/Table';
+import Table, { Column } from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
 import Modal from '../../components/UI/Modal';
 import Input from '../../components/UI/Input';
@@ -110,7 +110,14 @@ export default function UsersPage() {
     try {
       setLoading(true);
       setError(null);
-      const params: any = {
+      const params: {
+        page: number;
+        limit: number;
+        search?: string;
+        role?: string;
+        status?: string;
+        companyId?: string;
+      } = {
         page: currentPage,
         limit: pageSize
       };
@@ -155,27 +162,27 @@ export default function UsersPage() {
 
   // Filtering is now done on the backend via the API
 
-  const columns = [
+  const columns: Column<User>[] = [
     { key: 'email', label: 'Email', sortable: true },
     { key: 'role', label: 'Role', sortable: true,
-      render: (value: string) => (
+      render: (value: unknown) => (
         <span className={`px-2 py-1 text-xs font-medium rounded-full ${
           value === 'superadmin' ? 'bg-purple-100 text-purple-800' :
           value === 'admin' ? 'bg-blue-100 text-blue-800' :
           'bg-gray-100 text-gray-800'
         }`}>
-          {value}
+          {String(value)}
         </span>
       )
     },
     { key: 'company', label: 'Company', sortable: true },
     { key: 'status', label: 'Status', sortable: true,
-      render: (value: string, row: User) => (
+      render: (value: unknown, row: User) => (
         <div className="flex items-center gap-2">
           <span className={`px-2 py-1 text-xs font-medium rounded-full ${
             value === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
           }`}>
-            {value}
+            {String(value)}
           </span>
           {row.isDeleted && (
             <span className="px-2 py-1 text-xs font-medium rounded-full bg-orange-100 text-orange-800">
@@ -188,7 +195,7 @@ export default function UsersPage() {
     {
       key: 'actions',
       label: 'Actions',
-      render: (_: any, row: User) => (
+      render: (_: unknown, row: User) => (
         <div className="flex items-center gap-2">
           <button
             onClick={() => handleEditUser(row)}
@@ -558,7 +565,7 @@ export default function UsersPage() {
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200">
-          <Table columns={columns} data={users} />
+          <Table<User> columns={columns} data={users} />
 
           {users.length === 0 && !loading && (
             <div className="text-center py-8 text-gray-500">

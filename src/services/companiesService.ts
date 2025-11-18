@@ -2,17 +2,24 @@ import { Company } from '@/types';
 import { mockCompanies, mockDelay } from '@/mocks/companies.mock';
 import { apiClient } from '@/lib/api-client';
 import { config, isMockMode, API_ENDPOINTS } from '@/config';
+import {
+  EventsConfig,
+  ProcessingParams,
+  Styles,
+  ReportSettings,
+  ConfigModules
+} from '@/types/api';
 
 export type CreateCompanyData = Omit<Company, 'objectId' | 'createdAt' | 'updatedAt'> & {
-  eventsConfig?: any;
+  eventsConfig?: EventsConfig;
   parentCompanyId?: string;
   logoUrl?: string;
   webhookUrl?: string;
   senderName?: string;
-  processingParams?: any;
-  styles?: any;
-  reportSettings?: any;
-  configModules?: any;
+  processingParams?: ProcessingParams;
+  styles?: Styles;
+  reportSettings?: ReportSettings;
+  configModules?: ConfigModules;
   showStartInstantInspection?: boolean;
   showSendInspectionLink?: boolean;
   maxRequestAPI?: number;

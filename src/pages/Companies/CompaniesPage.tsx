@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthContext';
 import Header from '../../components/Layout/Header';
-import Table from '../../components/UI/Table';
+import Table, { Column } from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
 import Modal from '../../components/UI/Modal';
-import Input from '../../components/UI/Input';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { mockUsers } from '../../data/mockData';
 import { Company } from '../../types';
@@ -13,6 +12,7 @@ import companiesService, { getCompanyId } from '../../services/companiesService'
 import { CreditCard as Edit, Archive, Copy, Plus, Upload, Search, ListFilter as Filter, X } from 'lucide-react';
 import { mockChaseupRules } from '../../data/mockData';
 import { PERMISSIONS } from '@/types/auth';
+import { FullCompanyData, ApiTokenData } from '@/types/api';
 
 export default function CompaniesPage() {
   const navigate = useNavigate();
@@ -69,7 +69,12 @@ export default function CompaniesPage() {
   const loadCompanies = async (page: number = currentPage) => {
     try {
       setLoading(true);
-      const params: any = {
+      const params: {
+        page: number;
+        limit: number;
+        search?: string;
+        archived?: string;
+      } = {
         page,
         limit: itemsPerPage
       };
@@ -182,14 +187,15 @@ export default function CompaniesPage() {
       }
 
       // Pre-fill form with company data
-      const senderName = (fullCompanyData as any).eventManagerPtr?.tradeinVehicleConfig?.senderName ||
-                         (fullCompanyData as any).eventManagerPtr?.chaseUpVehicleConfig?.senderName || '';
-      const webhookUrl = (fullCompanyData as any).eventManagerPtr?.webhookUrlV2 || '';
+      const fullData = fullCompanyData as FullCompanyData;
+      const senderName = fullData.eventManagerPtr?.tradeinVehicleConfig?.senderName ||
+                         fullData.eventManagerPtr?.chaseUpVehicleConfig?.senderName || '';
+      const webhookUrl = fullData.eventManagerPtr?.webhookUrlV2 || '';
 
       // Extract report settings and config modules from settingsPtr
-      const reportSettings = (fullCompanyData as any).settingsPtr?.report;
-      const configModules = (fullCompanyData as any).settingsPtr?.configModules;
-      const parentCompanyId = (fullCompanyData as any).parentCompanyId;
+      const reportSettings = fullData.settingsPtr?.report;
+      const configModules = fullData.settingsPtr?.configModules;
+      const parentCompanyId = fullData.parentCompanyId;
 
       // Convert objects to JSON strings for textarea display
       const reportSettingsStr = reportSettings ? JSON.stringify(reportSettings, null, 2) : '';
@@ -353,11 +359,11 @@ export default function CompaniesPage() {
     return mockChaseupRules.some(rule => rule.company === companyName);
   };
 
-  const columns = [
+  const columns: Column<Company>[] = [
     { key: 'name', label: 'Company Name', sortable: true,
-      render: (value: string, row: Company) => (
+      render: (value: unknown, row: Company) => (
         <div className="flex items-center gap-2">
-          <span className={(row.archived || row.isArchived) ? 'font-semibold text-orange-900' : 'font-medium'}>{value}</span>
+          <span className={(row.archived || row.isArchived) ? 'font-semibold text-orange-900' : 'font-medium'}>{String(value)}</span>
           {(row.archived || row.isArchived) && (
             <span className="px-2 py-1 bg-orange-200 text-orange-800 text-xs font-bold rounded-full">
               📦 ARCHIVED
@@ -371,13 +377,14 @@ export default function CompaniesPage() {
       key: 'objectId',
       label: 'Company ID',
       sortable: true,
-      render: (value: string) => value || 'N/A'
+      render: (value: unknown) => String(value || 'N/A')
     },
     {
       key: 'apiToken',
       label: 'API Token',
-      render: (value: any) => {
-        const token = typeof value === 'string' ? value : value?.token;
+      render: (value: unknown) => {
+        const tokenValue = value as string | ApiTokenData | undefined;
+        const token = typeof tokenValue === 'string' ? tokenValue : (tokenValue as ApiTokenData)?.token;
         return (
           <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
             {token ? token.substring(0, 12) + '...' : 'N/A'}
@@ -389,35 +396,47 @@ export default function CompaniesPage() {
       key: 'currentApiRequests',
       label: 'Current Requests',
       sortable: true,
-      render: (_: any, row: Company) => row.apiToken?.numberRequest ?? 'N/A'
+      render: (_: unknown, row: Company) => {
+        const apiToken = row.apiToken;
+        const numberRequest = typeof apiToken === 'object' && apiToken !== null
+          ? (apiToken as ApiTokenData).numberRequest
+          : undefined;
+        return numberRequest ?? 'N/A';
+      }
     },
     {
       key: 'maxApiRequests',
       label: 'Max Requests',
       sortable: true,
-      render: (_: any, row: Company) => row.apiToken?.maxRequestAPI ?? 'N/A'
+      render: (_: unknown, row: Company) => {
+        const apiToken = row.apiToken;
+        const maxRequestAPI = typeof apiToken === 'object' && apiToken !== null
+          ? (apiToken as ApiTokenData).maxRequestAPI
+          : undefined;
+        return maxRequestAPI ?? 'N/A';
+      }
     },
     {
       key: 'createdAt',
       label: 'Created Date',
       sortable: true,
-      render: (value: string) => value ? new Date(value).toLocaleDateString() : 'N/A'
+      render: (value: unknown) => value ? new Date(String(value)).toLocaleDateString() : 'N/A'
     },
     {
       key: 'parentCompany',
       label: 'Parent Company',
-      render: (_: any, row: Company) => row.parentCompanyId ?? 'None'
+      render: (_: unknown, row: Company) => row.parentCompanyId ?? 'None'
     },
     {
       key: 'childrenCount',
       label: 'Children',
       sortable: true,
-      render: (_: any, row: Company) => row.childCompanyIds?.length ?? 0
+      render: (_: unknown, row: Company) => row.childCompanyIds?.length ?? 0
     },
     {
       key: 'chaseupRules',
       label: 'Chase-up Rules',
-      render: (_: any, row: Company) => {
+      render: (_: unknown, row: Company) => {
         const hasRules = hasChaseupRules(row.name);
         return (
           <div className="flex items-center gap-2">
@@ -443,7 +462,7 @@ export default function CompaniesPage() {
     {
       key: 'actions',
       label: 'Actions',
-      render: (_: any, row: Company) => (
+      render: (_: unknown, row: Company) => (
         <div className="flex items-center gap-2">
           <button
             onClick={() => navigate(`/companies/${getCompanyId(row)}/edit`)}
@@ -646,7 +665,7 @@ export default function CompaniesPage() {
             </div>
           ) : (
             <>
-              <Table
+              <Table<Company>
                 columns={columns}
                 data={sortedCompanies}
                 sortKey={sortKey}

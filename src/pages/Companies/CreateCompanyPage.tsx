@@ -376,13 +376,22 @@ const EventsWebhooksTab = ({
         {config.enabled && (
           <div className="space-y-4">
             {(addressee === 'emailAddress' || addressee === 'agent') && (
-              <Input
-                label={addressee === 'emailAddress' ? 'Email Address' : 'Agent Email Address'}
-                type="email"
-                value={config.address}
-                onChange={(e) => updateAddresseeConfig(eventKey, addressee, 'address', e.target.value)}
-                placeholder={addressee === 'emailAddress' ? 'recipient@example.com' : 'agent@example.com'}
-              />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <Input
+                  label={addressee === 'emailAddress' ? 'Email Address' : 'Agent Email Address'}
+                  type="email"
+                  value={config.address}
+                  onChange={(e) => updateAddresseeConfig(eventKey, addressee, 'address', e.target.value)}
+                  placeholder={addressee === 'emailAddress' ? 'recipient@example.com' : 'agent@example.com'}
+                />
+                <Input
+                  label={addressee === 'emailAddress' ? 'SMS Number' : 'Agent SMS Number'}
+                  type="tel"
+                  value={config.smsNumber || ''}
+                  onChange={(e) => updateAddresseeConfig(eventKey, addressee, 'smsNumber', e.target.value)}
+                  placeholder="+33612345678"
+                />
+              </div>
             )}
 
             <div className="flex gap-4">
@@ -495,6 +504,13 @@ const EventsWebhooksTab = ({
           placeholder="Your Company Name"
           value={formData.senderName}
           onChange={(e) => handleFieldChange('senderName', e.target.value)}
+        />
+        <Input
+          label="Sender Email (for all events)"
+          type="email"
+          placeholder="noreply@tchek.ai"
+          value={formData.senderEmail}
+          onChange={(e) => handleFieldChange('senderEmail', e.target.value)}
         />
         <Input
           label="Webhook URL"
@@ -724,6 +740,7 @@ export default function CreateCompanyPage() {
         emailAddress: {
           enabled: false,
           address: '',
+          smsNumber: '',
           sms: false,
           email: false,
           templates: {}
@@ -731,6 +748,7 @@ export default function CreateCompanyPage() {
         agent: {
           enabled: false,
           address: '',
+          smsNumber: '',
           sms: false,
           email: false,
           templates: {}
@@ -771,6 +789,7 @@ export default function CreateCompanyPage() {
     showSendInspectionLink: true,
     // EventManager fields
     senderName: '',
+    senderEmail: 'noreply@tchek.ai',
     webhookUrl: '',
     // Hierarchy field
     parentCompanyId: ''
@@ -925,16 +944,15 @@ export default function CreateCompanyPage() {
         companyEmail: detectedFlags.companyEmail || eventData.emailAddress?.email || false,
         companyEmailAddress: eventData.emailAddress?.address || '',
         companySMS: detectedFlags.companySMS || eventData.emailAddress?.sms || false,
-        companySMSNumber: '',
+        companySMSNumber: eventData.emailAddress?.smsNumber || '',
         agentSMS: detectedFlags.agentSMS || eventData.agent?.sms || false,
         agentEmail: detectedFlags.agentEmail || eventData.agent?.email || false,
         agentEmailAddress: eventData.agent?.address || '',
-        agentSMSNumber: '',
+        agentSMSNumber: eventData.agent?.smsNumber || '',
         customerEmail: detectedFlags.customerEmail || eventData.customer?.email || false,
         customerSMS: detectedFlags.customerSMS || eventData.customer?.sms || false,
-        senderEmail: '',
-        senderName: formData.senderName || '',
-        pdfGeneration: false
+        senderEmail: formData.senderEmail || 'noreply@tchek.ai',
+        senderName: formData.senderName || ''
       };
 
       // Store in eventsConfig using backend Parse field names
@@ -1027,7 +1045,7 @@ export default function CreateCompanyPage() {
         // ===== EventManager fields =====
         webhookUrl: formData.webhookUrl,
         senderName: formData.senderName,
-        eventsConfig: eventsConfig, // Event configurations and templates
+        eventsConfig: eventsConfig, // Event configurations and templates (includes senderEmail per event)
 
         // ===== Hierarchy fields =====
         parentCompanyId: formData.parentCompanyId || undefined,

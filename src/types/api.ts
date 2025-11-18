@@ -47,3 +47,96 @@ export interface SearchParams {
   sort?: SortConfig;
   filters?: FilterConfig;
 }
+
+// Strict API types to replace 'any' usage
+export interface QueryParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  archived?: string;
+  role?: string;
+  status?: string;
+  companyId?: string;
+  [key: string]: string | number | undefined;
+}
+
+export interface ApiTokenData {
+  token: string;
+  numberRequest?: number;
+  maxRequestAPI?: number;
+}
+
+export interface EventsConfig {
+  tradeinVehicleConfig?: {
+    enabled: boolean;
+    senderName?: string;
+    recipients?: string[];
+  };
+  chaseUpVehicleConfig?: {
+    enabled: boolean;
+    senderName?: string;
+    recipients?: string[];
+  };
+  webhookUrlV2?: string;
+}
+
+export interface SettingsPtr {
+  report?: ReportSettings;
+  configModules?: ConfigModules;
+}
+
+export interface ReportSettings {
+  showLogo?: boolean;
+  showCompanyName?: boolean;
+  showDate?: boolean;
+  [key: string]: unknown;
+}
+
+export interface ConfigModules {
+  damageDetection?: boolean;
+  costEstimation?: boolean;
+  validation?: boolean;
+  [key: string]: unknown;
+}
+
+export interface ProcessingParams {
+  mileageEnabled?: boolean;
+  blurEnabled?: boolean;
+  vinEnabled?: boolean;
+  readCarInformationEnabled?: boolean;
+  [key: string]: unknown;
+}
+
+export interface Styles {
+  primaryColor?: string;
+  secondaryColor?: string;
+  logo?: string;
+  [key: string]: unknown;
+}
+
+// Full company data with all nested objects
+export interface FullCompanyData {
+  objectId?: string;
+  id?: string;
+  name: string;
+  identifier?: string;
+  eventManagerPtr?: {
+    tradeinVehicleConfig?: {
+      senderName?: string;
+    };
+    chaseUpVehicleConfig?: {
+      senderName?: string;
+    };
+    webhookUrlV2?: string;
+  };
+  settingsPtr?: SettingsPtr;
+  parentCompanyId?: string;
+  apiToken?: string | ApiTokenData;
+  archived?: boolean;
+  isArchived?: boolean;
+  contractType?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  reportSettings?: string;
+  configModules?: string;
+}
