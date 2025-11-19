@@ -264,7 +264,7 @@ export default function CreateChaseupRulePage() {
         agentSMSNumber: reminder.user.smsNumber || '',
         customerEmail: reminder.customer.enabled && reminder.customer.email,
         customerSMS: reminder.customer.enabled && reminder.customer.sms,
-        senderEmail: 'noreply@tchek.ai',
+        senderEmail: '',
         senderName: ''
       };
     };

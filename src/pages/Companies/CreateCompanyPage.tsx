@@ -267,7 +267,8 @@ const EventsWebhooksTab = ({
   events,
   variables,
   templates,
-  setTemplates
+  setTemplates,
+  errors
 }) => {
   // State to track which field is currently focused
   const [focusedField, setFocusedField] = useState(null);
@@ -504,6 +505,8 @@ const EventsWebhooksTab = ({
           placeholder="Your Company Name"
           value={formData.senderName}
           onChange={(e) => handleFieldChange('senderName', e.target.value)}
+          error={errors.senderName}
+          required
         />
         <Input
           label="Sender Email (for all events)"
@@ -789,7 +792,7 @@ export default function CreateCompanyPage() {
     showSendInspectionLink: true,
     // EventManager fields
     senderName: '',
-    senderEmail: 'noreply@tchek.ai',
+    senderEmail: '',
     webhookUrl: '',
     // Hierarchy field
     parentCompanyId: ''
@@ -797,7 +800,8 @@ export default function CreateCompanyPage() {
   const [errors, setErrors] = useState({
     companyName: '',
     logoUrl: '',
-    maxApiRequests: ''
+    maxApiRequests: '',
+    senderName: ''
   });
 
   // Load companies for parent selection
@@ -951,7 +955,7 @@ export default function CreateCompanyPage() {
         agentSMSNumber: eventData.agent?.smsNumber || '',
         customerEmail: detectedFlags.customerEmail || eventData.customer?.email || false,
         customerSMS: detectedFlags.customerSMS || eventData.customer?.sms || false,
-        senderEmail: formData.senderEmail || 'noreply@tchek.ai',
+        senderEmail: formData.senderEmail || '',
         senderName: formData.senderName || ''
       };
 
@@ -967,7 +971,8 @@ export default function CreateCompanyPage() {
     const newErrors = {
       companyName: '',
       logoUrl: '',
-      maxApiRequests: ''
+      maxApiRequests: '',
+      senderName: ''
     };
 
     if (!formData.companyName.trim()) {
@@ -984,8 +989,12 @@ export default function CreateCompanyPage() {
       newErrors.maxApiRequests = 'Max API requests must be greater than 0';
     }
 
+    if (!formData.senderName.trim()) {
+      newErrors.senderName = 'Sender name is required';
+    }
+
     setErrors(newErrors);
-    return !newErrors.companyName && !newErrors.logoUrl && !newErrors.maxApiRequests;
+    return !newErrors.companyName && !newErrors.logoUrl && !newErrors.maxApiRequests && !newErrors.senderName;
   };
   
   const handleSave = async () => {
@@ -1122,6 +1131,7 @@ export default function CreateCompanyPage() {
         setTemplates={setTemplates}
         companyEmailEnabled={companyEmailEnabled}
         setCompanyEmailEnabled={setCompanyEmailEnabled}
+        errors={errors}
       />
     },
     {

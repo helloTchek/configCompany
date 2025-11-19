@@ -188,9 +188,11 @@ export default function CompaniesPage() {
 
       // Pre-fill form with company data
       const fullData = fullCompanyData as FullCompanyData;
-      const senderName = fullData.eventManagerPtr?.tradeinVehicleConfig?.senderName ||
-                         fullData.eventManagerPtr?.chaseUpVehicleConfig?.senderName || '';
-      const webhookUrl = fullData.eventManagerPtr?.webhookUrlV2 || '';
+      // IMPORTANT: Reset senderName and webhookUrl lors de la duplication
+      // senderName doit être vide (obligatoire)
+      // webhookUrl doit être vide (optionnel)
+      const senderName = ''; // Reset - sera obligatoire
+      const webhookUrl = ''; // Reset - sera optionnel
 
       // Extract report settings and config modules from settingsPtr
       const reportSettings = fullData.settingsPtr?.report;
@@ -245,9 +247,8 @@ export default function CompaniesPage() {
       errors.senderName = 'Sender name is required';
     }
 
-    if (!duplicateForm.webhookUrl.trim()) {
-      errors.webhookUrl = 'Webhook URL is required';
-    } else if (!/^https?:\/\/.+/.test(duplicateForm.webhookUrl)) {
+    // webhookUrl est optionnel, mais si fourni, doit être valide
+    if (duplicateForm.webhookUrl.trim() && !/^https?:\/\/.+/.test(duplicateForm.webhookUrl)) {
       errors.webhookUrl = 'Please enter a valid URL';
     }
 
@@ -992,7 +993,9 @@ export default function CompaniesPage() {
                 <h4 className="text-sm font-medium text-gray-700 mb-2">Edit Fields</h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Sender Name (for all events)</label>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Sender Name (for all events) <span className="text-red-500">*</span>
+                    </label>
                     <input
                       type="text"
                       value={duplicateForm.senderName}
@@ -1001,13 +1004,16 @@ export default function CompaniesPage() {
                         duplicateForm.errors.senderName ? 'border-red-500' : 'border-gray-300'
                       }`}
                       placeholder="Enter sender name"
+                      required
                     />
                     {duplicateForm.errors.senderName && (
                       <p className="text-xs text-red-600 mt-1">{duplicateForm.errors.senderName}</p>
                     )}
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Webhook URL</label>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Webhook URL <span className="text-gray-400 text-xs">(optional)</span>
+                    </label>
                     <input
                       type="url"
                       value={duplicateForm.webhookUrl}

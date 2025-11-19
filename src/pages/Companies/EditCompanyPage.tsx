@@ -267,7 +267,8 @@ const EventsWebhooksTab = ({
   formData,
   handleFieldChange,
   companyEmailEnabled,
-  setCompanyEmailEnabled
+  setCompanyEmailEnabled,
+  errors
 }) => {
   // State to track which field is currently focused
   const [focusedField, setFocusedField] = useState(null);
@@ -544,6 +545,8 @@ const EventsWebhooksTab = ({
           placeholder="Your Company Name"
           value={formData.senderName}
           onChange={(e) => handleFieldChange('senderName', e.target.value)}
+          error={errors.senderName}
+          required
         />
         <Input
           label="Sender Email (for all events)"
@@ -844,7 +847,7 @@ export default function EditCompanyPage() {
     reportSettings: '',
     configModules: '',
     senderName: '',
-    senderEmail: 'noreply@tchek.ai',
+    senderEmail: '',
     webhookUrl: '',
     archived: false
   });
@@ -1008,7 +1011,7 @@ export default function EditCompanyPage() {
           reportSettings: company.settingsPtr?.report ? JSON.stringify(company.settingsPtr.report, null, 2) : '',
           configModules: company.settingsPtr?.configModules ? JSON.stringify(company.settingsPtr.configModules, null, 2) : '',
           senderName: company.eventManagerPtr?.tradeinVehicleConfig?.senderName || company.eventManagerPtr?.chaseUpVehicleConfig?.senderName || '',
-          senderEmail: company.eventManagerPtr?.tradeinVehicleConfig?.senderEmail || company.eventManagerPtr?.chaseUpVehicleConfig?.senderEmail || 'noreply@tchek.ai',
+          senderEmail: company.eventManagerPtr?.tradeinVehicleConfig?.senderEmail || company.eventManagerPtr?.chaseUpVehicleConfig?.senderEmail || '',
           webhookUrl: company.eventManagerPtr?.webhookUrlV2 || '',
           archived: company.archived ?? false
         });
@@ -1052,7 +1055,8 @@ export default function EditCompanyPage() {
   const [errors, setErrors] = useState({
     companyName: '',
     logoUrl: '',
-    maxApiRequests: ''
+    maxApiRequests: '',
+    senderName: ''
   });
 
   const handleInputChange = () => {
@@ -1190,7 +1194,7 @@ export default function EditCompanyPage() {
         agentSMSNumber: eventData.agent?.smsNumber || '',
         customerEmail: detectedFlags.customerEmail || eventData.customer?.email || false,
         customerSMS: detectedFlags.customerSMS || eventData.customer?.sms || false,
-        senderEmail: formData.senderEmail || 'noreply@tchek.ai',
+        senderEmail: formData.senderEmail || '',
         senderName: formData.senderName || ''
       };
 
@@ -1206,7 +1210,8 @@ export default function EditCompanyPage() {
     const newErrors = {
       companyName: '',
       logoUrl: '',
-      maxApiRequests: ''
+      maxApiRequests: '',
+      senderName: ''
     };
 
     if (!formData.companyName.trim()) {
@@ -1223,8 +1228,12 @@ export default function EditCompanyPage() {
       newErrors.maxApiRequests = 'Max API requests must be greater than 0';
     }
 
+    if (!formData.senderName.trim()) {
+      newErrors.senderName = 'Sender name is required';
+    }
+
     setErrors(newErrors);
-    return !newErrors.companyName && !newErrors.logoUrl && !newErrors.maxApiRequests;
+    return !newErrors.companyName && !newErrors.logoUrl && !newErrors.maxApiRequests && !newErrors.senderName;
   };
   
   const handleSave = async () => {
@@ -1357,6 +1366,7 @@ export default function EditCompanyPage() {
         setTemplates={setTemplates}
         formData={formData}
         handleFieldChange={handleFieldChange}
+        errors={errors}
       />
     },
     {
