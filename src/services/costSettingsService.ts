@@ -187,24 +187,14 @@ class CostSettingsService {
   }
 
   /**
-   * Duplicate a cost settings
-   * NOTE: Not implemented - requires createCostSettings to be available
+   * Duplicate a cost settings with all its cost params
    */
   async duplicateCostSettings(id: string, newName: string): Promise<CostSettings> {
-    throw new Error('Duplicating cost settings is not yet implemented in the backend');
-    // const original = await this.getCostSettingsById(id);
-    // if (!original) {
-    //   throw new Error(`CostSettings with id ${id} not found`);
-    // }
-
-    // const newCostSettings = await this.createCostSettings({
-    //   name: newName,
-    //   companyId: original.companyId || original.companyPtr?.objectId || '',
-    //   tax: original.tax,
-    //   currency: original.currency,
-    // });
-
-    // return newCostSettings;
+    const response = await apiClient.post<CostSettings>(
+      `${API_ENDPOINTS.costSettings.detail(id)}/duplicate`,
+      { name: newName }
+    );
+    return response;
   }
 }
 

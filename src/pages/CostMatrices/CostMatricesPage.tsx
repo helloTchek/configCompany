@@ -31,6 +31,10 @@ export default function CostMatricesPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [settingToDelete, setSettingToDelete] = useState<CostSettings | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+  const [settingToDuplicate, setSettingToDuplicate] = useState<CostSettings | null>(null);
+  const [duplicating, setDuplicating] = useState(false);
+  const [duplicateName, setDuplicateName] = useState('');
 
   // Debounce search term
   useEffect(() => {
@@ -97,17 +101,34 @@ export default function CostMatricesPage() {
     window.URL.revokeObjectURL(url);
   };
 
-  const handleDuplicate = async (costSetting: CostSettings) => {
+  const handleDuplicate = (costSetting: CostSettings) => {
     const displayName = costSetting.className || costSetting.name || 'Unknown';
-    const newName = prompt('Enter a name for the duplicated cost matrix:', `${displayName} (Copy)`);
-    if (!newName) return;
+    setSettingToDuplicate(costSetting);
+    setDuplicateName(`${displayName} (Copie)`);
+    setShowDuplicateModal(true);
+  };
+
+  const confirmDuplicate = async () => {
+    if (!settingToDuplicate || !duplicateName.trim() || duplicating) return;
 
     try {
-      await costSettingsService.duplicateCostSettings(costSetting.id, newName);
-      await loadCostSettings();
+      setDuplicating(true);
+      const result = await costSettingsService.duplicateCostSettings(settingToDuplicate.id, duplicateName);
+
+      // Close modal and reset state
+      setShowDuplicateModal(false);
+      setSettingToDuplicate(null);
+      setDuplicateName('');
+      setDuplicating(false);
+
+      // Reload data
+      await loadCostSettings(currentPage);
+
+      alert(`Matrice de coûts "${result.className || result.name}" dupliquée avec succès`);
     } catch (err: any) {
       console.error('Error duplicating cost settings:', err);
-      alert(`Failed to duplicate cost matrix: ${err.message}`);
+      alert(`Échec de la duplication: ${err.message}`);
+      setDuplicating(false);
     }
   };
 
@@ -436,6 +457,70 @@ export default function CostMatricesPage() {
                 className="!bg-red-600 hover:!bg-red-700 !text-white"
               >
                 {deleting ? 'Suppression...' : 'Oui, supprimer'}
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Duplicate Confirmation Modal */}
+      {settingToDuplicate && (
+        <Modal
+          isOpen={showDuplicateModal}
+          onClose={() => {
+            setShowDuplicateModal(false);
+            setSettingToDuplicate(null);
+            setDuplicateName('');
+          }}
+          title="Dupliquer la matrice de coûts"
+          size="md"
+        >
+          <div className="space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                <Copy className="w-6 h-6 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Dupliquer "{settingToDuplicate.className || settingToDuplicate.name || 'Unknown'}"
+                </h3>
+                <p className="text-sm text-gray-600 mb-3">
+                  Une copie complète de cette matrice de coûts sera créée avec tous ses paramètres associés.
+                </p>
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Nom de la nouvelle matrice
+                  </label>
+                  <input
+                    type="text"
+                    value={duplicateName}
+                    onChange={(e) => setDuplicateName(e.target.value)}
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Nom de la matrice dupliquée"
+                    autoFocus
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 justify-end pt-4 border-t border-gray-200">
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setShowDuplicateModal(false);
+                  setSettingToDuplicate(null);
+                  setDuplicateName('');
+                }}
+                disabled={duplicating}
+              >
+                Annuler
+              </Button>
+              <Button
+                onClick={confirmDuplicate}
+                disabled={duplicating || !duplicateName.trim()}
+                className="!bg-blue-600 hover:!bg-blue-700 !text-white"
+              >
+                {duplicating ? 'Duplication...' : 'Dupliquer'}
               </Button>
             </div>
           </div>
