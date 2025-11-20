@@ -39,6 +39,17 @@ export const API_ENDPOINTS = {
     	byCompany: (companyId: string) => `/chaseup/company/${companyId}`,
     	plannedChaseUps: (ruleId: string) => `/chaseup/list/${ruleId}`,
   	},
+  	costSettings: {
+    	list: '/costsettings',
+    	detail: (id: string) => `/costsettings/${id}`,
+  	},
+  	costParams: {
+    	byCostSettings: (costSettingsId: string) => `/costparams/${costSettingsId}`,
+    	aggregate: (costSettingsId: string) => `/costparams/json/${costSettingsId}`,
+    	update: (id: string) => `/costparams/${id}`,
+    	createParams: (id: string) => `/costparams/script/create/${id}`,
+    	resetAndInitialize: '/costparams/script/reseteverything',
+  	},
 } as const;
 
 export type Config = typeof config;

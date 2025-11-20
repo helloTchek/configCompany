@@ -144,6 +144,62 @@ export interface SortingRuleBackend {
   ACL?: any;
 }
 
+// CostSettings (Cost Matrix) types based on backend
+export interface CostSettings {
+  id: string;
+  objectId?: string;
+  className: string; // Backend model getter returns this (maps to 'name' field in DB)
+  name?: string; // For backwards compatibility
+  companyPtr?: {
+    objectId?: string;
+    id?: string;
+    name?: string;
+    className?: string;
+  };
+  companyId?: string;
+  companyName?: string;
+  tax: number;
+  currency: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// CostParam types based on backend
+export interface CostParam {
+  id: string;
+  objectId?: string;
+  cost: number;
+  matchedFromOldCost: boolean;
+  validated: boolean;
+  vehiclePart: {
+    id: string;
+    label: string;
+    code: string;
+  };
+  vehiclePartLocation: {
+    id: string;
+    codeEN: string;
+    identifier: string;
+  };
+  severityType: {
+    id: string;
+    label: string;
+    level: string;
+    levelNb: number;
+    minSize: number;
+    maxSize: number;
+    color: string;
+  };
+  question?: string | null;
+  answer?: string | null;
+}
+
+// Aggregated format for cost params
+export interface CostParamsAggregate {
+  [key: string]: any;
+}
+
+// Legacy types (keeping for compatibility)
 export interface CostMatrix {
   id: string;
   company: string;

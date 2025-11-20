@@ -1,28 +1,49 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/Layout/Header';
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
 import Modal from '../../components/UI/Modal';
-import { ArrowLeft, Save, Download, X } from 'lucide-react';
+import { ArrowLeft, Download } from 'lucide-react';
+import { costSettingsService } from '../../services/costSettingsService';
+import { companiesService } from '../../services/companiesService';
+import { Company } from '../../types';
 
 export default function CreateCostMatrixPage() {
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [loadingCompanies, setLoadingCompanies] = useState(true);
+  const [companies, setCompanies] = useState<Company[]>([]);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    duplicateFrom: '',
-    company: '',
+    companyId: '',
     currency: 'EUR',
     tax: 20,
   });
   const [errors, setErrors] = useState({
     name: '',
-    company: '',
+    companyId: '',
     currency: '',
     tax: ''
   });
+
+  useEffect(() => {
+    loadCompanies();
+  }, []);
+
+  const loadCompanies = async () => {
+    try {
+      setLoadingCompanies(true);
+      const data = await companiesService.getAllCompanies();
+      setCompanies(data);
+    } catch (err) {
+      console.error('Error loading companies:', err);
+    } finally {
+      setLoadingCompanies(false);
+    }
+  };
 
   const handleInputChange = (field: string, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -68,7 +89,7 @@ export default function CreateCostMatrixPage() {
   const validateForm = () => {
     const newErrors = {
       name: '',
-      company: '',
+      companyId: '',
       currency: '',
       tax: ''
     };
@@ -77,8 +98,8 @@ export default function CreateCostMatrixPage() {
       newErrors.name = 'Matrix name is required';
     }
 
-    if (!formData.company.trim()) {
-      newErrors.company = 'Company is required';
+    if (!formData.companyId.trim()) {
+      newErrors.companyId = 'Company is required';
     }
 
     if (!formData.currency.trim()) {
@@ -90,28 +111,31 @@ export default function CreateCostMatrixPage() {
     }
 
     setErrors(newErrors);
-    return !newErrors.name && !newErrors.company && !newErrors.currency && !newErrors.tax;
+    return !newErrors.name && !newErrors.companyId && !newErrors.currency && !newErrors.tax;
   };
 
-  const handleCreateMatrix = () => {
+  const handleCreateMatrix = async () => {
     if (!validateForm()) {
       return;
     }
 
-    const newMatrix = {
-      id: `matrix-${Date.now()}`,
-      company: formData.company,
-      currency: formData.currency,
-      tax: formData.tax,
-      parts: formData.duplicateFrom ? [] : [], // Would copy from existing if duplicating
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
+    try {
+      setLoading(true);
+      const newCostSettings = await costSettingsService.createCostSettings({
+        name: formData.name,
+        companyId: formData.companyId,
+        currency: formData.currency,
+        tax: formData.tax,
+      });
 
-    console.log('Creating cost matrix:', newMatrix);
-    
-    // Navigate to edit page for the new matrix
-    navigate(`/cost-matrices/${newMatrix.id}/edit`);
+      alert('Cost matrix created successfully');
+      navigate(`/cost-matrices/${newCostSettings.id}/edit`);
+    } catch (err: any) {
+      console.error('Error creating cost matrix:', err);
+      alert(`Failed to create cost matrix: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!showModal) {
@@ -181,35 +205,26 @@ export default function CreateCostMatrixPage() {
               />
             </div>
 
-            {/* Duplicate from existing matrix */}
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">Duplicate from existing matrix (optional)</label>
-              <select
-                value={formData.duplicateFrom}
-                onChange={(e) => handleInputChange('duplicateFrom', e.target.value)}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">Create empty matrix</option>
-                <option value="1">AutoCorp Insurance - Standard Matrix</option>
-                <option value="2">FleetMax Leasing - Premium Matrix</option>
-              </select>
-            </div>
-
             {/* Company */}
             <div>
               <label className="block text-sm font-medium text-gray-900 mb-2">Company</label>
               <select
-                value={formData.company}
-                onChange={(e) => handleInputChange('company', e.target.value)}
+                value={formData.companyId}
+                onChange={(e) => handleInputChange('companyId', e.target.value)}
                 className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.company ? 'border-red-500' : 'border-gray-300'
+                  errors.companyId ? 'border-red-500' : 'border-gray-300'
                 }`}
+                disabled={loadingCompanies}
               >
                 <option value="">Select Company</option>
-                <option value="AutoCorp Insurance">AutoCorp Insurance</option>
-                <option value="FleetMax Leasing">FleetMax Leasing</option>
+                {companies.map((company) => (
+                  <option key={company.id} value={company.objectId || company.id}>
+                    {company.name}
+                  </option>
+                ))}
               </select>
-              {errors.company && <p className="text-sm text-red-600 mt-1">{errors.company}</p>}
+              {errors.companyId && <p className="text-sm text-red-600 mt-1">{errors.companyId}</p>}
+              {loadingCompanies && <p className="text-sm text-gray-500 mt-1">Loading companies...</p>}
             </div>
 
             {/* Currency and Tax */}
