@@ -3,7 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Header from '../../components/Layout/Header';
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
-import { ArrowLeft, Save, Download, Upload } from 'lucide-react';
+import Modal from '../../components/UI/Modal';
+import { ArrowLeft, Save, Download, Upload, Trash2, AlertTriangle } from 'lucide-react';
 import { CostSettings, CostParam } from '../../types';
 import { costSettingsService } from '../../services/costSettingsService';
 
@@ -63,6 +64,8 @@ export default function EditCostMatrixPage() {
   const [filterByPart, setFilterByPart] = useState('');
   const [filterByLocation, setFilterByLocation] = useState('');
   const [filterBySeverity, setFilterBySeverity] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -166,6 +169,22 @@ export default function EditCostMatrixPage() {
     } catch (err: any) {
       console.error('Error saving cost matrix:', err);
       alert(`Failed to save cost matrix: ${err.message}`);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!id) return;
+
+    try {
+      setDeleting(true);
+      await costSettingsService.deleteCostSettings(id);
+      setShowDeleteModal(false);
+      alert('Matrice de coûts supprimée avec succès');
+      navigate('/cost-matrices');
+    } catch (err: any) {
+      console.error('Error deleting cost matrix:', err);
+      alert(`Échec de la suppression: ${err.message}`);
+      setDeleting(false);
     }
   };
 
@@ -292,7 +311,7 @@ export default function EditCostMatrixPage() {
     );
   }
 
-  const companyName = costSettings.companyName || costSettings.companyPtr?.name || 'N/A';
+  const companyName = costSettings.companyPtr?.className || costSettings.companyPtr?.name || costSettings.companyName || 'N/A';
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
@@ -335,25 +354,36 @@ export default function EditCostMatrixPage() {
               </div>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex gap-3 justify-between">
+              <div className="flex gap-3">
+                <Button
+                  variant="secondary"
+                  onClick={handleDownloadCsv}
+                  className="flex items-center gap-2"
+                  size="sm"
+                >
+                  <Download size={16} />
+                  Download CSV
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={handleImportClick}
+                  className="flex items-center gap-2"
+                  size="sm"
+                  disabled={importing}
+                >
+                  <Upload size={16} />
+                  {importing ? 'Importing...' : 'Import from Excel'}
+                </Button>
+              </div>
               <Button
                 variant="secondary"
-                onClick={handleDownloadCsv}
-                className="flex items-center gap-2"
+                onClick={() => setShowDeleteModal(true)}
+                className="flex items-center gap-2 !text-red-600 !border-red-300 hover:!bg-red-50"
                 size="sm"
               >
-                <Download size={16} />
-                Download CSV
-              </Button>
-              <Button
-                variant="primary"
-                onClick={handleImportClick}
-                className="flex items-center gap-2"
-                size="sm"
-                disabled={importing}
-              >
-                <Upload size={16} />
-                {importing ? 'Importing...' : 'Import from Excel'}
+                <Trash2 size={16} />
+                Supprimer
               </Button>
               <input
                 ref={fileInputRef}
@@ -543,6 +573,52 @@ export default function EditCostMatrixPage() {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        title="Confirmer la suppression"
+        size="md"
+      >
+        <div className="space-y-4">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+              <AlertTriangle className="w-6 h-6 text-red-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Êtes-vous sûr de vouloir supprimer cette matrice ?
+              </h3>
+              <p className="text-sm text-gray-600 mb-3">
+                Vous êtes sur le point de supprimer la matrice de coûts <span className="font-semibold">"{formData.name}"</span>.
+              </p>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p className="text-sm text-red-800">
+                  <strong>Cette action est irréversible.</strong> Tous les paramètres de coûts associés ({costParams.length} entrées) seront également supprimés définitivement.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-3 justify-end pt-4 border-t border-gray-200">
+            <Button
+              variant="secondary"
+              onClick={() => setShowDeleteModal(false)}
+              disabled={deleting}
+            >
+              Annuler
+            </Button>
+            <Button
+              onClick={handleDelete}
+              disabled={deleting}
+              className="!bg-red-600 hover:!bg-red-700 !text-white"
+            >
+              {deleting ? 'Suppression...' : 'Oui, supprimer'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

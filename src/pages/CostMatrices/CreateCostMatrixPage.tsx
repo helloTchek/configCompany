@@ -4,6 +4,7 @@ import Header from '../../components/Layout/Header';
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
 import Modal from '../../components/UI/Modal';
+import CompanySelector from '../../components/UI/CompanySelector';
 import { ArrowLeft, Download } from 'lucide-react';
 import { costSettingsService } from '../../services/costSettingsService';
 import { companiesService } from '../../services/companiesService';
@@ -207,23 +208,15 @@ export default function CreateCostMatrixPage() {
 
             {/* Company */}
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">Company</label>
-              <select
-                value={formData.companyId}
-                onChange={(e) => handleInputChange('companyId', e.target.value)}
-                className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  errors.companyId ? 'border-red-500' : 'border-gray-300'
-                }`}
+              <CompanySelector
+                companies={companies}
+                selectedCompanyId={formData.companyId}
+                onSelect={(companyId) => handleInputChange('companyId', companyId)}
+                placeholder="Search for a company..."
+                label="Company"
+                error={errors.companyId}
                 disabled={loadingCompanies}
-              >
-                <option value="">Select Company</option>
-                {companies.map((company) => (
-                  <option key={company.id} value={company.objectId || company.id}>
-                    {company.name}
-                  </option>
-                ))}
-              </select>
-              {errors.companyId && <p className="text-sm text-red-600 mt-1">{errors.companyId}</p>}
+              />
               {loadingCompanies && <p className="text-sm text-gray-500 mt-1">Loading companies...</p>}
             </div>
 

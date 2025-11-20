@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/Layout/Header';
 import Button from '../../components/UI/Button';
+import Modal from '../../components/UI/Modal';
 import { CostSettings } from '../../types';
 import { costSettingsService } from '../../services/costSettingsService';
-import { CreditCard as Edit, Download, Copy, Trash2, Plus, Eye, Search, X } from 'lucide-react';
+import { CreditCard as Edit, Download, Copy, Trash2, Plus, Eye, Search, X, AlertTriangle } from 'lucide-react';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 const getCurrencySymbol = (currencyCode: string): string => {
@@ -27,6 +28,9 @@ export default function CostMatricesPage() {
   const [totalPages, setTotalPages] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [settingToDelete, setSettingToDelete] = useState<CostSettings | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Debounce search term
   useEffect(() => {
@@ -107,23 +111,26 @@ export default function CostMatricesPage() {
     }
   };
 
-  const handleDelete = async (costSetting: CostSettings) => {
-    const displayName = costSetting.className || costSetting.name || 'Unknown';
-    const companyName = costSetting.companyPtr?.className || costSetting.companyPtr?.name || costSetting.companyName || 'this company';
-    if (!confirm(`Are you sure you want to delete the cost matrix "${displayName}" for ${companyName}?`)) {
-      return;
-    }
+  const handleDelete = (costSetting: CostSettings) => {
+    setSettingToDelete(costSetting);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!settingToDelete) return;
 
     try {
-      const success = await costSettingsService.deleteCostSettings(costSetting.id);
-      if (success) {
-        await loadCostSettings();
-      } else {
-        alert('Failed to delete cost matrix');
-      }
+      setDeleting(true);
+      await costSettingsService.deleteCostSettings(settingToDelete.id);
+      setShowDeleteModal(false);
+      setSettingToDelete(null);
+      await loadCostSettings(currentPage);
+      alert('Matrice de coûts supprimée avec succès');
     } catch (err: any) {
       console.error('Error deleting cost settings:', err);
-      alert(`Failed to delete cost matrix: ${err.message}`);
+      alert(`Échec de la suppression: ${err.message}`);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -373,6 +380,67 @@ export default function CostMatricesPage() {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {settingToDelete && (
+        <Modal
+          isOpen={showDeleteModal}
+          onClose={() => {
+            setShowDeleteModal(false);
+            setSettingToDelete(null);
+          }}
+          title="Confirmer la suppression"
+          size="md"
+        >
+          <div className="space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                <AlertTriangle className="w-6 h-6 text-red-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Êtes-vous sûr de vouloir supprimer cette matrice ?
+                </h3>
+                <p className="text-sm text-gray-600 mb-3">
+                  Vous êtes sur le point de supprimer la matrice de coûts{' '}
+                  <span className="font-semibold">
+                    "{settingToDelete.className || settingToDelete.name || 'Unknown'}"
+                  </span>{' '}
+                  pour{' '}
+                  <span className="font-semibold">
+                    {settingToDelete.companyPtr?.className || settingToDelete.companyPtr?.name || settingToDelete.companyName || 'cette compagnie'}
+                  </span>.
+                </p>
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                  <p className="text-sm text-red-800">
+                    <strong>Cette action est irréversible.</strong> Tous les paramètres de coûts associés seront également supprimés définitivement.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 justify-end pt-4 border-t border-gray-200">
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setSettingToDelete(null);
+                }}
+                disabled={deleting}
+              >
+                Annuler
+              </Button>
+              <Button
+                onClick={confirmDelete}
+                disabled={deleting}
+                className="!bg-red-600 hover:!bg-red-700 !text-white"
+              >
+                {deleting ? 'Suppression...' : 'Oui, supprimer'}
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

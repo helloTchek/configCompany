@@ -123,17 +123,9 @@ class CostSettingsService {
 
   /**
    * Delete cost settings
-   * NOTE: Not implemented in backend - would need to be added
    */
-  async deleteCostSettings(id: string): Promise<boolean> {
-    // Backend doesn't have DELETE endpoint yet
-    throw new Error('Deleting cost settings is not yet implemented in the backend');
-    // try {
-    //   await apiClient.delete(API_ENDPOINTS.costSettings.detail(id));
-    //   return true;
-    // } catch {
-    //   return false;
-    // }
+  async deleteCostSettings(id: string): Promise<void> {
+    await apiClient.delete(API_ENDPOINTS.costSettings.detail(id));
   }
 
   /**
