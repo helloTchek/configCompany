@@ -1,6 +1,6 @@
 import { CostSettings, CostParam, CostParamsAggregate } from '@/types';
 import { apiClient } from '@/lib/api-client';
-import { API_ENDPOINTS } from '@/config';
+import { API_ENDPOINTS, config } from '@/config';
 
 export interface CreateCostSettingsData {
   name: string;
@@ -168,6 +168,33 @@ class CostSettingsService {
       data
     );
     return response;
+  }
+
+  /**
+   * Import cost params from Excel file
+   */
+  async importCostParamsFromExcel(costSettingsId: string, file: File): Promise<{ success: boolean; created: number; errors: any[] }> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    // Build headers manually (can't use apiClient since it sets Content-Type to application/json)
+    const headers: Record<string, string> = {};
+    const token = localStorage.getItem('accessToken');
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    if (config.api.apiKey) headers['x-api-key'] = config.api.apiKey;
+
+    const response = await fetch(`${apiClient['baseUrl']}${API_ENDPOINTS.costParams.importExcel(costSettingsId)}`, {
+      method: 'POST',
+      headers,
+      body: formData
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `HTTP ${response.status}`);
+    }
+
+    return response.json();
   }
 
   /**

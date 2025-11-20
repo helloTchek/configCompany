@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Header from '../../components/Layout/Header';
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
-import { ArrowLeft, Save, Download } from 'lucide-react';
+import { ArrowLeft, Save, Download, Upload } from 'lucide-react';
 import { CostSettings, CostParam } from '../../types';
 import { costSettingsService } from '../../services/costSettingsService';
 
@@ -18,11 +18,14 @@ const severityColors: Record<string, string> = {
 export default function EditCostMatrixPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [costSettings, setCostSettings] = useState<CostSettings | null>(null);
   const [costParams, setCostParams] = useState<CostParam[]>([]);
   const [editedParams, setEditedParams] = useState<Record<string, { cost: number; validated: boolean }>>({});
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{ success: boolean; created: number; errors: any[] } | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     currency: 'EUR',
@@ -64,7 +67,7 @@ export default function EditCostMatrixPage() {
       setCostSettings(settings);
       setCostParams(params);
       setFormData({
-        name: settings.name,
+        name: settings.className || settings.name || '',
         currency: settings.currency,
         tax: settings.tax,
       });
@@ -177,9 +180,43 @@ export default function EditCostMatrixPage() {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${costSettings.name.toLowerCase().replace(/\s+/g, '-')}-cost-matrix.csv`;
+    const fileName = (costSettings.className || costSettings.name || 'cost-matrix').toLowerCase().replace(/\s+/g, '-');
+    a.download = `${fileName}-cost-matrix.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !id) return;
+
+    setImporting(true);
+    setImportResult(null);
+
+    try {
+      const result = await costSettingsService.importCostParamsFromExcel(id, file);
+      setImportResult(result);
+
+      if (result.success) {
+        alert(`Successfully imported ${result.created} cost params!${result.errors.length > 0 ? `\n\nWarning: ${result.errors.length} rows had errors.` : ''}`);
+
+        // Reload cost params after successful import
+        await loadData();
+      }
+    } catch (err: any) {
+      console.error('Error importing Excel file:', err);
+      alert(`Failed to import Excel file: ${err.message}`);
+    } finally {
+      setImporting(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
   };
 
   const filteredParams = costParams.filter(param => {
@@ -283,6 +320,23 @@ export default function EditCostMatrixPage() {
                 <Download size={16} />
                 Download CSV
               </Button>
+              <Button
+                variant="primary"
+                onClick={handleImportClick}
+                className="flex items-center gap-2"
+                size="sm"
+                disabled={importing}
+              >
+                <Upload size={16} />
+                {importing ? 'Importing...' : 'Import from Excel'}
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={handleFileChange}
+                className="hidden"
+              />
             </div>
           </div>
 

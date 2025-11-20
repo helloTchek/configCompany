@@ -49,6 +49,7 @@ export const API_ENDPOINTS = {
     	update: (id: string) => `/costparams/${id}`,
     	createParams: (id: string) => `/costparams/script/create/${id}`,
     	resetAndInitialize: '/costparams/script/reseteverything',
+    	importExcel: (costSettingsId: string) => `/costparams/import/${costSettingsId}`,
   	},
 } as const;
 
