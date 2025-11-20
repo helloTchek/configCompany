@@ -7,6 +7,15 @@ import { costSettingsService } from '../../services/costSettingsService';
 import { CreditCard as Edit, Download, Copy, Trash2, Plus, Eye, Search, X } from 'lucide-react';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
+const getCurrencySymbol = (currencyCode: string): string => {
+  const symbols: Record<string, string> = {
+    'EUR': '€',
+    'USD': '$',
+    'GBP': '£'
+  };
+  return symbols[currencyCode] || currencyCode;
+};
+
 export default function CostMatricesPage() {
   const navigate = useNavigate();
   const [costSettings, setCostSettings] = useState<CostSettings[]>([]);
@@ -233,7 +242,7 @@ export default function CostMatricesPage() {
                           </td>
                         <td className="py-4 px-4">
                           <div>
-                            <div className="font-medium text-gray-900">{setting.currency}</div>
+                            <div className="font-medium text-gray-900">{getCurrencySymbol(setting.currency)}</div>
                             <div className="text-sm text-gray-600">Tax: {setting.tax}%</div>
                           </div>
                         </td>

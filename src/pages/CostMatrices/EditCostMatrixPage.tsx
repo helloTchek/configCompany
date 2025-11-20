@@ -15,6 +15,15 @@ const severityColors: Record<string, string> = {
   'SEV5': 'bg-red-200 text-red-900'
 };
 
+const getCurrencySymbol = (currencyCode: string): string => {
+  const symbols: Record<string, string> = {
+    'EUR': '€',
+    'USD': '$',
+    'GBP': '£'
+  };
+  return symbols[currencyCode] || currencyCode;
+};
+
 export default function EditCostMatrixPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
@@ -300,7 +309,7 @@ export default function EditCostMatrixPage() {
                   <div className="text-gray-600">Tax Rate</div>
                 </div>
                 <div className="text-center">
-                  <div className="font-semibold text-gray-900">{formData.currency}</div>
+                  <div className="font-semibold text-gray-900">{getCurrencySymbol(formData.currency)}</div>
                   <div className="text-gray-600">Currency</div>
                 </div>
                 <div className="text-center">
@@ -484,7 +493,7 @@ export default function EditCostMatrixPage() {
                               min="0"
                               step="0.01"
                             />
-                            <span className="text-sm text-gray-600">{formData.currency}</span>
+                            <span className="text-sm text-gray-600">{getCurrencySymbol(formData.currency)}</span>
                           </div>
                         </td>
                         <td className="py-3 px-4">
