@@ -160,6 +160,16 @@ class CostSettingsService {
   }
 
   /**
+   * Delete all cost params for a cost settings
+   */
+  async deleteAllCostParams(costSettingsId: string): Promise<{ success: boolean; deleted: number }> {
+    const response = await apiClient.delete<{ success: boolean; deleted: number; message: string }>(
+      API_ENDPOINTS.costParams.byCostSettings(costSettingsId)
+    );
+    return response;
+  }
+
+  /**
    * Import cost params from Excel file
    */
   async importCostParamsFromExcel(costSettingsId: string, file: File): Promise<{ success: boolean; created: number; errors: any[] }> {

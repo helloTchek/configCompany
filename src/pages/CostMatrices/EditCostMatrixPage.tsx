@@ -50,6 +50,7 @@ export default function EditCostMatrixPage() {
   const [costParams, setCostParams] = useState<CostParam[]>([]);
   const [editedParams, setEditedParams] = useState<Record<string, { cost: number; validated: boolean }>>({});
   const [importing, setImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState(0);
   const [importResult, setImportResult] = useState<{ success: boolean; created: number; errors: any[] } | null>(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -177,13 +178,17 @@ export default function EditCostMatrixPage() {
 
     try {
       setDeleting(true);
-      await costSettingsService.deleteCostSettings(id);
+      const result = await costSettingsService.deleteAllCostParams(id);
       setShowDeleteModal(false);
-      alert('Matrice de coûts supprimée avec succès');
-      navigate('/cost-matrices');
+
+      // Reload data to show empty list
+      await loadData();
+
+      alert(`${result.deleted} paramètres de coûts supprimés avec succès`);
     } catch (err: any) {
-      console.error('Error deleting cost matrix:', err);
+      console.error('Error deleting cost params:', err);
       alert(`Échec de la suppression: ${err.message}`);
+    } finally {
       setDeleting(false);
     }
   };
@@ -239,23 +244,43 @@ export default function EditCostMatrixPage() {
     if (!file || !id) return;
 
     setImporting(true);
+    setImportProgress(0);
     setImportResult(null);
+
+    // Simulate progress during import (estimated based on file size)
+    const progressInterval = setInterval(() => {
+      setImportProgress((prev) => {
+        if (prev >= 90) return prev; // Cap at 90% until actual completion
+        return prev + 5;
+      });
+    }, 200);
 
     try {
       const result = await costSettingsService.importCostParamsFromExcel(id, file);
+
+      // Complete progress
+      clearInterval(progressInterval);
+      setImportProgress(100);
       setImportResult(result);
 
       if (result.success) {
-        alert(`Successfully imported ${result.created} cost params!${result.errors.length > 0 ? `\n\nWarning: ${result.errors.length} rows had errors.` : ''}`);
+        setTimeout(() => {
+          alert(`Import réussi: ${result.created} paramètres de coûts importés!${result.errors.length > 0 ? `\n\nAttention: ${result.errors.length} lignes avec erreurs.` : ''}`);
+        }, 300);
 
         // Reload cost params after successful import
         await loadData();
       }
     } catch (err: any) {
+      clearInterval(progressInterval);
       console.error('Error importing Excel file:', err);
-      alert(`Failed to import Excel file: ${err.message}`);
+      alert(`Échec de l'import: ${err.message}`);
     } finally {
-      setImporting(false);
+      setTimeout(() => {
+        setImporting(false);
+        setImportProgress(0);
+      }, 500);
+
       // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -348,13 +373,26 @@ export default function EditCostMatrixPage() {
                   <div className="text-gray-600">Currency</div>
                 </div>
                 <div className="text-center">
-                  <div className="font-semibold text-gray-900">{costParams.length}</div>
-                  <div className="text-gray-600">Cost Entries</div>
+                  <div className="flex items-center gap-2 justify-center">
+                    <div>
+                      <div className="font-semibold text-gray-900">{costParams.length}</div>
+                      <div className="text-gray-600">Cost Entries</div>
+                    </div>
+                    {costParams.length > 0 && (
+                      <button
+                        onClick={() => setShowDeleteModal(true)}
+                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Supprimer tous les paramètres de coûts"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="flex gap-3 justify-between">
+            <div className="space-y-3">
               <div className="flex gap-3">
                 <Button
                   variant="secondary"
@@ -373,25 +411,26 @@ export default function EditCostMatrixPage() {
                   disabled={importing}
                 >
                   <Upload size={16} />
-                  {importing ? 'Importing...' : 'Import from Excel'}
+                  {importing ? `Import en cours... ${importProgress}%` : 'Import from Excel'}
                 </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".xlsx,.xls"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
               </div>
-              <Button
-                variant="secondary"
-                onClick={() => setShowDeleteModal(true)}
-                className="flex items-center gap-2 !text-red-600 !border-red-300 hover:!bg-red-50"
-                size="sm"
-              >
-                <Trash2 size={16} />
-                Supprimer
-              </Button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".xlsx,.xls"
-                onChange={handleFileChange}
-                className="hidden"
-              />
+
+              {/* Progress Bar */}
+              {importing && (
+                <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                  <div
+                    className="bg-blue-600 h-2.5 rounded-full transition-all duration-300 ease-out"
+                    style={{ width: `${importProgress}%` }}
+                  ></div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -588,14 +627,14 @@ export default function EditCostMatrixPage() {
             </div>
             <div className="flex-1">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Êtes-vous sûr de vouloir supprimer cette matrice ?
+                Supprimer tous les paramètres de coûts ?
               </h3>
               <p className="text-sm text-gray-600 mb-3">
-                Vous êtes sur le point de supprimer la matrice de coûts <span className="font-semibold">"{formData.name}"</span>.
+                Vous êtes sur le point de supprimer <span className="font-semibold">{costParams.length} paramètres de coûts</span> de la matrice "{formData.name}".
               </p>
               <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                 <p className="text-sm text-red-800">
-                  <strong>Cette action est irréversible.</strong> Tous les paramètres de coûts associés ({costParams.length} entrées) seront également supprimés définitivement.
+                  <strong>Cette action est irréversible.</strong> Tous les cost entries seront supprimés, mais la matrice de coûts elle-même sera conservée. Vous pourrez réimporter des données par la suite.
                 </p>
               </div>
             </div>
@@ -614,7 +653,7 @@ export default function EditCostMatrixPage() {
               disabled={deleting}
               className="!bg-red-600 hover:!bg-red-700 !text-white"
             >
-              {deleting ? 'Suppression...' : 'Oui, supprimer'}
+              {deleting ? 'Suppression...' : 'Supprimer les cost entries'}
             </Button>
           </div>
         </div>
