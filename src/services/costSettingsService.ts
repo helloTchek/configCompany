@@ -115,13 +115,10 @@ class CostSettingsService {
 
   /**
    * Update cost settings
-   * NOTE: Not implemented in backend - would need to be added
    */
   async updateCostSettings(id: string, data: UpdateCostSettingsData): Promise<CostSettings> {
-    // Backend doesn't have PUT endpoint yet
-    throw new Error('Updating cost settings is not yet implemented in the backend');
-    // const response = await apiClient.put<CostSettings>(API_ENDPOINTS.costSettings.detail(id), data);
-    // return response.data!;
+    const response = await apiClient.put<CostSettings>(API_ENDPOINTS.costSettings.detail(id), data);
+    return response;
   }
 
   /**

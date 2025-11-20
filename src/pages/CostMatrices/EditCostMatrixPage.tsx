@@ -19,9 +19,24 @@ const getCurrencySymbol = (currencyCode: string): string => {
   const symbols: Record<string, string> = {
     'EUR': '€',
     'USD': '$',
-    'GBP': '£'
+    'GBP': '£',
+    '€': '€',
+    '$': '$',
+    '£': '£'
   };
   return symbols[currencyCode] || currencyCode;
+};
+
+const getCurrencyCode = (currencySymbol: string): string => {
+  const codes: Record<string, string> = {
+    '€': 'EUR',
+    '$': 'USD',
+    '£': 'GBP',
+    'EUR': 'EUR',
+    'USD': 'USD',
+    'GBP': 'GBP'
+  };
+  return codes[currencySymbol] || currencySymbol;
 };
 
 export default function EditCostMatrixPage() {
@@ -77,7 +92,7 @@ export default function EditCostMatrixPage() {
       setCostParams(params);
       setFormData({
         name: settings.className || settings.name || '',
-        currency: settings.currency,
+        currency: getCurrencyCode(settings.currency), // Convert symbol to code for select
         tax: settings.tax,
       });
     } catch (err: any) {
@@ -145,7 +160,8 @@ export default function EditCostMatrixPage() {
       );
       await Promise.all(updatePromises);
 
-      alert('Cost matrix updated successfully');
+      const updatedParamsCount = Object.keys(editedParams).length;
+      alert(`Cost matrix updated successfully!${updatedParamsCount > 0 ? `\n\n${updatedParamsCount} cost param(s) updated.` : ''}`);
       navigate('/cost-matrices');
     } catch (err: any) {
       console.error('Error saving cost matrix:', err);
@@ -309,7 +325,7 @@ export default function EditCostMatrixPage() {
                   <div className="text-gray-600">Tax Rate</div>
                 </div>
                 <div className="text-center">
-                  <div className="font-semibold text-gray-900">{getCurrencySymbol(formData.currency)}</div>
+                  <div className="font-semibold text-gray-900">{costSettings?.currency || getCurrencySymbol(formData.currency)}</div>
                   <div className="text-gray-600">Currency</div>
                 </div>
                 <div className="text-center">
@@ -493,7 +509,7 @@ export default function EditCostMatrixPage() {
                               min="0"
                               step="0.01"
                             />
-                            <span className="text-sm text-gray-600">{getCurrencySymbol(formData.currency)}</span>
+                            <span className="text-sm text-gray-600">{costSettings?.currency || getCurrencySymbol(formData.currency)}</span>
                           </div>
                         </td>
                         <td className="py-3 px-4">
