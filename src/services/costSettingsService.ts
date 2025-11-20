@@ -107,13 +107,10 @@ class CostSettingsService {
 
   /**
    * Create new cost settings
-   * NOTE: Not implemented in backend - would need to be added
    */
   async createCostSettings(data: CreateCostSettingsData): Promise<CostSettings> {
-    // Backend doesn't have POST endpoint yet
-    throw new Error('Creating cost settings is not yet implemented in the backend');
-    // const response = await apiClient.post<CostSettings>(API_ENDPOINTS.costSettings.list, data);
-    // return response.data!;
+    const response = await apiClient.post<CostSettings>(API_ENDPOINTS.costSettings.list, data);
+    return response;
   }
 
   /**
