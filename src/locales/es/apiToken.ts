@@ -1,23 +1,23 @@
 export const apiToken = {
-  title: 'API Tokens',
-  subtitle: 'Manage API tokens and request limits',
+  title: 'Tokens API',
+  subtitle: 'Administrar tokens API y límites de solicitudes',
   fields: {
-    token: 'API Token',
-    currentRequests: 'Current Requests',
-    maxRequests: 'Max Requests',
-    expiryDate: 'Expiry Date',
-    decisionTree: 'Decision Tree Configuration',
-    company: 'Company'
+    token: 'Token API',
+    currentRequests: 'Solicitudes actuales',
+    maxRequests: 'Máx. solicitudes',
+    expiryDate: 'Fecha de expiración',
+    decisionTree: 'Configuración del árbol de decisiones',
+    company: 'Empresa'
   },
   actions: {
-    regenerate: 'Regenerate Token',
-    resetRequests: 'Reset Request Count',
-    extendExpiry: 'Extend Expiry Date'
+    regenerate: 'Regenerar token',
+    resetRequests: 'Restablecer contador de solicitudes',
+    extendExpiry: 'Extender fecha de expiración'
   },
   messages: {
-    regenerateConfirm: 'Are you sure you want to regenerate this token? The old token will stop working immediately.',
-    regenerateSuccess: 'Token regenerated successfully',
-    resetSuccess: 'Request count reset successfully',
-    extendSuccess: 'Expiry date extended successfully'
+    regenerateConfirm: '¿Está seguro de que desea regenerar este token? El token anterior dejará de funcionar inmediatamente.',
+    regenerateSuccess: 'Token regenerado con éxito',
+    resetSuccess: 'Contador de solicitudes restablecido con éxito',
+    extendSuccess: 'Fecha de expiración extendida con éxito'
   }
 } as const;

@@ -1,50 +1,50 @@
 export const shootInspect = {
-  title: 'Shoot Inspection Configuration',
-  subtitle: 'Configure photo capture workflow and settings',
+  title: 'Configuración de inspección fotográfica',
+  subtitle: 'Configurar el flujo de trabajo y ajustes de captura de fotos',
   fields: {
-    name: 'Configuration Name',
-    description: 'Description',
-    maxRetries: 'Max Retries',
-    qualityCheckEnabled: 'Quality Check Enabled',
-    photoAngles: 'Photo Angles',
-    allowedDamageTypes: 'Allowed Damage Types'
+    name: 'Nombre de la configuración',
+    description: 'Descripción',
+    maxRetries: 'Máximo de reintentos',
+    qualityCheckEnabled: 'Control de calidad habilitado',
+    photoAngles: 'Ángulos de foto',
+    allowedDamageTypes: 'Tipos de daño permitidos'
   },
   angles: {
-    front: 'Front',
-    back: 'Back',
-    leftSide: 'Left Side',
-    rightSide: 'Right Side',
+    front: 'Frente',
+    back: 'Parte trasera',
+    leftSide: 'Lado izquierdo',
+    rightSide: 'Lado derecho',
     interior: 'Interior',
-    dashboard: 'Dashboard'
+    dashboard: 'Tablero'
   },
   damageTypes: {
-    carBody: 'Car Body',
+    carBody: 'Carrocería',
     interior: 'Interior',
-    glazings: 'Glazings',
-    dashboard: 'Dashboard',
-    declaration: 'Declaration',
-    documents: 'Documents'
+    glazings: 'Cristales',
+    dashboard: 'Tablero',
+    declaration: 'Declaración',
+    documents: 'Documentos'
   },
   steps: {
-    title: 'Inspection Steps',
-    addStep: 'Add Step',
-    editStep: 'Edit Step',
-    removeStep: 'Remove Step',
-    stepOrder: 'Step {{order}}',
-    stepTitle: 'Step Title',
-    stepDescription: 'Step Description',
-    isOptional: 'Optional Step',
-    showHelp: 'Show Help',
-    runDetection: 'Run Detection',
-    thumbnailUrl: 'Thumbnail URL',
-    overlayUrl: 'Overlay URL'
+    title: 'Pasos de inspección',
+    addStep: 'Agregar paso',
+    editStep: 'Editar paso',
+    removeStep: 'Eliminar paso',
+    stepOrder: 'Paso {{order}}',
+    stepTitle: 'Título del paso',
+    stepDescription: 'Descripción del paso',
+    isOptional: 'Paso opcional',
+    showHelp: 'Mostrar ayuda',
+    runDetection: 'Ejecutar detección',
+    thumbnailUrl: 'URL de miniatura',
+    overlayUrl: 'URL de superposición'
   },
   messages: {
-    createSuccess: 'Shoot inspection configuration created successfully',
-    updateSuccess: 'Shoot inspection configuration updated successfully',
-    deleteSuccess: 'Shoot inspection configuration deleted successfully',
-    stepAdded: 'Step added successfully',
-    stepRemoved: 'Step removed successfully',
-    invalidConfiguration: 'Invalid configuration format'
+    createSuccess: 'Configuración de inspección fotográfica creada con éxito',
+    updateSuccess: 'Configuración de inspección fotográfica actualizada con éxito',
+    deleteSuccess: 'Configuración de inspección fotográfica eliminada con éxito',
+    stepAdded: 'Paso agregado con éxito',
+    stepRemoved: 'Paso eliminado con éxito',
+    invalidConfiguration: 'Formato de configuración inválido'
   }
 } as const;

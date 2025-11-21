@@ -1,27 +1,27 @@
 export const settings = {
-  title: 'Settings',
-  subtitle: 'Configure application settings and styles',
+  title: 'Configuración',
+  subtitle: 'Configurar ajustes y estilos de la aplicación',
   sections: {
-    styles: 'Styles',
-    reportSettings: 'Report Settings',
-    configModules: 'Config Modules'
+    styles: 'Estilos',
+    reportSettings: 'Configuración de informes',
+    configModules: 'Módulos de configuración'
   },
   fields: {
-    styles: 'Styles Configuration',
-    reportSettings: 'Report Settings Configuration',
-    configModules: 'Config Modules Configuration',
-    urlBackground: 'Remove Background URL',
-    instantInspection: 'Show Start Instant Inspection'
+    styles: 'Configuración de estilos',
+    reportSettings: 'Configuración de informes',
+    configModules: 'Configuración de módulos',
+    urlBackground: 'Eliminar URL de fondo',
+    instantInspection: 'Mostrar inicio de inspección instantánea'
   },
   actions: {
-    downloadJson: 'Download JSON',
-    uploadJson: 'Upload JSON',
-    resetToDefault: 'Reset to Default'
+    downloadJson: 'Descargar JSON',
+    uploadJson: 'Subir JSON',
+    resetToDefault: 'Restablecer a valores predeterminados'
   },
   messages: {
-    updateSuccess: 'Settings updated successfully',
-    resetSuccess: 'Settings reset to default values',
-    invalidJson: 'Invalid JSON format',
-    uploadSuccess: 'Configuration uploaded successfully'
+    updateSuccess: 'Configuración actualizada con éxito',
+    resetSuccess: 'Configuración restablecida a los valores predeterminados',
+    invalidJson: 'Formato JSON inválido',
+    uploadSuccess: 'Configuración subida con éxito'
   }
 } as const;

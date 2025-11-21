@@ -1,46 +1,46 @@
 export const sortingRules = {
-  title: 'Règles de Tri',
-  subtitle: 'Configurer les règles de filtrage et de mise à jour automatisées par entreprise',
-  create: 'Créer une Nouvelle Règle',
-  edit: 'Modifier la Règle de Tri',
+  title: 'Reglas de ordenación',
+  subtitle: 'Configurar reglas de filtrado y actualización automatizadas por empresa',
+  create: 'Crear nueva regla',
+  edit: 'Editar regla de ordenación',
   fields: {
-    company: 'Entreprise',
-    type: 'Type',
-    fromCollection: 'Collection Source',
-    targetCollection: 'Collection Cible',
-    referenceKey: 'Clé de Référence',
-    referencePrefix: 'Préfixe de Référence',
-    filters: 'Filtres (JSON)',
-    updates: 'Mises à jour (JSON)',
-    processingPriority: 'Priorité de Traitement',
-    priority: 'Priorité'
+    company: 'Empresa',
+    type: 'Tipo',
+    fromCollection: 'Colección origen',
+    targetCollection: 'Colección destino',
+    referenceKey: 'Clave de referencia',
+    referencePrefix: 'Prefijo de referencia',
+    filters: 'Filtros (JSON)',
+    updates: 'Actualizaciones (JSON)',
+    processingPriority: 'Prioridad de procesamiento',
+    priority: 'Prioridad'
   },
   types: {
-    detectionPhase: 'Phase de Détection',
-    validationPhase: 'Phase de Validation',
-    reportGeneration: 'Génération de Rapport'
+    detectionPhase: 'Fase de detección',
+    validationPhase: 'Fase de validación',
+    reportGeneration: 'Generación de informe'
   },
   priorities: {
-    highest: '1 - Priorité la Plus Élevée',
-    high: '2 - Priorité Élevée',
-    medium: '3 - Priorité Moyenne',
-    low: '4 - Priorité Faible',
-    lowest: '5 - Priorité la Plus Faible',
-    highLevel: 'Priorité Élevée (1-2)',
-    mediumLevel: 'Priorité Moyenne (3-4)'
+    highest: '1 - Prioridad más alta',
+    high: '2 - Prioridad alta',
+    medium: '3 - Prioridad media',
+    low: '4 - Prioridad baja',
+    lowest: '5 - Prioridad más baja',
+    highLevel: 'Prioridad alta (1-2)',
+    mediumLevel: 'Prioridad media (3-4)'
   },
   examples: {
-    title: 'Exemples de Configuration',
-    filterExamples: 'Exemples de Filtres :',
-    updateExamples: 'Exemples de Mises à jour :',
-    filtersHelp: 'Objet JSON définissant les critères de filtrage',
-    updatesHelp: 'Objet JSON définissant les mises à jour à appliquer'
+    title: 'Ejemplos de configuración',
+    filterExamples: 'Ejemplos de filtros:',
+    updateExamples: 'Ejemplos de actualizaciones:',
+    filtersHelp: 'Objeto JSON que define los criterios de filtrado',
+    updatesHelp: 'Objeto JSON que define las actualizaciones a aplicar'
   },
   messages: {
-    createSuccess: 'Règle de tri créée avec succès',
-    updateSuccess: 'Règle de tri mise à jour avec succès',
-    deleteSuccess: 'Règle de tri supprimée avec succès',
-    invalidJson: 'Format JSON invalide',
-    loadingRule: 'Chargement de la règle de tri...'
+    createSuccess: 'Regla de ordenación creada con éxito',
+    updateSuccess: 'Regla de ordenación actualizada con éxito',
+    deleteSuccess: 'Regla de ordenación eliminada con éxito',
+    invalidJson: 'Formato JSON inválido',
+    loadingRule: 'Cargando la regla de ordenación...'
   }
 } as const;

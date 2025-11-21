@@ -1,56 +1,56 @@
 export const events = {
-  title: 'Events & Webhooks',
-  subtitle: 'Configure notification templates and recipients for different events',
+  title: 'Eventi & Webhook',
+  subtitle: 'Configura modelli di notifica e destinatari per diversi eventi',
   events: {
-    selfInspectionCreation: 'Self Inspection Creation',
-    automatedChaseUp: 'Automated Chase-up Message',
-    manualChaseUp: 'Manual Chase-up Message',
-    inspectionFinished: 'Inspection Finished Message',
-    damageReviewFinished: 'Damage Review Finished Message',
-    shareUpdatedReport: 'Share Updated Report Message'
+    selfInspectionCreation: 'Creazione ispezione autonoma',
+    automatedChaseUp: 'Messaggio di sollecito automatico',
+    manualChaseUp: 'Messaggio di sollecito manuale',
+    inspectionFinished: 'Messaggio ispezione completata',
+    damageReviewFinished: 'Messaggio revisione danni completata',
+    shareUpdatedReport: 'Messaggio condivisione rapporto aggiornato'
   },
   recipients: {
-    title: 'Recipients',
-    customerPhone: 'Customer Phone Number',
-    companyEmail: 'Company Email Address',
-    agentEmail: 'Agent Email Address',
-    webhookUrl: 'Webhook URL',
-    addRecipient: 'Add Recipient'
+    title: 'Destinatari',
+    customerPhone: 'Numero di telefono cliente',
+    companyEmail: 'Email aziendale',
+    agentEmail: 'Email agente',
+    webhookUrl: 'URL Webhook',
+    addRecipient: 'Aggiungi destinatario'
   },
   messageContent: {
-    title: 'Message Content',
+    title: 'Contenuto messaggio',
     email: 'Email',
     sms: 'SMS',
-    subject: 'Subject',
-    htmlContent: 'HTML Content',
-    textContent: 'Text Content',
-    characterCount: 'Character count: {{count}}',
-    pageLimit: 'Page limit: {{limit}}'
+    subject: 'Oggetto',
+    htmlContent: 'Contenuto HTML',
+    textContent: 'Contenuto testuale',
+    characterCount: 'Numero caratteri: {{count}}',
+    pageLimit: 'Limite pagine: {{limit}}'
   },
   variables: {
-    title: 'Available Variables',
-    description: 'Click any variable to copy it to your clipboard',
-    customerName: 'Customer Name',
-    customerEmail: 'Customer Email',
-    customerPhone: 'Customer Phone',
-    inspectionId: 'Inspection ID',
-    inspectionLink: 'Inspection Link',
-    vehicleMake: 'Vehicle Make',
-    vehicleModel: 'Vehicle Model',
-    licensePlate: 'License Plate',
-    companyName: 'Company Name',
-    agentName: 'Agent Name',
-    inspectionDate: 'Inspection Date',
-    trackingUrl: 'Tracking URL'
+    title: 'Variabili disponibili',
+    description: 'Clicca su una variabile per copiarla negli appunti',
+    customerName: 'Nome cliente',
+    customerEmail: 'Email cliente',
+    customerPhone: 'Telefono cliente',
+    inspectionId: 'ID ispezione',
+    inspectionLink: 'Link ispezione',
+    vehicleMake: 'Marca veicolo',
+    vehicleModel: 'Modello veicolo',
+    licensePlate: 'Targa',
+    companyName: 'Nome azienda',
+    agentName: 'Nome agente',
+    inspectionDate: 'Data ispezione',
+    trackingUrl: 'URL tracciamento'
   },
   fields: {
-    webhookUrl: 'Webhook URL',
-    senderName: 'Sender Name (for all events)'
+    webhookUrl: 'URL Webhook',
+    senderName: 'Nome mittente (per tutti gli eventi)'
   },
   messages: {
-    updateSuccess: 'Event configuration updated successfully',
-    testSuccess: 'Test message sent successfully',
-    testError: 'Failed to send test message',
-    variableCopied: 'Variable copied to clipboard'
+    updateSuccess: 'Configurazione evento aggiornata con successo',
+    testSuccess: 'Messaggio di test inviato con successo',
+    testError: 'Invio messaggio di test fallito',
+    variableCopied: 'Variabile copiata negli appunti'
   }
 } as const;

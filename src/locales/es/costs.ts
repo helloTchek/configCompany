@@ -1,45 +1,45 @@
 export const costs = {
-  title: 'Cost Matrices',
-  subtitle: 'Manage repair costs by part types, locations, and severities',
-  create: 'Create New Matrix',
-  edit: 'Edit Cost Matrix',
+  title: 'Matrices de costos',
+  subtitle: 'Administrar costos de reparación por tipo de pieza, ubicación y gravedad',
+  create: 'Crear nueva matriz',
+  edit: 'Editar matriz de costos',
   fields: {
-    company: 'Company',
-    currency: 'Currency',
-    taxRate: 'Tax Rate (%)',
-    partsCount: 'Parts Count',
-    partType: 'Part Type',
-    location: 'Location',
-    severity: 'Severity',
-    cost: 'Cost'
+    company: 'Empresa',
+    currency: 'Moneda',
+    taxRate: 'Tasa de impuesto (%)',
+    partsCount: 'Cantidad de piezas',
+    partType: 'Tipo de pieza',
+    location: 'Ubicación',
+    severity: 'Gravedad',
+    cost: 'Costo'
   },
   severities: {
-    minor: 'Minor',
-    moderate: 'Moderate',
-    major: 'Major',
-    severe: 'Severe'
+    minor: 'Leve',
+    moderate: 'Moderada',
+    major: 'Alta',
+    severe: 'Severa'
   },
   locations: {
-    front: 'Front',
-    rear: 'Rear',
-    left: 'Left',
-    right: 'Right',
-    roof: 'Roof',
+    front: 'Frente',
+    rear: 'Parte trasera',
+    left: 'Izquierda',
+    right: 'Derecha',
+    roof: 'Techo',
     interior: 'Interior'
   },
   actions: {
-    addPart: 'Add Part',
-    removePart: 'Remove Part',
-    importCsv: 'Import CSV',
-    exportCsv: 'Export CSV',
-    bulkEdit: 'Bulk Edit'
+    addPart: 'Agregar pieza',
+    removePart: 'Eliminar pieza',
+    importCsv: 'Importar CSV',
+    exportCsv: 'Exportar CSV',
+    bulkEdit: 'Edición masiva'
   },
   messages: {
-    createSuccess: 'Cost matrix created successfully',
-    updateSuccess: 'Cost matrix updated successfully',
-    deleteSuccess: 'Cost matrix deleted successfully',
-    importSuccess: 'CSV imported successfully',
-    exportSuccess: 'CSV exported successfully',
-    invalidCsv: 'Invalid CSV format'
+    createSuccess: 'Matriz de costos creada con éxito',
+    updateSuccess: 'Matriz de costos actualizada con éxito',
+    deleteSuccess: 'Matriz de costos eliminada con éxito',
+    importSuccess: 'CSV importado con éxito',
+    exportSuccess: 'CSV exportado con éxito',
+    invalidCsv: 'Formato CSV inválido'
   }
 } as const;

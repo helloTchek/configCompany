@@ -1,61 +1,61 @@
 export const workflows = {
-  title: 'Workflows',
-  subtitle: 'Create and manage inspection journey workflows',
-  create: 'Create New Journey',
-  edit: 'Edit Journey',
-  duplicate: 'Duplicate Journey',
+  title: 'Flujos de trabajo',
+  subtitle: 'Crear y administrar flujos de inspección',
+  create: 'Crear nuevo flujo',
+  edit: 'Editar flujo',
+  duplicate: 'Duplicar flujo',
   fields: {
-    name: 'Journey Name',
-    description: 'Description',
-    company: 'Company',
-    blocksCount: 'Blocks Count',
-    status: 'Status',
-    isActive: 'Active'
+    name: 'Nombre del flujo',
+    description: 'Descripción',
+    company: 'Empresa',
+    blocksCount: 'Cantidad de bloques',
+    status: 'Estado',
+    isActive: 'Activo'
   },
   blocks: {
-    title: 'Journey Blocks',
-    addBlock: 'Add Block',
-    form: 'Form Block',
-    shootInspection: 'Shoot Inspection Block',
-    fastTrack: 'Fast Track Block',
-    addDamage: 'Add Damage Block',
-    static: 'Static Screen Block'
+    title: 'Bloques del flujo',
+    addBlock: 'Agregar bloque',
+    form: 'Bloque de formulario',
+    shootInspection: 'Bloque de inspección fotográfica',
+    fastTrack: 'Bloque de Fast Track',
+    addDamage: 'Bloque de agregar daños',
+    static: 'Bloque de pantalla estática'
   },
   blockTypes: {
     form: {
-      name: 'Form Block',
-      description: 'Custom form with JSON configuration'
+      name: 'Bloque de formulario',
+      description: 'Formulario personalizado con configuración JSON'
     },
     shootInspection: {
-      name: 'Shoot Inspection Block',
-      description: 'Photo capture workflow'
+      name: 'Bloque de inspección fotográfica',
+      description: 'Flujo de captura de fotos'
     },
     fastTrack: {
-      name: 'Fast Track Block',
-      description: 'Quick inspection process'
+      name: 'Bloque de Fast Track',
+      description: 'Proceso rápido de inspección'
     },
     addDamage: {
-      name: 'Add Damage Block',
-      description: 'Manual damage reporting'
+      name: 'Bloque de agregar daños',
+      description: 'Reporte manual de daños'
     },
     static: {
-      name: 'Static Screen Block',
-      description: 'Static content screens (onboarding/offboarding)'
+      name: 'Bloque de pantalla estática',
+      description: 'Pantallas de contenido estático (onboarding/offboarding)'
     }
   },
   configuration: {
-    title: 'Journey Configuration',
-    importJson: 'Import JSON',
-    exportJson: 'Export JSON'
+    title: 'Configuración del flujo',
+    importJson: 'Importar JSON',
+    exportJson: 'Exportar JSON'
   },
   messages: {
-    createSuccess: 'Journey created successfully',
-    updateSuccess: 'Journey updated successfully',
-    deleteSuccess: 'Journey deleted successfully',
-    duplicateSuccess: 'Journey duplicated successfully',
-    deleteConfirm: 'Are you sure you want to delete this journey?',
-    noBlocks: 'No blocks added yet. Click "Add Block" to start building your journey.',
-    nameRequired: 'Please enter a journey name',
-    blocksRequired: 'Please add at least one block to the journey'
+    createSuccess: 'Flujo creado con éxito',
+    updateSuccess: 'Flujo actualizado con éxito',
+    deleteSuccess: 'Flujo eliminado con éxito',
+    duplicateSuccess: 'Flujo duplicado con éxito',
+    deleteConfirm: '¿Está seguro de que desea eliminar este flujo?',
+    noBlocks: 'No se han agregado bloques. Haga clic en "Agregar bloque" para empezar a construir su flujo.',
+    nameRequired: 'Por favor, ingrese un nombre para el flujo',
+    blocksRequired: 'Por favor, agregue al menos un bloque al flujo'
   }
 } as const;

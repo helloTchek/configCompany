@@ -1,33 +1,33 @@
 export const users = {
-  title: 'Users',
-  subtitle: 'Manage user accounts and permissions',
-  create: 'Create New User',
-  edit: 'Edit User',
+  title: 'Usuarios',
+  subtitle: 'Administrar cuentas de usuario y permisos',
+  create: 'Crear nuevo usuario',
+  edit: 'Editar usuario',
   fields: {
-    email: 'Email',
-    name: 'Name',
-    role: 'Role',
-    company: 'Company',
-    status: 'Status',
-    password: 'Password',
-    confirmPassword: 'Confirm Password'
+    email: 'Correo electrónico',
+    name: 'Nombre',
+    role: 'Rol',
+    company: 'Empresa',
+    status: 'Estado',
+    password: 'Contraseña',
+    confirmPassword: 'Confirmar contraseña'
   },
   roles: {
-    superAdmin: 'Super Admin',
-    admin: 'Admin',
-    user: 'User'
+    superAdmin: 'Superadministrador',
+    admin: 'Administrador',
+    user: 'Usuario'
   },
   status: {
-    active: 'Active',
-    inactive: 'Inactive'
+    active: 'Activo',
+    inactive: 'Inactivo'
   },
   messages: {
-    createSuccess: 'User created successfully',
-    updateSuccess: 'User updated successfully',
-    deleteSuccess: 'User deleted successfully',
-    deleteConfirm: 'Are you sure you want to delete this user?',
-    passwordMismatch: 'Passwords do not match',
-    emailExists: 'A user with this email already exists',
-    lastLoginNever: 'Never'
+    createSuccess: 'Usuario creado con éxito',
+    updateSuccess: 'Usuario actualizado con éxito',
+    deleteSuccess: 'Usuario eliminado con éxito',
+    deleteConfirm: '¿Está seguro de que desea eliminar este usuario?',
+    passwordMismatch: 'Las contraseñas no coinciden',
+    emailExists: 'Ya existe un usuario con este correo electrónico',
+    lastLoginNever: 'Nunca'
   }
 } as const;
