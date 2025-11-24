@@ -5,7 +5,7 @@ import Button from '../../components/UI/Button';
 import Modal from '../../components/UI/Modal';
 import { CostSettings } from '../../types';
 import { costSettingsService } from '../../services/costSettingsService';
-import { CreditCard as Edit, Download, Copy, Trash2, Plus, Eye, Search, X, AlertTriangle } from 'lucide-react';
+import { CreditCard as Edit, Download, Copy, Trash2, Plus, Eye, Search, X, AlertTriangle, ChevronUp, ChevronDown } from 'lucide-react';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 const getCurrencySymbol = (currencyCode: string): string => {
@@ -39,6 +39,9 @@ export default function CostMatricesPage() {
   const [settingToView, setSettingToView] = useState<CostSettings | null>(null);
   const [viewStats, setViewStats] = useState<{ total: number; validated: number } | null>(null);
   const [loadingStats, setLoadingStats] = useState(false);
+  // Sorting state
+  const [sortKey, setSortKey] = useState<string>('');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   // Debounce search term
   useEffect(() => {
@@ -183,6 +186,54 @@ export default function CostMatricesPage() {
     return date.toLocaleDateString('en-GB');
   };
 
+  // Sorting handler
+  const handleSort = (key: string) => {
+    if (sortKey === key) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDirection('asc');
+    }
+  };
+
+  // Apply sorting
+  const sortedCostSettings = sortKey ? [...costSettings].sort((a, b) => {
+    let aValue: any;
+    let bValue: any;
+
+    if (sortKey === 'matrix') {
+      aValue = a.className || a.name || '';
+      bValue = b.className || b.name || '';
+    } else if (sortKey === 'company') {
+      aValue = a.companyPtr?.className || a.companyPtr?.name || a.companyName || '';
+      bValue = b.companyPtr?.className || b.companyPtr?.name || b.companyName || '';
+    } else if (sortKey === 'currency') {
+      aValue = a.currency || '';
+      bValue = b.currency || '';
+    } else if (sortKey === 'updatedAt') {
+      aValue = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+      bValue = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+    } else {
+      aValue = a[sortKey as keyof CostSettings];
+      bValue = b[sortKey as keyof CostSettings];
+    }
+
+    if (aValue === undefined && bValue === undefined) return 0;
+    if (aValue === undefined) return sortDirection === 'asc' ? 1 : -1;
+    if (bValue === undefined) return sortDirection === 'asc' ? -1 : 1;
+
+    let comparison = 0;
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      comparison = aValue.localeCompare(bValue);
+    } else if (typeof aValue === 'number' && typeof bValue === 'number') {
+      comparison = aValue - bValue;
+    } else {
+      comparison = String(aValue).localeCompare(String(bValue));
+    }
+
+    return sortDirection === 'asc' ? comparison : -comparison;
+  }) : costSettings;
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <Header title="Repair Costs Management" />
@@ -254,7 +305,7 @@ export default function CostMatricesPage() {
               <div className="flex justify-center items-center py-8">
                 <LoadingSpinner />
               </div>
-            ) : costSettings.length === 0 ? (
+            ) : sortedCostSettings.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-gray-600">No cost matrices found</p>
                 <p className="text-sm text-gray-500 mt-2">
@@ -266,16 +317,116 @@ export default function CostMatricesPage() {
                 <table className="min-w-full">
                   <thead>
                     <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 font-medium text-gray-700 text-sm">MATRIX</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700 text-sm">COMPANY</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700 text-sm">CURRENCY & TAX</th>
+                      <th
+                        className="text-left py-3 px-4 font-medium text-gray-700 text-sm cursor-pointer hover:bg-gray-100"
+                        onClick={() => handleSort('matrix')}
+                      >
+                        <div className="flex items-center gap-1">
+                          MATRIX
+                          <div className="flex flex-col">
+                            <ChevronUp
+                              size={12}
+                              className={`${
+                                sortKey === 'matrix' && sortDirection === 'asc'
+                                  ? 'text-blue-600'
+                                  : 'text-gray-400'
+                              }`}
+                            />
+                            <ChevronDown
+                              size={12}
+                              className={`${
+                                sortKey === 'matrix' && sortDirection === 'desc'
+                                  ? 'text-blue-600'
+                                  : 'text-gray-400'
+                              }`}
+                            />
+                          </div>
+                        </div>
+                      </th>
+                      <th
+                        className="text-left py-3 px-4 font-medium text-gray-700 text-sm cursor-pointer hover:bg-gray-100"
+                        onClick={() => handleSort('company')}
+                      >
+                        <div className="flex items-center gap-1">
+                          COMPANY
+                          <div className="flex flex-col">
+                            <ChevronUp
+                              size={12}
+                              className={`${
+                                sortKey === 'company' && sortDirection === 'asc'
+                                  ? 'text-blue-600'
+                                  : 'text-gray-400'
+                              }`}
+                            />
+                            <ChevronDown
+                              size={12}
+                              className={`${
+                                sortKey === 'company' && sortDirection === 'desc'
+                                  ? 'text-blue-600'
+                                  : 'text-gray-400'
+                              }`}
+                            />
+                          </div>
+                        </div>
+                      </th>
+                      <th
+                        className="text-left py-3 px-4 font-medium text-gray-700 text-sm cursor-pointer hover:bg-gray-100"
+                        onClick={() => handleSort('currency')}
+                      >
+                        <div className="flex items-center gap-1">
+                          CURRENCY & TAX
+                          <div className="flex flex-col">
+                            <ChevronUp
+                              size={12}
+                              className={`${
+                                sortKey === 'currency' && sortDirection === 'asc'
+                                  ? 'text-blue-600'
+                                  : 'text-gray-400'
+                              }`}
+                            />
+                            <ChevronDown
+                              size={12}
+                              className={`${
+                                sortKey === 'currency' && sortDirection === 'desc'
+                                  ? 'text-blue-600'
+                                  : 'text-gray-400'
+                              }`}
+                            />
+                          </div>
+                        </div>
+                      </th>
                       <th className="text-left py-3 px-4 font-medium text-gray-700 text-sm">STATUS</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700 text-sm">LAST UPDATED</th>
+                      <th
+                        className="text-left py-3 px-4 font-medium text-gray-700 text-sm cursor-pointer hover:bg-gray-100"
+                        onClick={() => handleSort('updatedAt')}
+                      >
+                        <div className="flex items-center gap-1">
+                          LAST UPDATED
+                          <div className="flex flex-col">
+                            <ChevronUp
+                              size={12}
+                              className={`${
+                                sortKey === 'updatedAt' && sortDirection === 'asc'
+                                  ? 'text-blue-600'
+                                  : 'text-gray-400'
+                              }`}
+                            />
+                            <ChevronDown
+                              size={12}
+                              className={`${
+                                sortKey === 'updatedAt' && sortDirection === 'desc'
+                                  ? 'text-blue-600'
+                                  : 'text-gray-400'
+                              }`}
+                            />
+                          </div>
+                        </div>
+                      </th>
                       <th className="text-left py-3 px-4 font-medium text-gray-700 text-sm">ACTIONS</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {costSettings.map((setting) => {
+                    {sortedCostSettings.map((setting) => {
                       const displayName = setting.className || setting.name || 'Unnamed';
                       const companyName = setting.companyPtr?.className || setting.companyPtr?.name || setting.companyName || 'N/A';
 
@@ -347,7 +498,7 @@ export default function CostMatricesPage() {
         </div>
 
         {/* Pagination */}
-        {!loading && costSettings.length > 0 && (
+        {!loading && sortedCostSettings.length > 0 && (
           <div className="mt-6 bg-white border border-gray-200 rounded-lg px-6 py-4 flex items-center justify-between">
             <div className="flex-1 flex justify-between sm:hidden">
               <Button
