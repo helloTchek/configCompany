@@ -33,6 +33,9 @@ export default function SortingRulesPage() {
     priority: ''
   });
   const [deleteModal, setDeleteModal] = useState<{ open: boolean; rule?: SortingRule }>({ open: false });
+  // Sorting state
+  const [sortKey, setSortKey] = useState<string>('');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   // Load sorting rules and extract unique companies
   const loadSortingRules = async () => {
@@ -104,6 +107,16 @@ export default function SortingRulesPage() {
 
   const hasActiveFilters = searchTerm || Object.values(filters).some(filter => filter !== '');
 
+  // Sorting handler
+  const handleSort = (key: string) => {
+    if (sortKey === key) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDirection('asc');
+    }
+  };
+
   // Client-side filtering for search, type, and priority
   const filteredRules = rules.filter(rule => {
     // Search filter
@@ -124,6 +137,27 @@ export default function SortingRulesPage() {
 
     return matchesSearch && matchesType && matchesPriority;
   });
+
+  // Apply sorting
+  const sortedRules = sortKey ? [...filteredRules].sort((a, b) => {
+    const aValue = a[sortKey as keyof SortingRule];
+    const bValue = b[sortKey as keyof SortingRule];
+
+    if (aValue === undefined && bValue === undefined) return 0;
+    if (aValue === undefined) return sortDirection === 'asc' ? 1 : -1;
+    if (bValue === undefined) return sortDirection === 'asc' ? -1 : 1;
+
+    let comparison = 0;
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      comparison = aValue.localeCompare(bValue);
+    } else if (typeof aValue === 'number' && typeof bValue === 'number') {
+      comparison = aValue - bValue;
+    } else {
+      comparison = String(aValue).localeCompare(String(bValue));
+    }
+
+    return sortDirection === 'asc' ? comparison : -comparison;
+  }) : filteredRules;
 
   const handleDelete = (rule: SortingRule) => {
     setDeleteModal({ open: true, rule });
@@ -146,18 +180,18 @@ export default function SortingRulesPage() {
   };
 
   const columns = [
-    { key: 'company', label: t('sortingRules:fields.company'), sortable: true },
-    { key: 'type', label: t('sortingRules:fields.type'), sortable: true,
+    { key: 'company', label: 'Company', sortable: true },
+    { key: 'type', label: 'Type', sortable: true,
       render: (value: string) => (
         <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
           {value}
         </span>
       )
     },
-    { key: 'fromCollection', label: t('sortingRules:fields.fromCollection'), sortable: true },
-    { key: 'targetCollection', label: t('sortingRules:fields.targetCollection'), sortable: true },
-    { key: 'referenceKey', label: t('sortingRules:fields.referenceKey'), sortable: true },
-    { key: 'referencePrefix', label: t('sortingRules:fields.referencePrefix') },
+    { key: 'fromCollection', label: 'From Collection', sortable: true },
+    { key: 'targetCollection', label: 'Target Collection', sortable: true },
+    { key: 'referenceKey', label: 'Reference Key', sortable: true },
+    { key: 'referencePrefix', label: 'Reference Prefix', sortable: true },
     {
       key: 'actions',
       label: t('common:fields.actions'),
@@ -293,7 +327,7 @@ export default function SortingRulesPage() {
               {hasActiveFilters && (
                 <div className="mt-4 flex justify-between items-center">
                   <span className="text-sm text-gray-600">
-                    {t('common:messages.showing')} {filteredRules.length} {t('common:messages.of')} {rules.length} {t('sortingRules:title').toLowerCase()}
+                    {t('common:messages.showing')} {sortedRules.length} {t('common:messages.of')} {rules.length} {t('sortingRules:title').toLowerCase()}
                   </span>
                   <Button variant="secondary" size="sm" onClick={clearFilters}>
                     {t('common:actions.clearFilters')}
@@ -305,10 +339,16 @@ export default function SortingRulesPage() {
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200">
-          <Table columns={columns} data={filteredRules} />
+          <Table
+            columns={columns}
+            data={sortedRules}
+            sortKey={sortKey}
+            sortDirection={sortDirection}
+            onSort={handleSort}
+          />
         </div>
 
-        {filteredRules.length === 0 && (
+        {sortedRules.length === 0 && (
           <div className="text-center py-8 text-gray-500">
             <p>{t('common:messages.noResults')}</p>
             {hasActiveFilters && (
