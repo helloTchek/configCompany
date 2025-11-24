@@ -35,6 +35,10 @@ export default function CostMatricesPage() {
   const [settingToDuplicate, setSettingToDuplicate] = useState<CostSettings | null>(null);
   const [duplicating, setDuplicating] = useState(false);
   const [duplicateName, setDuplicateName] = useState('');
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [settingToView, setSettingToView] = useState<CostSettings | null>(null);
+  const [viewStats, setViewStats] = useState<{ total: number; validated: number } | null>(null);
+  const [loadingStats, setLoadingStats] = useState(false);
 
   // Debounce search term
   useEffect(() => {
@@ -129,6 +133,24 @@ export default function CostMatricesPage() {
       console.error('Error duplicating cost settings:', err);
       alert(`Échec de la duplication: ${err.message}`);
       setDuplicating(false);
+    }
+  };
+
+  const handleView = async (costSetting: CostSettings) => {
+    setSettingToView(costSetting);
+    setShowViewModal(true);
+    setLoadingStats(true);
+
+    try {
+      // Load cost params to get statistics
+      const params = await costSettingsService.getCostParams(costSetting.id);
+      const validated = params.filter(p => p.validated).length;
+      setViewStats({ total: params.length, validated });
+    } catch (err: any) {
+      console.error('Error loading cost params stats:', err);
+      setViewStats({ total: 0, validated: 0 });
+    } finally {
+      setLoadingStats(false);
     }
   };
 
@@ -285,7 +307,7 @@ export default function CostMatricesPage() {
                         <td className="py-4 px-4">
                           <div className="flex items-center gap-2">
                             <button
-                              onClick={() => navigate(`/cost-matrices/${setting.id}/view`)}
+                              onClick={() => handleView(setting)}
                               className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                               title="View"
                             >
@@ -457,6 +479,108 @@ export default function CostMatricesPage() {
                 className="!bg-red-600 hover:!bg-red-700 !text-white"
               >
                 {deleting ? 'Suppression...' : 'Oui, supprimer'}
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* View Modal */}
+      {settingToView && (
+        <Modal
+          isOpen={showViewModal}
+          onClose={() => {
+            setShowViewModal(false);
+            setSettingToView(null);
+            setViewStats(null);
+          }}
+          title="Détails de la matrice de coûts"
+          size="md"
+        >
+          <div className="space-y-4">
+            {/* Header */}
+            <div className="border-b border-gray-200 pb-4">
+              <h3 className="text-xl font-bold text-gray-900">
+                {settingToView.className || settingToView.name || 'Unnamed'}
+              </h3>
+              <p className="text-sm text-gray-600 mt-1">
+                {settingToView.companyPtr?.className || settingToView.companyPtr?.name || settingToView.companyName || 'N/A'}
+              </p>
+            </div>
+
+            {/* Key Information Grid */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="text-sm text-gray-600 mb-1">Currency</div>
+                <div className="text-2xl font-bold text-gray-900">
+                  {getCurrencySymbol(settingToView.currency)}
+                </div>
+                <div className="text-xs text-gray-500 mt-1">{settingToView.currency}</div>
+              </div>
+
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="text-sm text-gray-600 mb-1">Tax Rate</div>
+                <div className="text-2xl font-bold text-gray-900">
+                  {settingToView.tax}%
+                </div>
+              </div>
+
+              <div className="bg-blue-50 rounded-lg p-4">
+                <div className="text-sm text-blue-600 mb-1">Total Entries</div>
+                <div className="text-2xl font-bold text-blue-900">
+                  {loadingStats ? '...' : viewStats?.total || 0}
+                </div>
+              </div>
+
+              <div className="bg-green-50 rounded-lg p-4">
+                <div className="text-sm text-green-600 mb-1">Validated</div>
+                <div className="text-2xl font-bold text-green-900">
+                  {loadingStats ? '...' : viewStats?.validated || 0}
+                </div>
+                {!loadingStats && viewStats && viewStats.total > 0 && (
+                  <div className="text-xs text-green-600 mt-1">
+                    {((viewStats.validated / viewStats.total) * 100).toFixed(0)}%
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Dates */}
+            <div className="border-t border-gray-200 pt-4 space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Created:</span>
+                <span className="text-gray-900 font-medium">
+                  {formatDate(settingToView.createdAt)}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Last Updated:</span>
+                <span className="text-gray-900 font-medium">
+                  {formatDate(settingToView.updatedAt)}
+                </span>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 justify-end pt-4 border-t border-gray-200">
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setShowViewModal(false);
+                  setSettingToView(null);
+                  setViewStats(null);
+                }}
+              >
+                Close
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowViewModal(false);
+                  navigate(`/cost-matrices/${settingToView.id}/edit`);
+                }}
+                className="!bg-blue-600 hover:!bg-blue-700 !text-white"
+              >
+                Edit Matrix
               </Button>
             </div>
           </div>
