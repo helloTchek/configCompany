@@ -7,6 +7,7 @@ import Modal from '../../components/UI/Modal';
 import { ArrowLeft, Save, Download, Upload, Trash2, AlertTriangle } from 'lucide-react';
 import { CostSettings, CostParam } from '../../types';
 import { costSettingsService } from '../../services/costSettingsService';
+import * as XLSX from 'xlsx';
 
 const severityColors: Record<string, string> = {
   'SEV1': 'bg-green-100 text-green-800',
@@ -193,7 +194,7 @@ export default function EditCostMatrixPage() {
     }
   };
 
-  const handleDownloadCsv = () => {
+  const handleDownloadXlsx = () => {
     if (!costParams.length || !costSettings) return;
 
     const headers = [
@@ -209,30 +210,40 @@ export default function EditCostMatrixPage() {
       'Answer'
     ];
 
-    const csvContent = [
-      headers.join(','),
-      ...costParams.map(param => [
-        param.vehiclePart.label,
-        param.vehiclePart.code,
-        param.vehiclePartLocation.codeEN,
-        param.vehiclePartLocation.identifier,
-        param.severityType.levelNb,
-        param.severityType.label,
-        editedParams[param.id]?.cost ?? param.cost,
-        editedParams[param.id]?.validated ?? param.validated ? 'Yes' : 'No',
-        param.question || '',
-        param.answer || ''
-      ].join(','))
-    ].join('\n');
+    // Prepare data rows
+    const data = costParams.map(param => [
+      param.vehiclePart.label,
+      param.vehiclePart.code,
+      param.vehiclePartLocation.codeEN,
+      param.vehiclePartLocation.identifier,
+      param.severityType.levelNb,
+      param.severityType.label,
+      editedParams[param.id]?.cost ?? param.cost,
+      editedParams[param.id]?.validated ?? param.validated ? 'Yes' : 'No',
+      param.question || '',
+      param.answer || ''
+    ]);
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
+    // Create worksheet with headers and data
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+
+    // Auto-size columns
+    const colWidths = headers.map((_, i) => {
+      const maxLen = Math.max(
+        headers[i]?.length || 0,
+        ...data.map(row => String(row[i] || '').length)
+      );
+      return { wch: Math.min(maxLen + 2, 50) };
+    });
+    ws['!cols'] = colWidths;
+
+    // Create workbook and add worksheet
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Cost Matrix');
+
+    // Generate file name and download
     const fileName = (costSettings.className || costSettings.name || 'cost-matrix').toLowerCase().replace(/\s+/g, '-');
-    a.download = `${fileName}-cost-matrix.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
+    XLSX.writeFile(wb, `${fileName}-cost-matrix.xlsx`);
   };
 
   const handleImportClick = () => {
@@ -396,12 +407,12 @@ export default function EditCostMatrixPage() {
               <div className="flex gap-3">
                 <Button
                   variant="secondary"
-                  onClick={handleDownloadCsv}
+                  onClick={handleDownloadXlsx}
                   className="flex items-center gap-2"
                   size="sm"
                 >
                   <Download size={16} />
-                  Download CSV
+                  Download XLSX
                 </Button>
                 <Button
                   variant="primary"
