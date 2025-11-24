@@ -1,33 +1,33 @@
 export const users = {
-  title: 'Users',
-  subtitle: 'Manage user accounts and permissions',
-  create: 'Create New User',
-  edit: 'Edit User',
+  title: 'Gebruikers',
+  subtitle: 'Beheer gebruikersaccounts en machtigingen',
+  create: 'Nieuwe gebruiker aanmaken',
+  edit: 'Gebruiker bewerken',
   fields: {
-    email: 'Email',
-    name: 'Name',
-    role: 'Role',
-    company: 'Company',
+    email: 'E-mail',
+    name: 'Naam',
+    role: 'Rol',
+    company: 'Bedrijf',
     status: 'Status',
-    password: 'Password',
-    confirmPassword: 'Confirm Password'
+    password: 'Wachtwoord',
+    confirmPassword: 'Bevestig wachtwoord'
   },
   roles: {
-    superAdmin: 'Super Admin',
-    admin: 'Admin',
-    user: 'User'
+    superAdmin: 'Superbeheerder',
+    admin: 'Beheerder',
+    user: 'Gebruiker'
   },
   status: {
-    active: 'Active',
-    inactive: 'Inactive'
+    active: 'Actief',
+    inactive: 'Inactief'
   },
   messages: {
-    createSuccess: 'User created successfully',
-    updateSuccess: 'User updated successfully',
-    deleteSuccess: 'User deleted successfully',
-    deleteConfirm: 'Are you sure you want to delete this user?',
-    passwordMismatch: 'Passwords do not match',
-    emailExists: 'A user with this email already exists',
-    lastLoginNever: 'Never'
+    createSuccess: 'Gebruiker succesvol aangemaakt',
+    updateSuccess: 'Gebruiker succesvol bijgewerkt',
+    deleteSuccess: 'Gebruiker succesvol verwijderd',
+    deleteConfirm: 'Weet u zeker dat u deze gebruiker wilt verwijderen?',
+    passwordMismatch: 'Wachtwoorden komen niet overeen',
+    emailExists: 'Er bestaat al een gebruiker met dit e-mailadres',
+    lastLoginNever: 'Nooit'
   }
 } as const;

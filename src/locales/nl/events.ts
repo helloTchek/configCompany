@@ -1,56 +1,56 @@
 export const events = {
-  title: 'Events & Webhooks',
-  subtitle: 'Configure notification templates and recipients for different events',
+  title: 'Evenementen & Webhooks',
+  subtitle: 'Configureer notificatiesjablonen en ontvangers voor verschillende evenementen',
   events: {
-    selfInspectionCreation: 'Self Inspection Creation',
-    automatedChaseUp: 'Automated Chase-up Message',
-    manualChaseUp: 'Manual Chase-up Message',
-    inspectionFinished: 'Inspection Finished Message',
-    damageReviewFinished: 'Damage Review Finished Message',
-    shareUpdatedReport: 'Share Updated Report Message'
+    selfInspectionCreation: 'Zelfinspectie Aanmaak',
+    automatedChaseUp: 'Geautomatiseerd Achtervolgingsbericht',
+    manualChaseUp: 'Handmatig Achtervolgingsbericht',
+    inspectionFinished: 'Inspectie Voltooid Bericht',
+    damageReviewFinished: 'Schadebeoordeling Voltooid Bericht',
+    shareUpdatedReport: 'Bijgewerkt Rapport Delen Bericht'
   },
   recipients: {
-    title: 'Recipients',
-    customerPhone: 'Customer Phone Number',
-    companyEmail: 'Company Email Address',
-    agentEmail: 'Agent Email Address',
+    title: 'Ontvangers',
+    customerPhone: 'Telefoonnummer Klant',
+    companyEmail: 'E-mailadres Bedrijf',
+    agentEmail: 'E-mailadres Agent',
     webhookUrl: 'Webhook URL',
-    addRecipient: 'Add Recipient'
+    addRecipient: 'Ontvanger Toevoegen'
   },
   messageContent: {
-    title: 'Message Content',
-    email: 'Email',
+    title: 'Berichtinhoud',
+    email: 'E-mail',
     sms: 'SMS',
-    subject: 'Subject',
-    htmlContent: 'HTML Content',
-    textContent: 'Text Content',
-    characterCount: 'Character count: {{count}}',
-    pageLimit: 'Page limit: {{limit}}'
+    subject: 'Onderwerp',
+    htmlContent: 'HTML-inhoud',
+    textContent: 'Tekstinhoud',
+    characterCount: 'Aantal tekens: {{count}}',
+    pageLimit: 'Paginalimiet: {{limit}}'
   },
   variables: {
-    title: 'Available Variables',
-    description: 'Click any variable to copy it to your clipboard',
-    customerName: 'Customer Name',
-    customerEmail: 'Customer Email',
-    customerPhone: 'Customer Phone',
-    inspectionId: 'Inspection ID',
-    inspectionLink: 'Inspection Link',
-    vehicleMake: 'Vehicle Make',
-    vehicleModel: 'Vehicle Model',
-    licensePlate: 'License Plate',
-    companyName: 'Company Name',
-    agentName: 'Agent Name',
-    inspectionDate: 'Inspection Date',
+    title: 'Beschikbare Variabelen',
+    description: 'Klik op een variabele om deze naar je klembord te kopiëren',
+    customerName: 'Naam Klant',
+    customerEmail: 'E-mail Klant',
+    customerPhone: 'Telefoon Klant',
+    inspectionId: 'Inspectie-ID',
+    inspectionLink: 'Inspectielink',
+    vehicleMake: 'Merk Voertuig',
+    vehicleModel: 'Model Voertuig',
+    licensePlate: 'Kenteken',
+    companyName: 'Bedrijfsnaam',
+    agentName: 'Naam Agent',
+    inspectionDate: 'Inspectiedatum',
     trackingUrl: 'Tracking URL'
   },
   fields: {
     webhookUrl: 'Webhook URL',
-    senderName: 'Sender Name (for all events)'
+    senderName: 'Naam Afzender (voor alle evenementen)'
   },
   messages: {
-    updateSuccess: 'Event configuration updated successfully',
-    testSuccess: 'Test message sent successfully',
-    testError: 'Failed to send test message',
-    variableCopied: 'Variable copied to clipboard'
+    updateSuccess: 'Evenementconfiguratie succesvol bijgewerkt',
+    testSuccess: 'Testbericht succesvol verzonden',
+    testError: 'Testbericht verzenden mislukt',
+    variableCopied: 'Variabele naar klembord gekopieerd'
   }
 } as const;

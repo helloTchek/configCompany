@@ -1,46 +1,46 @@
 export const sortingRules = {
-  title: 'Sorting Rules',
-  subtitle: 'Configure automated filtering and update rules per company',
-  create: 'Create New Rule',
-  edit: 'Edit Sorting Rule',
+  title: 'Sorteringsregels',
+  subtitle: 'Configureer geautomatiseerde filter- en update regels per bedrijf',
+  create: 'Nieuwe regel aanmaken',
+  edit: 'Sorteringsregel bewerken',
   fields: {
-    company: 'Company',
+    company: 'Bedrijf',
     type: 'Type',
-    fromCollection: 'From Collection',
-    targetCollection: 'Target Collection',
-    referenceKey: 'Reference Key',
-    referencePrefix: 'Reference Prefix',
+    fromCollection: 'Broncollectie',
+    targetCollection: 'Doelcollectie',
+    referenceKey: 'Referentiesleutel',
+    referencePrefix: 'Referentieprefix',
     filters: 'Filters (JSON)',
     updates: 'Updates (JSON)',
-    processingPriority: 'Processing Priority',
-    priority: 'Priority'
+    processingPriority: 'Verwerkingsprioriteit',
+    priority: 'Prioriteit'
   },
   types: {
-    detectionPhase: 'Detection Phase',
-    validationPhase: 'Validation Phase',
-    reportGeneration: 'Report Generation'
+    detectionPhase: 'Detectiefase',
+    validationPhase: 'Validatiefase',
+    reportGeneration: 'Rapportgeneratie'
   },
   priorities: {
-    highest: '1 - Highest Priority',
-    high: '2 - High Priority',
-    medium: '3 - Medium Priority',
-    low: '4 - Low Priority',
-    lowest: '5 - Lowest Priority',
-    highLevel: 'High Priority (1-2)',
-    mediumLevel: 'Medium Priority (3-4)'
+    highest: '1 - Hoogste prioriteit',
+    high: '2 - Hoge prioriteit',
+    medium: '3 - Middelmatige prioriteit',
+    low: '4 - Lage prioriteit',
+    lowest: '5 - Laagste prioriteit',
+    highLevel: 'Hoge prioriteit (1-2)',
+    mediumLevel: 'Middelmatige prioriteit (3-4)'
   },
   examples: {
-    title: 'Configuration Examples',
-    filterExamples: 'Filter Examples:',
-    updateExamples: 'Update Examples:',
-    filtersHelp: 'JSON object defining the filter criteria',
-    updatesHelp: 'JSON object defining the updates to apply'
+    title: 'Configuratievoorbeelden',
+    filterExamples: 'Filtervoorbeelden:',
+    updateExamples: 'Updatevoorbeelden:',
+    filtersHelp: 'JSON-object dat de filtercriteria definieert',
+    updatesHelp: 'JSON-object dat de toe te passen updates definieert'
   },
   messages: {
-    createSuccess: 'Sorting rule created successfully',
-    updateSuccess: 'Sorting rule updated successfully',
-    deleteSuccess: 'Sorting rule deleted successfully',
-    invalidJson: 'Invalid JSON format',
-    loadingRule: 'Loading sorting rule...'
+    createSuccess: 'Sorteringsregel succesvol aangemaakt',
+    updateSuccess: 'Sorteringsregel succesvol bijgewerkt',
+    deleteSuccess: 'Sorteringsregel succesvol verwijderd',
+    invalidJson: 'Ongeldig JSON-formaat',
+    loadingRule: 'Sorteringsregel laden...'
   }
 } as const;

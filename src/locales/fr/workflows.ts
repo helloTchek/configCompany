@@ -1,61 +1,61 @@
 export const workflows = {
-  title: 'Workflows',
-  subtitle: 'Create and manage inspection journey workflows',
-  create: 'Create New Journey',
-  edit: 'Edit Journey',
-  duplicate: 'Duplicate Journey',
+  title: 'Flux de Travail',
+  subtitle: 'Créer et gérer les flux de parcours d’inspection',
+  create: 'Créer un Nouveau Parcours',
+  edit: 'Modifier le Parcours',
+  duplicate: 'Dupliquer le Parcours',
   fields: {
-    name: 'Journey Name',
+    name: 'Nom du Parcours',
     description: 'Description',
-    company: 'Company',
-    blocksCount: 'Blocks Count',
-    status: 'Status',
-    isActive: 'Active'
+    company: 'Entreprise',
+    blocksCount: 'Nombre de Blocs',
+    status: 'Statut',
+    isActive: 'Actif'
   },
   blocks: {
-    title: 'Journey Blocks',
-    addBlock: 'Add Block',
-    form: 'Form Block',
-    shootInspection: 'Shoot Inspection Block',
-    fastTrack: 'Fast Track Block',
-    addDamage: 'Add Damage Block',
-    static: 'Static Screen Block'
+    title: 'Blocs du Parcours',
+    addBlock: 'Ajouter un Bloc',
+    form: 'Bloc Formulaire',
+    shootInspection: 'Bloc Inspection Photo',
+    fastTrack: 'Bloc Fast Track',
+    addDamage: 'Bloc Ajouter Dommage',
+    static: 'Bloc Écran Statique'
   },
   blockTypes: {
     form: {
-      name: 'Form Block',
-      description: 'Custom form with JSON configuration'
+      name: 'Bloc Formulaire',
+      description: 'Formulaire personnalisé avec configuration JSON'
     },
     shootInspection: {
-      name: 'Shoot Inspection Block',
-      description: 'Photo capture workflow'
+      name: 'Bloc Inspection Photo',
+      description: 'Flux de capture photo'
     },
     fastTrack: {
-      name: 'Fast Track Block',
-      description: 'Quick inspection process'
+      name: 'Bloc Fast Track',
+      description: 'Processus d’inspection rapide'
     },
     addDamage: {
-      name: 'Add Damage Block',
-      description: 'Manual damage reporting'
+      name: 'Bloc Ajouter Dommage',
+      description: 'Signalement manuel de dommages'
     },
     static: {
-      name: 'Static Screen Block',
-      description: 'Static content screens (onboarding/offboarding)'
+      name: 'Bloc Écran Statique',
+      description: 'Écrans de contenu statique (onboarding/offboarding)'
     }
   },
   configuration: {
-    title: 'Journey Configuration',
-    importJson: 'Import JSON',
-    exportJson: 'Export JSON'
+    title: 'Configuration du Parcours',
+    importJson: 'Importer JSON',
+    exportJson: 'Exporter JSON'
   },
   messages: {
-    createSuccess: 'Journey created successfully',
-    updateSuccess: 'Journey updated successfully',
-    deleteSuccess: 'Journey deleted successfully',
-    duplicateSuccess: 'Journey duplicated successfully',
-    deleteConfirm: 'Are you sure you want to delete this journey?',
-    noBlocks: 'No blocks added yet. Click "Add Block" to start building your journey.',
-    nameRequired: 'Please enter a journey name',
-    blocksRequired: 'Please add at least one block to the journey'
+    createSuccess: 'Parcours créé avec succès',
+    updateSuccess: 'Parcours mis à jour avec succès',
+    deleteSuccess: 'Parcours supprimé avec succès',
+    duplicateSuccess: 'Parcours dupliqué avec succès',
+    deleteConfirm: 'Êtes-vous sûr de vouloir supprimer ce parcours ?',
+    noBlocks: 'Aucun bloc ajouté pour le moment. Cliquez sur "Ajouter un Bloc" pour commencer à construire votre parcours.',
+    nameRequired: 'Veuillez saisir un nom de parcours',
+    blocksRequired: 'Veuillez ajouter au moins un bloc au parcours'
   }
 } as const;

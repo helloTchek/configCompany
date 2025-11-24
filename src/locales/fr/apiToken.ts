@@ -1,23 +1,23 @@
 export const apiToken = {
-  title: 'API Tokens',
-  subtitle: 'Manage API tokens and request limits',
+  title: 'Jetons API',
+  subtitle: 'Gérer les jetons API et les limites de requêtes',
   fields: {
-    token: 'API Token',
-    currentRequests: 'Current Requests',
-    maxRequests: 'Max Requests',
-    expiryDate: 'Expiry Date',
-    decisionTree: 'Decision Tree Configuration',
-    company: 'Company'
+    token: 'Jeton API',
+    currentRequests: 'Requêtes Actuelles',
+    maxRequests: 'Requêtes Maximales',
+    expiryDate: 'Date d’Expiration',
+    decisionTree: 'Configuration de l’Arbre de Décision',
+    company: 'Entreprise'
   },
   actions: {
-    regenerate: 'Regenerate Token',
-    resetRequests: 'Reset Request Count',
-    extendExpiry: 'Extend Expiry Date'
+    regenerate: 'Régénérer le Jeton',
+    resetRequests: 'Réinitialiser le Nombre de Requêtes',
+    extendExpiry: 'Prolonger la Date d’Expiration'
   },
   messages: {
-    regenerateConfirm: 'Are you sure you want to regenerate this token? The old token will stop working immediately.',
-    regenerateSuccess: 'Token regenerated successfully',
-    resetSuccess: 'Request count reset successfully',
-    extendSuccess: 'Expiry date extended successfully'
+    regenerateConfirm: 'Êtes-vous sûr de vouloir régénérer ce jeton ? L’ancien jeton cessera immédiatement de fonctionner.',
+    regenerateSuccess: 'Jeton régénéré avec succès',
+    resetSuccess: 'Nombre de requêtes réinitialisé avec succès',
+    extendSuccess: 'Date d’expiration prolongée avec succès'
   }
 } as const;

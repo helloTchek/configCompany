@@ -1,45 +1,45 @@
 export const costs = {
-  title: 'Cost Matrices',
-  subtitle: 'Manage repair costs by part types, locations, and severities',
-  create: 'Create New Matrix',
-  edit: 'Edit Cost Matrix',
+  title: 'Kostenmatrices',
+  subtitle: 'Beheer reparatiekosten per type onderdeel, locatie en ernst',
+  create: 'Nieuwe matrix aanmaken',
+  edit: 'Kostenmatrix bewerken',
   fields: {
-    company: 'Company',
-    currency: 'Currency',
-    taxRate: 'Tax Rate (%)',
-    partsCount: 'Parts Count',
-    partType: 'Part Type',
-    location: 'Location',
-    severity: 'Severity',
-    cost: 'Cost'
+    company: 'Bedrijf',
+    currency: 'Valuta',
+    taxRate: 'Belastingtarief (%)',
+    partsCount: 'Aantal onderdelen',
+    partType: 'Type onderdeel',
+    location: 'Locatie',
+    severity: 'Ernst',
+    cost: 'Kosten'
   },
   severities: {
-    minor: 'Minor',
-    moderate: 'Moderate',
-    major: 'Major',
-    severe: 'Severe'
+    minor: 'Mild',
+    moderate: 'Gemiddeld',
+    major: 'Ernstig',
+    severe: 'Zeer ernstig'
   },
   locations: {
-    front: 'Front',
-    rear: 'Rear',
-    left: 'Left',
-    right: 'Right',
-    roof: 'Roof',
-    interior: 'Interior'
+    front: 'Voor',
+    rear: 'Achter',
+    left: 'Links',
+    right: 'Rechts',
+    roof: 'Dak',
+    interior: 'Interieur'
   },
   actions: {
-    addPart: 'Add Part',
-    removePart: 'Remove Part',
-    importCsv: 'Import CSV',
-    exportCsv: 'Export CSV',
-    bulkEdit: 'Bulk Edit'
+    addPart: 'Onderdeel toevoegen',
+    removePart: 'Onderdeel verwijderen',
+    importCsv: 'CSV importeren',
+    exportCsv: 'CSV exporteren',
+    bulkEdit: 'Bulkbewerking'
   },
   messages: {
-    createSuccess: 'Cost matrix created successfully',
-    updateSuccess: 'Cost matrix updated successfully',
-    deleteSuccess: 'Cost matrix deleted successfully',
-    importSuccess: 'CSV imported successfully',
-    exportSuccess: 'CSV exported successfully',
-    invalidCsv: 'Invalid CSV format'
+    createSuccess: 'Kostenmatrix succesvol aangemaakt',
+    updateSuccess: 'Kostenmatrix succesvol bijgewerkt',
+    deleteSuccess: 'Kostenmatrix succesvol verwijderd',
+    importSuccess: 'CSV succesvol geïmporteerd',
+    exportSuccess: 'CSV succesvol geëxporteerd',
+    invalidCsv: 'Ongeldig CSV-formaat'
   }
 } as const;

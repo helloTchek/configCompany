@@ -1,50 +1,50 @@
 export const shootInspect = {
-  title: 'Shoot Inspection Configuration',
-  subtitle: 'Configure photo capture workflow and settings',
+  title: 'Configuration de l’Inspection Photo',
+  subtitle: 'Configurer le workflow et les paramètres de prise de photos',
   fields: {
-    name: 'Configuration Name',
+    name: 'Nom de la Configuration',
     description: 'Description',
-    maxRetries: 'Max Retries',
-    qualityCheckEnabled: 'Quality Check Enabled',
-    photoAngles: 'Photo Angles',
-    allowedDamageTypes: 'Allowed Damage Types'
+    maxRetries: 'Nombre Maximum de Tentatives',
+    qualityCheckEnabled: 'Vérification de Qualité Activée',
+    photoAngles: 'Angles de Prise de Vue',
+    allowedDamageTypes: 'Types de Dommages Autorisés'
   },
   angles: {
-    front: 'Front',
-    back: 'Back',
-    leftSide: 'Left Side',
-    rightSide: 'Right Side',
-    interior: 'Interior',
-    dashboard: 'Dashboard'
+    front: 'Avant',
+    back: 'Arrière',
+    leftSide: 'Côté Gauche',
+    rightSide: 'Côté Droit',
+    interior: 'Intérieur',
+    dashboard: 'Tableau de Bord'
   },
   damageTypes: {
-    carBody: 'Car Body',
-    interior: 'Interior',
-    glazings: 'Glazings',
-    dashboard: 'Dashboard',
-    declaration: 'Declaration',
+    carBody: 'Carrosserie',
+    interior: 'Intérieur',
+    glazings: 'Vitrages',
+    dashboard: 'Tableau de Bord',
+    declaration: 'Déclaration',
     documents: 'Documents'
   },
   steps: {
-    title: 'Inspection Steps',
-    addStep: 'Add Step',
-    editStep: 'Edit Step',
-    removeStep: 'Remove Step',
-    stepOrder: 'Step {{order}}',
-    stepTitle: 'Step Title',
-    stepDescription: 'Step Description',
-    isOptional: 'Optional Step',
-    showHelp: 'Show Help',
-    runDetection: 'Run Detection',
-    thumbnailUrl: 'Thumbnail URL',
-    overlayUrl: 'Overlay URL'
+    title: 'Étapes de l’Inspection',
+    addStep: 'Ajouter une Étape',
+    editStep: 'Modifier l’Étape',
+    removeStep: 'Supprimer l’Étape',
+    stepOrder: 'Étape {{order}}',
+    stepTitle: 'Titre de l’Étape',
+    stepDescription: 'Description de l’Étape',
+    isOptional: 'Étape Optionnelle',
+    showHelp: 'Afficher l’Aide',
+    runDetection: 'Lancer la Détection',
+    thumbnailUrl: 'URL de la Miniature',
+    overlayUrl: 'URL de la Superposition'
   },
   messages: {
-    createSuccess: 'Shoot inspection configuration created successfully',
-    updateSuccess: 'Shoot inspection configuration updated successfully',
-    deleteSuccess: 'Shoot inspection configuration deleted successfully',
-    stepAdded: 'Step added successfully',
-    stepRemoved: 'Step removed successfully',
-    invalidConfiguration: 'Invalid configuration format'
+    createSuccess: 'Configuration d’inspection photo créée avec succès',
+    updateSuccess: 'Configuration d’inspection photo mise à jour avec succès',
+    deleteSuccess: 'Configuration d’inspection photo supprimée avec succès',
+    stepAdded: 'Étape ajoutée avec succès',
+    stepRemoved: 'Étape supprimée avec succès',
+    invalidConfiguration: 'Format de configuration invalide'
   }
 } as const;

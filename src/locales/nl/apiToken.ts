@@ -1,23 +1,23 @@
 export const apiToken = {
-  title: 'API Tokens',
-  subtitle: 'Manage API tokens and request limits',
+  title: 'API-tokens',
+  subtitle: 'Beheer API-tokens en verzoeklimieten',
   fields: {
-    token: 'API Token',
-    currentRequests: 'Current Requests',
-    maxRequests: 'Max Requests',
-    expiryDate: 'Expiry Date',
-    decisionTree: 'Decision Tree Configuration',
-    company: 'Company'
+    token: 'API-token',
+    currentRequests: 'Huidige verzoeken',
+    maxRequests: 'Maximale verzoeken',
+    expiryDate: 'Vervaldatum',
+    decisionTree: 'Configuratie van beslissingsboom',
+    company: 'Bedrijf'
   },
   actions: {
-    regenerate: 'Regenerate Token',
-    resetRequests: 'Reset Request Count',
-    extendExpiry: 'Extend Expiry Date'
+    regenerate: 'Token opnieuw genereren',
+    resetRequests: 'Aantal verzoeken opnieuw instellen',
+    extendExpiry: 'Vervaldatum verlengen'
   },
   messages: {
-    regenerateConfirm: 'Are you sure you want to regenerate this token? The old token will stop working immediately.',
-    regenerateSuccess: 'Token regenerated successfully',
-    resetSuccess: 'Request count reset successfully',
-    extendSuccess: 'Expiry date extended successfully'
+    regenerateConfirm: 'Weet u zeker dat u dit token opnieuw wilt genereren? Het oude token werkt onmiddellijk niet meer.',
+    regenerateSuccess: 'Token succesvol opnieuw gegenereerd',
+    resetSuccess: 'Aantal verzoeken succesvol opnieuw ingesteld',
+    extendSuccess: 'Vervaldatum succesvol verlengd'
   }
 } as const;

@@ -1,50 +1,50 @@
 export const shootInspect = {
-  title: 'Shoot Inspection Configuration',
-  subtitle: 'Configure photo capture workflow and settings',
+  title: 'Shoot Inspectie Configuratie',
+  subtitle: 'Configureer workflow en instellingen voor foto-opnames',
   fields: {
-    name: 'Configuration Name',
-    description: 'Description',
-    maxRetries: 'Max Retries',
-    qualityCheckEnabled: 'Quality Check Enabled',
-    photoAngles: 'Photo Angles',
-    allowedDamageTypes: 'Allowed Damage Types'
+    name: 'Configuratienaam',
+    description: 'Beschrijving',
+    maxRetries: 'Maximaal aantal pogingen',
+    qualityCheckEnabled: 'Kwaliteitscontrole ingeschakeld',
+    photoAngles: 'Fotohoeken',
+    allowedDamageTypes: 'Toegestane schade-types'
   },
   angles: {
-    front: 'Front',
-    back: 'Back',
-    leftSide: 'Left Side',
-    rightSide: 'Right Side',
-    interior: 'Interior',
+    front: 'Voorzijde',
+    back: 'Achterzijde',
+    leftSide: 'Linkerzijde',
+    rightSide: 'Rechterzijde',
+    interior: 'Interieur',
     dashboard: 'Dashboard'
   },
   damageTypes: {
-    carBody: 'Car Body',
-    interior: 'Interior',
-    glazings: 'Glazings',
+    carBody: 'Carrosserie',
+    interior: 'Interieur',
+    glazings: 'Ruiten',
     dashboard: 'Dashboard',
-    declaration: 'Declaration',
-    documents: 'Documents'
+    declaration: 'Verklaring',
+    documents: 'Documenten'
   },
   steps: {
-    title: 'Inspection Steps',
-    addStep: 'Add Step',
-    editStep: 'Edit Step',
-    removeStep: 'Remove Step',
-    stepOrder: 'Step {{order}}',
-    stepTitle: 'Step Title',
-    stepDescription: 'Step Description',
-    isOptional: 'Optional Step',
-    showHelp: 'Show Help',
-    runDetection: 'Run Detection',
-    thumbnailUrl: 'Thumbnail URL',
-    overlayUrl: 'Overlay URL'
+    title: 'Inspectiestappen',
+    addStep: 'Stap toevoegen',
+    editStep: 'Stap bewerken',
+    removeStep: 'Stap verwijderen',
+    stepOrder: 'Stap {{order}}',
+    stepTitle: 'Staptitel',
+    stepDescription: 'Stapbeschrijving',
+    isOptional: 'Optionele stap',
+    showHelp: 'Toon hulp',
+    runDetection: 'Detectie uitvoeren',
+    thumbnailUrl: 'Miniatuur-URL',
+    overlayUrl: 'Overlay-URL'
   },
   messages: {
-    createSuccess: 'Shoot inspection configuration created successfully',
-    updateSuccess: 'Shoot inspection configuration updated successfully',
-    deleteSuccess: 'Shoot inspection configuration deleted successfully',
-    stepAdded: 'Step added successfully',
-    stepRemoved: 'Step removed successfully',
-    invalidConfiguration: 'Invalid configuration format'
+    createSuccess: 'Shoot inspectie configuratie succesvol aangemaakt',
+    updateSuccess: 'Shoot inspectie configuratie succesvol bijgewerkt',
+    deleteSuccess: 'Shoot inspectie configuratie succesvol verwijderd',
+    stepAdded: 'Stap succesvol toegevoegd',
+    stepRemoved: 'Stap succesvol verwijderd',
+    invalidConfiguration: 'Ongeldig configuratieformaat'
   }
 } as const;

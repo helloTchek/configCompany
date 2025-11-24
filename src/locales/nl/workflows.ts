@@ -1,61 +1,61 @@
 export const workflows = {
   title: 'Workflows',
-  subtitle: 'Create and manage inspection journey workflows',
-  create: 'Create New Journey',
-  edit: 'Edit Journey',
-  duplicate: 'Duplicate Journey',
+  subtitle: 'Maak en beheer inspectie-reisworkflows',
+  create: 'Nieuwe reis aanmaken',
+  edit: 'Reis bewerken',
+  duplicate: 'Reis dupliceren',
   fields: {
-    name: 'Journey Name',
-    description: 'Description',
-    company: 'Company',
-    blocksCount: 'Blocks Count',
+    name: 'Reisnaam',
+    description: 'Beschrijving',
+    company: 'Bedrijf',
+    blocksCount: 'Aantal blokken',
     status: 'Status',
-    isActive: 'Active'
+    isActive: 'Actief'
   },
   blocks: {
-    title: 'Journey Blocks',
-    addBlock: 'Add Block',
-    form: 'Form Block',
-    shootInspection: 'Shoot Inspection Block',
-    fastTrack: 'Fast Track Block',
-    addDamage: 'Add Damage Block',
-    static: 'Static Screen Block'
+    title: 'Reisblokken',
+    addBlock: 'Blok toevoegen',
+    form: 'Formulierblok',
+    shootInspection: 'Fotoblok inspectie',
+    fastTrack: 'Snelspoorblok',
+    addDamage: 'Blok schade toevoegen',
+    static: 'Statisch schermblok'
   },
   blockTypes: {
     form: {
-      name: 'Form Block',
-      description: 'Custom form with JSON configuration'
+      name: 'Formulierblok',
+      description: 'Aangepast formulier met JSON-configuratie'
     },
     shootInspection: {
-      name: 'Shoot Inspection Block',
-      description: 'Photo capture workflow'
+      name: 'Fotoblok inspectie',
+      description: 'Workflow voor het maken van foto\'s'
     },
     fastTrack: {
-      name: 'Fast Track Block',
-      description: 'Quick inspection process'
+      name: 'Snelspoorblok',
+      description: 'Snelle inspectieprocedure'
     },
     addDamage: {
-      name: 'Add Damage Block',
-      description: 'Manual damage reporting'
+      name: 'Blok schade toevoegen',
+      description: 'Handmatige schade-aangifte'
     },
     static: {
-      name: 'Static Screen Block',
-      description: 'Static content screens (onboarding/offboarding)'
+      name: 'Statisch schermblok',
+      description: 'Statische contentschermen (onboarding/offboarding)'
     }
   },
   configuration: {
-    title: 'Journey Configuration',
-    importJson: 'Import JSON',
-    exportJson: 'Export JSON'
+    title: 'Reisconfiguratie',
+    importJson: 'JSON importeren',
+    exportJson: 'JSON exporteren'
   },
   messages: {
-    createSuccess: 'Journey created successfully',
-    updateSuccess: 'Journey updated successfully',
-    deleteSuccess: 'Journey deleted successfully',
-    duplicateSuccess: 'Journey duplicated successfully',
-    deleteConfirm: 'Are you sure you want to delete this journey?',
-    noBlocks: 'No blocks added yet. Click "Add Block" to start building your journey.',
-    nameRequired: 'Please enter a journey name',
-    blocksRequired: 'Please add at least one block to the journey'
+    createSuccess: 'Reis succesvol aangemaakt',
+    updateSuccess: 'Reis succesvol bijgewerkt',
+    deleteSuccess: 'Reis succesvol verwijderd',
+    duplicateSuccess: 'Reis succesvol gedupliceerd',
+    deleteConfirm: 'Weet u zeker dat u deze reis wilt verwijderen?',
+    noBlocks: 'Er zijn nog geen blokken toegevoegd. Klik op "Blok toevoegen" om uw reis te starten.',
+    nameRequired: 'Voer een reisnaam in',
+    blocksRequired: 'Voeg ten minste één blok toe aan de reis'
   }
 } as const;
