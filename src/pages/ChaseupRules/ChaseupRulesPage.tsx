@@ -34,6 +34,9 @@ export default function ChaseupRulesPage() {
   const [duplicateModal, setDuplicateModal] = useState<{ open: boolean; rule?: ChaseupRule }>({ open: false });
   const [targetCompanyId, setTargetCompanyId] = useState('');
   const [deleteModal, setDeleteModal] = useState<{ open: boolean; rule?: ChaseupRule }>({ open: false });
+  // Sorting state
+  const [sortKey, setSortKey] = useState<string>('');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   // Debounce search term
   useEffect(() => {
@@ -101,11 +104,55 @@ export default function ChaseupRulesPage() {
 
   const hasActiveFilters = searchTerm || Object.values(filters).some(filter => filter !== '');
 
+  // Sorting handler
+  const handleSort = (key: string) => {
+    if (sortKey === key) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDirection('asc');
+    }
+  };
+
   // Client-side filter for maxSendings (not handled by backend)
   const filteredRules = rules.filter(rule => {
     const matchesMaxSendings = !filters.maxSendings || rule.maxSendings.toString() === filters.maxSendings;
     return matchesMaxSendings;
   });
+
+  // Apply sorting
+  const sortedRules = sortKey ? [...filteredRules].sort((a, b) => {
+    let aValue: any;
+    let bValue: any;
+
+    // Handle special computed columns
+    if (sortKey === 'utcSendingTime') {
+      aValue = a.utcSendingTime ? a.utcSendingTime.hour * 60 + a.utcSendingTime.minute : 0;
+      bValue = b.utcSendingTime ? b.utcSendingTime.hour * 60 + b.utcSendingTime.minute : 0;
+    } else if (sortKey === 'firstDelayDays') {
+      // Convert all delays to minutes for comparison
+      aValue = a.firstDelayDays ? a.firstDelayDays * 24 * 60 : (a.firstDelayMinutes || 0);
+      bValue = b.firstDelayDays ? b.firstDelayDays * 24 * 60 : (b.firstDelayMinutes || 0);
+    } else {
+      aValue = a[sortKey as keyof ChaseupRule];
+      bValue = b[sortKey as keyof ChaseupRule];
+    }
+
+    if (aValue === undefined && bValue === undefined) return 0;
+    if (aValue === undefined) return sortDirection === 'asc' ? 1 : -1;
+    if (bValue === undefined) return sortDirection === 'asc' ? -1 : 1;
+
+    let comparison = 0;
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      comparison = aValue.localeCompare(bValue);
+    } else if (typeof aValue === 'number' && typeof bValue === 'number') {
+      comparison = aValue - bValue;
+    } else {
+      comparison = String(aValue).localeCompare(String(bValue));
+    }
+
+    return sortDirection === 'asc' ? comparison : -comparison;
+  }) : filteredRules;
 
   const handleDuplicate = (rule: ChaseupRule) => {
     setTargetCompanyId('');
@@ -165,8 +212,8 @@ export default function ChaseupRulesPage() {
     { key: 'activationDate', label: 'Activation Date', sortable: true,
       render: (value: string) => new Date(value).toLocaleDateString()
     },
-    { key: 'utcSendingTime', label: 'UTC Time', sortable: false,
-      render: (value: { hour: number; minute: number }) => 
+    { key: 'utcSendingTime', label: 'UTC Time', sortable: true,
+      render: (value: { hour: number; minute: number }) =>
         `${value.hour.toString().padStart(2, '0')}:${value.minute.toString().padStart(2, '0')}`
     },
     { key: 'maxSendings', label: 'Max Sendings', sortable: true,
@@ -180,7 +227,7 @@ export default function ChaseupRulesPage() {
         </span>
       )
     },
-    { key: 'firstDelayDays', label: 'First Delay', sortable: false,
+    { key: 'firstDelayDays', label: 'First Delay', sortable: true,
       render: (value: number | undefined, row: ChaseupRule) => {
         if (value) return `${value} days`;
         if (row.firstDelayMinutes) return `${row.firstDelayMinutes} min`;
@@ -325,7 +372,7 @@ export default function ChaseupRulesPage() {
               {hasActiveFilters && (
                 <div className="mt-4 flex justify-between items-center">
                   <span className="text-sm text-gray-600">
-                    Showing {filteredRules.length} of {rules.length} rules
+                    Showing {sortedRules.length} of {rules.length} rules
                   </span>
                   <Button variant="secondary" size="sm" onClick={clearFilters}>
                     Clear All Filters
@@ -343,9 +390,15 @@ export default function ChaseupRulesPage() {
             </div>
           ) : (
             <>
-              <Table columns={columns} data={filteredRules} />
+              <Table
+                columns={columns}
+                data={sortedRules}
+                sortKey={sortKey}
+                sortDirection={sortDirection}
+                onSort={handleSort}
+              />
 
-              {filteredRules.length === 0 && (
+              {sortedRules.length === 0 && (
                 <div className="text-center py-8 text-gray-500">
                   <p>No chase-up rules found matching your criteria.</p>
                   {hasActiveFilters && (
