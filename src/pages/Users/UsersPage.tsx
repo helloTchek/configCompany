@@ -28,6 +28,9 @@ export default function UsersPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalUsers, setTotalUsers] = useState(0);
   const [pageSize, setPageSize] = useState(20);
+  // Sorting state
+  const [sortKey, setSortKey] = useState<string>('');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [createModal, setCreateModal] = useState(false);
   const [createFormData, setCreateFormData] = useState({
     email: '',
@@ -160,7 +163,36 @@ export default function UsersPage() {
 
   const hasActiveFilters = searchTerm || Object.values(filters).some(filter => filter !== '');
 
-  // Filtering is now done on the backend via the API
+  // Sorting handler
+  const handleSort = (key: string) => {
+    if (sortKey === key) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDirection('asc');
+    }
+  };
+
+  // Apply client-side sorting
+  const sortedUsers = sortKey ? [...users].sort((a, b) => {
+    const aValue = a[sortKey as keyof User];
+    const bValue = b[sortKey as keyof User];
+
+    if (aValue === undefined && bValue === undefined) return 0;
+    if (aValue === undefined) return sortDirection === 'asc' ? 1 : -1;
+    if (bValue === undefined) return sortDirection === 'asc' ? -1 : 1;
+
+    let comparison = 0;
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      comparison = aValue.localeCompare(bValue);
+    } else if (typeof aValue === 'number' && typeof bValue === 'number') {
+      comparison = aValue - bValue;
+    } else {
+      comparison = String(aValue).localeCompare(String(bValue));
+    }
+
+    return sortDirection === 'asc' ? comparison : -comparison;
+  }) : users;
 
   const columns: Column<User>[] = [
     { key: 'email', label: 'Email', sortable: true },
@@ -553,7 +585,7 @@ export default function UsersPage() {
               {hasActiveFilters && (
                 <div className="mt-4 flex justify-between items-center">
                   <span className="text-sm text-gray-600">
-                    Showing {users.length} of {totalUsers} users
+                    Showing {sortedUsers.length} of {totalUsers} users
                   </span>
                   <Button variant="secondary" size="sm" onClick={clearFilters}>
                     Clear All Filters
@@ -565,9 +597,15 @@ export default function UsersPage() {
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200">
-          <Table<User> columns={columns} data={users} />
+          <Table<User>
+            columns={columns}
+            data={sortedUsers}
+            sortKey={sortKey}
+            sortDirection={sortDirection}
+            onSort={handleSort}
+          />
 
-          {users.length === 0 && !loading && (
+          {sortedUsers.length === 0 && !loading && (
             <div className="text-center py-8 text-gray-500">
               <p>No users found matching your criteria.</p>
               {hasActiveFilters && (
