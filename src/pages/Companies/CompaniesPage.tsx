@@ -325,8 +325,27 @@ export default function CompaniesPage() {
 
   // Apply sorting
   const sortedCompanies = sortKey ? [...filteredCompanies].sort((a, b) => {
-    const aValue = a[sortKey as keyof Company];
-    const bValue = b[sortKey as keyof Company];
+    let aValue: any;
+    let bValue: any;
+
+    // Handle special computed columns
+    if (sortKey === 'currentApiRequests') {
+      const aToken = a.apiToken;
+      const bToken = b.apiToken;
+      aValue = typeof aToken === 'object' && aToken !== null ? (aToken as ApiTokenData).numberRequest : undefined;
+      bValue = typeof bToken === 'object' && bToken !== null ? (bToken as ApiTokenData).numberRequest : undefined;
+    } else if (sortKey === 'maxApiRequests') {
+      const aToken = a.apiToken;
+      const bToken = b.apiToken;
+      aValue = typeof aToken === 'object' && aToken !== null ? (aToken as ApiTokenData).maxRequestAPI : undefined;
+      bValue = typeof bToken === 'object' && bToken !== null ? (bToken as ApiTokenData).maxRequestAPI : undefined;
+    } else if (sortKey === 'childrenCount') {
+      aValue = a.childCompanyIds?.length ?? 0;
+      bValue = b.childCompanyIds?.length ?? 0;
+    } else {
+      aValue = a[sortKey as keyof Company];
+      bValue = b[sortKey as keyof Company];
+    }
 
     if (aValue === undefined && bValue === undefined) return 0;
     if (aValue === undefined) return sortDirection === 'asc' ? 1 : -1;
