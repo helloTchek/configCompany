@@ -7,6 +7,8 @@ import { CostSettings } from '../../types';
 import { costSettingsService } from '../../services/costSettingsService';
 import { CreditCard as Edit, Download, Copy, Trash2, Plus, Eye, Search, X, AlertTriangle, ChevronUp, ChevronDown } from 'lucide-react';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { useModalState, useDebouncedSearch } from '@/hooks';
+import { createErrorHandler } from '@/utils';
 
 const getCurrencySymbol = (currencyCode: string): string => {
   const symbols: Record<string, string> = {
@@ -26,31 +28,19 @@ export default function CostMatricesPage() {
   const [itemsPerPage] = useState(50);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [settingToDelete, setSettingToDelete] = useState<CostSettings | null>(null);
+  const [searchTerm, debouncedSearchTerm, setSearchTerm] = useDebouncedSearch(500);
+  const deleteModal = useModalState<CostSettings>();
   const [deleting, setDeleting] = useState(false);
-  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
-  const [settingToDuplicate, setSettingToDuplicate] = useState<CostSettings | null>(null);
+  const duplicateModal = useModalState<CostSettings>();
   const [duplicating, setDuplicating] = useState(false);
   const [duplicateName, setDuplicateName] = useState('');
-  const [showViewModal, setShowViewModal] = useState(false);
-  const [settingToView, setSettingToView] = useState<CostSettings | null>(null);
+  const viewModal = useModalState<CostSettings>();
   const [viewStats, setViewStats] = useState<{ total: number; validated: number } | null>(null);
   const [loadingStats, setLoadingStats] = useState(false);
+  const handleError = createErrorHandler(setError);
   // Sorting state
   const [sortKey, setSortKey] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-
-  // Debounce search term
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
 
   // Reset to page 1 when search changes
   useEffect(() => {
@@ -84,9 +74,9 @@ export default function CostMatricesPage() {
       setTotalItems(response.pagination.total);
       setTotalPages(response.pagination.totalPages);
       setCurrentPage(page);
-    } catch (err: any) {
-      console.error('Error loading cost settings:', err);
-      setError(err.message || 'Failed to load cost settings');
+    } catch (error) {
+      console.error('Error loading cost settings:', error);
+      handleError(error);
     } finally {
       setLoading(false);
     }
@@ -110,21 +100,19 @@ export default function CostMatricesPage() {
 
   const handleDuplicate = (costSetting: CostSettings) => {
     const displayName = costSetting.className || costSetting.name || 'Unknown';
-    setSettingToDuplicate(costSetting);
     setDuplicateName(`${displayName} (Copie)`);
-    setShowDuplicateModal(true);
+    duplicateModal.open(costSetting);
   };
 
   const confirmDuplicate = async () => {
-    if (!settingToDuplicate || !duplicateName.trim() || duplicating) return;
+    if (!duplicateModal.data || !duplicateName.trim() || duplicating) return;
 
     try {
       setDuplicating(true);
-      const result = await costSettingsService.duplicateCostSettings(settingToDuplicate.id, duplicateName);
+      const result = await costSettingsService.duplicateCostSettings(duplicateModal.data.id, duplicateName);
 
       // Close modal and reset state
-      setShowDuplicateModal(false);
-      setSettingToDuplicate(null);
+      duplicateModal.close();
       setDuplicateName('');
       setDuplicating(false);
 
@@ -132,16 +120,15 @@ export default function CostMatricesPage() {
       await loadCostSettings(currentPage);
 
       alert(`Matrice de coûts "${result.className || result.name}" dupliquée avec succès`);
-    } catch (err: any) {
-      console.error('Error duplicating cost settings:', err);
-      alert(`Échec de la duplication: ${err.message}`);
+    } catch (error) {
+      console.error('Error duplicating cost settings:', error);
+      alert(`Échec de la duplication: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setDuplicating(false);
     }
   };
 
   const handleView = async (costSetting: CostSettings) => {
-    setSettingToView(costSetting);
-    setShowViewModal(true);
+    viewModal.open(costSetting);
     setLoadingStats(true);
 
     try {
@@ -149,8 +136,8 @@ export default function CostMatricesPage() {
       const params = await costSettingsService.getCostParams(costSetting.id);
       const validated = params.filter(p => p.validated).length;
       setViewStats({ total: params.length, validated });
-    } catch (err: any) {
-      console.error('Error loading cost params stats:', err);
+    } catch (error) {
+      console.error('Error loading cost params stats:', error);
       setViewStats({ total: 0, validated: 0 });
     } finally {
       setLoadingStats(false);
@@ -158,23 +145,21 @@ export default function CostMatricesPage() {
   };
 
   const handleDelete = (costSetting: CostSettings) => {
-    setSettingToDelete(costSetting);
-    setShowDeleteModal(true);
+    deleteModal.open(costSetting);
   };
 
   const confirmDelete = async () => {
-    if (!settingToDelete) return;
+    if (!deleteModal.data) return;
 
     try {
       setDeleting(true);
-      await costSettingsService.deleteCostSettings(settingToDelete.id);
-      setShowDeleteModal(false);
-      setSettingToDelete(null);
+      await costSettingsService.deleteCostSettings(deleteModal.data.id);
+      deleteModal.close();
       await loadCostSettings(currentPage);
       alert('Matrice de coûts supprimée avec succès');
-    } catch (err: any) {
-      console.error('Error deleting cost settings:', err);
-      alert(`Échec de la suppression: ${err.message}`);
+    } catch (error) {
+      console.error('Error deleting cost settings:', error);
+      alert(`Échec de la suppression: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setDeleting(false);
     }
@@ -576,13 +561,10 @@ export default function CostMatricesPage() {
       </div>
 
       {/* Delete Confirmation Modal */}
-      {settingToDelete && (
+      {deleteModal.data && (
         <Modal
-          isOpen={showDeleteModal}
-          onClose={() => {
-            setShowDeleteModal(false);
-            setSettingToDelete(null);
-          }}
+          isOpen={deleteModal.isOpen}
+          onClose={() => deleteModal.close()}
           title="Confirmer la suppression"
           size="md"
         >
@@ -598,11 +580,11 @@ export default function CostMatricesPage() {
                 <p className="text-sm text-gray-600 mb-3">
                   Vous êtes sur le point de supprimer la matrice de coûts{' '}
                   <span className="font-semibold">
-                    "{settingToDelete.className || settingToDelete.name || 'Unknown'}"
+                    "{deleteModal.data.className || deleteModal.data.name || 'Unknown'}"
                   </span>{' '}
                   pour{' '}
                   <span className="font-semibold">
-                    {settingToDelete.companyPtr?.className || settingToDelete.companyPtr?.name || settingToDelete.companyName || 'cette compagnie'}
+                    {deleteModal.data.companyPtr?.className || deleteModal.data.companyPtr?.name || deleteModal.data.companyName || 'cette compagnie'}
                   </span>.
                 </p>
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3">
@@ -616,10 +598,7 @@ export default function CostMatricesPage() {
             <div className="flex gap-3 justify-end pt-4 border-t border-gray-200">
               <Button
                 variant="secondary"
-                onClick={() => {
-                  setShowDeleteModal(false);
-                  setSettingToDelete(null);
-                }}
+                onClick={() => deleteModal.close()}
                 disabled={deleting}
               >
                 Annuler
@@ -637,12 +616,11 @@ export default function CostMatricesPage() {
       )}
 
       {/* View Modal */}
-      {settingToView && (
+      {viewModal.data && (
         <Modal
-          isOpen={showViewModal}
+          isOpen={viewModal.isOpen}
           onClose={() => {
-            setShowViewModal(false);
-            setSettingToView(null);
+            viewModal.close();
             setViewStats(null);
           }}
           title="Détails de la matrice de coûts"
@@ -652,10 +630,10 @@ export default function CostMatricesPage() {
             {/* Header */}
             <div className="border-b border-gray-200 pb-4">
               <h3 className="text-xl font-bold text-gray-900">
-                {settingToView.className || settingToView.name || 'Unnamed'}
+                {viewModal.data.className || viewModal.data.name || 'Unnamed'}
               </h3>
               <p className="text-sm text-gray-600 mt-1">
-                {settingToView.companyPtr?.className || settingToView.companyPtr?.name || settingToView.companyName || 'N/A'}
+                {viewModal.data.companyPtr?.className || viewModal.data.companyPtr?.name || viewModal.data.companyName || 'N/A'}
               </p>
             </div>
 
@@ -664,15 +642,15 @@ export default function CostMatricesPage() {
               <div className="bg-gray-50 rounded-lg p-4">
                 <div className="text-sm text-gray-600 mb-1">Currency</div>
                 <div className="text-2xl font-bold text-gray-900">
-                  {getCurrencySymbol(settingToView.currency)}
+                  {getCurrencySymbol(viewModal.data.currency)}
                 </div>
-                <div className="text-xs text-gray-500 mt-1">{settingToView.currency}</div>
+                <div className="text-xs text-gray-500 mt-1">{viewModal.data.currency}</div>
               </div>
 
               <div className="bg-gray-50 rounded-lg p-4">
                 <div className="text-sm text-gray-600 mb-1">Tax Rate</div>
                 <div className="text-2xl font-bold text-gray-900">
-                  {settingToView.tax}%
+                  {viewModal.data.tax}%
                 </div>
               </div>
 
@@ -701,13 +679,13 @@ export default function CostMatricesPage() {
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Created:</span>
                 <span className="text-gray-900 font-medium">
-                  {formatDate(settingToView.createdAt)}
+                  {formatDate(viewModal.data.createdAt)}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Last Updated:</span>
                 <span className="text-gray-900 font-medium">
-                  {formatDate(settingToView.updatedAt)}
+                  {formatDate(viewModal.data.updatedAt)}
                 </span>
               </div>
             </div>
@@ -717,8 +695,7 @@ export default function CostMatricesPage() {
               <Button
                 variant="secondary"
                 onClick={() => {
-                  setShowViewModal(false);
-                  setSettingToView(null);
+                  viewModal.close();
                   setViewStats(null);
                 }}
               >
@@ -726,8 +703,8 @@ export default function CostMatricesPage() {
               </Button>
               <Button
                 onClick={() => {
-                  setShowViewModal(false);
-                  navigate(`/cost-matrices/${settingToView.id}/edit`);
+                  viewModal.close();
+                  navigate(`/cost-matrices/${viewModal.data.id}/edit`);
                 }}
                 className="!bg-blue-600 hover:!bg-blue-700 !text-white"
               >
@@ -739,12 +716,11 @@ export default function CostMatricesPage() {
       )}
 
       {/* Duplicate Confirmation Modal */}
-      {settingToDuplicate && (
+      {duplicateModal.data && (
         <Modal
-          isOpen={showDuplicateModal}
+          isOpen={duplicateModal.isOpen}
           onClose={() => {
-            setShowDuplicateModal(false);
-            setSettingToDuplicate(null);
+            duplicateModal.close();
             setDuplicateName('');
           }}
           title="Dupliquer la matrice de coûts"
@@ -757,7 +733,7 @@ export default function CostMatricesPage() {
               </div>
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Dupliquer "{settingToDuplicate.className || settingToDuplicate.name || 'Unknown'}"
+                  Dupliquer "{duplicateModal.data.className || duplicateModal.data.name || 'Unknown'}"
                 </h3>
                 <p className="text-sm text-gray-600 mb-3">
                   Une copie complète de cette matrice de coûts sera créée avec tous ses paramètres associés.
@@ -782,8 +758,7 @@ export default function CostMatricesPage() {
               <Button
                 variant="secondary"
                 onClick={() => {
-                  setShowDuplicateModal(false);
-                  setSettingToDuplicate(null);
+                  duplicateModal.close();
                   setDuplicateName('');
                 }}
                 disabled={duplicating}

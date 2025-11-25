@@ -1,50 +1,50 @@
 export const shootInspect = {
-  title: 'Shoot Inspection Configuration',
-  subtitle: 'Configure photo capture workflow and settings',
+  title: 'Konfiguration av fotoinspektion',
+  subtitle: 'Konfigurera arbetsflöde och inställningar för fotoinspelning',
   fields: {
-    name: 'Configuration Name',
-    description: 'Description',
-    maxRetries: 'Max Retries',
-    qualityCheckEnabled: 'Quality Check Enabled',
-    photoAngles: 'Photo Angles',
-    allowedDamageTypes: 'Allowed Damage Types'
+    name: 'Konfigurationsnamn',
+    description: 'Beskrivning',
+    maxRetries: 'Max antal försök',
+    qualityCheckEnabled: 'Kvalitetskontroll aktiverad',
+    photoAngles: 'Foto-vinklar',
+    allowedDamageTypes: 'Tillåtna skadetyper'
   },
   angles: {
-    front: 'Front',
-    back: 'Back',
-    leftSide: 'Left Side',
-    rightSide: 'Right Side',
-    interior: 'Interior',
-    dashboard: 'Dashboard'
+    front: 'Fram',
+    back: 'Bak',
+    leftSide: 'Vänster sida',
+    rightSide: 'Höger sida',
+    interior: 'Interiör',
+    dashboard: 'Instrumentbräda'
   },
   damageTypes: {
-    carBody: 'Car Body',
-    interior: 'Interior',
-    glazings: 'Glazings',
-    dashboard: 'Dashboard',
-    declaration: 'Declaration',
-    documents: 'Documents'
+    carBody: 'Bilkaross',
+    interior: 'Interiör',
+    glazings: 'Glasytor',
+    dashboard: 'Instrumentbräda',
+    declaration: 'Deklaration',
+    documents: 'Dokument'
   },
   steps: {
-    title: 'Inspection Steps',
-    addStep: 'Add Step',
-    editStep: 'Edit Step',
-    removeStep: 'Remove Step',
-    stepOrder: 'Step {{order}}',
-    stepTitle: 'Step Title',
-    stepDescription: 'Step Description',
-    isOptional: 'Optional Step',
-    showHelp: 'Show Help',
-    runDetection: 'Run Detection',
-    thumbnailUrl: 'Thumbnail URL',
-    overlayUrl: 'Overlay URL'
+    title: 'Inspektionssteg',
+    addStep: 'Lägg till steg',
+    editStep: 'Redigera steg',
+    removeStep: 'Ta bort steg',
+    stepOrder: 'Steg {{order}}',
+    stepTitle: 'Stegtitel',
+    stepDescription: 'Stegbeskrivning',
+    isOptional: 'Valfritt steg',
+    showHelp: 'Visa hjälp',
+    runDetection: 'Kör detektion',
+    thumbnailUrl: 'Miniatyr-URL',
+    overlayUrl: 'Överläggs-URL'
   },
   messages: {
-    createSuccess: 'Shoot inspection configuration created successfully',
-    updateSuccess: 'Shoot inspection configuration updated successfully',
-    deleteSuccess: 'Shoot inspection configuration deleted successfully',
-    stepAdded: 'Step added successfully',
-    stepRemoved: 'Step removed successfully',
-    invalidConfiguration: 'Invalid configuration format'
+    createSuccess: 'Fotoinspektionskonfiguration skapad',
+    updateSuccess: 'Fotoinspektionskonfiguration uppdaterad',
+    deleteSuccess: 'Fotoinspektionskonfiguration raderad',
+    stepAdded: 'Steg tillagt',
+    stepRemoved: 'Steg borttaget',
+    invalidConfiguration: 'Ogiltigt konfigurationsformat'
   }
 } as const;

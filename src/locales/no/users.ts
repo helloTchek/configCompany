@@ -1,33 +1,33 @@
 export const users = {
-  title: 'Users',
-  subtitle: 'Manage user accounts and permissions',
-  create: 'Create New User',
-  edit: 'Edit User',
+  title: 'Brukere',
+  subtitle: 'Administrer brukerkontoer og tillatelser',
+  create: 'Opprett ny bruker',
+  edit: 'Rediger bruker',
   fields: {
-    email: 'Email',
-    name: 'Name',
-    role: 'Role',
-    company: 'Company',
+    email: 'E-post',
+    name: 'Navn',
+    role: 'Rolle',
+    company: 'Selskap',
     status: 'Status',
-    password: 'Password',
-    confirmPassword: 'Confirm Password'
+    password: 'Passord',
+    confirmPassword: 'Bekreft passord'
   },
   roles: {
     superAdmin: 'Super Admin',
     admin: 'Admin',
-    user: 'User'
+    user: 'Bruker'
   },
   status: {
-    active: 'Active',
-    inactive: 'Inactive'
+    active: 'Aktiv',
+    inactive: 'Inaktiv'
   },
   messages: {
-    createSuccess: 'User created successfully',
-    updateSuccess: 'User updated successfully',
-    deleteSuccess: 'User deleted successfully',
-    deleteConfirm: 'Are you sure you want to delete this user?',
-    passwordMismatch: 'Passwords do not match',
-    emailExists: 'A user with this email already exists',
-    lastLoginNever: 'Never'
+    createSuccess: 'Bruker opprettet',
+    updateSuccess: 'Bruker oppdatert',
+    deleteSuccess: 'Bruker slettet',
+    deleteConfirm: 'Er du sikker på at du vil slette denne brukeren?',
+    passwordMismatch: 'Passordene stemmer ikke overens',
+    emailExists: 'En bruker med denne e-posten eksisterer allerede',
+    lastLoginNever: 'Aldri'
   }
 } as const;

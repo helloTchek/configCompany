@@ -1,56 +1,56 @@
 export const events = {
-  title: 'Events & Webhooks',
-  subtitle: 'Configure notification templates and recipients for different events',
+  title: 'Hendelser & Webhooks',
+  subtitle: 'Konfigurer varslingsmaler og mottakere for forskjellige hendelser',
   events: {
-    selfInspectionCreation: 'Self Inspection Creation',
-    automatedChaseUp: 'Automated Chase-up Message',
-    manualChaseUp: 'Manual Chase-up Message',
-    inspectionFinished: 'Inspection Finished Message',
-    damageReviewFinished: 'Damage Review Finished Message',
-    shareUpdatedReport: 'Share Updated Report Message'
+    selfInspectionCreation: 'Opprettelse av selvinspeksjon',
+    automatedChaseUp: 'Automatisk oppfølgingsmelding',
+    manualChaseUp: 'Manuell oppfølgingsmelding',
+    inspectionFinished: 'Inspeksjon fullført melding',
+    damageReviewFinished: 'Skaderapport ferdig melding',
+    shareUpdatedReport: 'Del oppdatert rapport melding'
   },
   recipients: {
-    title: 'Recipients',
-    customerPhone: 'Customer Phone Number',
-    companyEmail: 'Company Email Address',
-    agentEmail: 'Agent Email Address',
-    webhookUrl: 'Webhook URL',
-    addRecipient: 'Add Recipient'
+    title: 'Mottakere',
+    customerPhone: 'Kundens telefonnummer',
+    companyEmail: 'Selskapets e-postadresse',
+    agentEmail: 'Agentens e-postadresse',
+    webhookUrl: 'Webhook-URL',
+    addRecipient: 'Legg til mottaker'
   },
   messageContent: {
-    title: 'Message Content',
-    email: 'Email',
+    title: 'Meldingsinnhold',
+    email: 'E-post',
     sms: 'SMS',
-    subject: 'Subject',
-    htmlContent: 'HTML Content',
-    textContent: 'Text Content',
-    characterCount: 'Character count: {{count}}',
-    pageLimit: 'Page limit: {{limit}}'
+    subject: 'Emne',
+    htmlContent: 'HTML-innhold',
+    textContent: 'Tekstinnhold',
+    characterCount: 'Antall tegn: {{count}}',
+    pageLimit: 'Sidegrense: {{limit}}'
   },
   variables: {
-    title: 'Available Variables',
-    description: 'Click any variable to copy it to your clipboard',
-    customerName: 'Customer Name',
-    customerEmail: 'Customer Email',
-    customerPhone: 'Customer Phone',
-    inspectionId: 'Inspection ID',
-    inspectionLink: 'Inspection Link',
-    vehicleMake: 'Vehicle Make',
-    vehicleModel: 'Vehicle Model',
-    licensePlate: 'License Plate',
-    companyName: 'Company Name',
-    agentName: 'Agent Name',
-    inspectionDate: 'Inspection Date',
-    trackingUrl: 'Tracking URL'
+    title: 'Tilgjengelige variabler',
+    description: 'Klikk på en variabel for å kopiere den til utklippstavlen',
+    customerName: 'Kundens navn',
+    customerEmail: 'Kundens e-post',
+    customerPhone: 'Kundens telefon',
+    inspectionId: 'Inspeksjons-ID',
+    inspectionLink: 'Inspeksjonslenke',
+    vehicleMake: 'Bilmerke',
+    vehicleModel: 'Bilmodell',
+    licensePlate: 'Registreringsnummer',
+    companyName: 'Selskapsnavn',
+    agentName: 'Agentnavn',
+    inspectionDate: 'Inspeksjonsdato',
+    trackingUrl: 'Sporings-URL'
   },
   fields: {
-    webhookUrl: 'Webhook URL',
-    senderName: 'Sender Name (for all events)'
+    webhookUrl: 'Webhook-URL',
+    senderName: 'Avsenders navn (for alle hendelser)'
   },
   messages: {
-    updateSuccess: 'Event configuration updated successfully',
-    testSuccess: 'Test message sent successfully',
-    testError: 'Failed to send test message',
-    variableCopied: 'Variable copied to clipboard'
+    updateSuccess: 'Hendelseskonfigurasjon oppdatert',
+    testSuccess: 'Testmelding sendt',
+    testError: 'Kunne ikke sende testmelding',
+    variableCopied: 'Variabel kopiert til utklippstavlen'
   }
 } as const;

@@ -114,6 +114,48 @@ export interface Styles {
   [key: string]: unknown;
 }
 
+// API User structure
+export interface ApiUser {
+  objectId: string;
+  email: string;
+  username?: string;
+  role: 'superadmin' | 'admin' | 'user';
+  companyId?: string;
+  companyPtr?: {
+    __type: 'Pointer';
+    className: 'Company';
+    objectId: string;
+  };
+  companyName?: string;
+  status: 'active' | 'inactive';
+  isDeleted?: boolean;
+  disabledReason?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Sorting rule updates
+export interface SortingRuleUpdates {
+  status?: number;
+  assignedTo?: string;
+  priority?: number;
+  tags?: string[];
+  customField1?: string;
+  customField2?: string;
+  customField3?: string;
+}
+
+// Cost params aggregate
+export interface CostParamsAggregate {
+  partType: string;
+  location: string;
+  severity: string;
+  cost: number;
+  validated: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Full company data with all nested objects
 export interface FullCompanyData {
   objectId?: string;

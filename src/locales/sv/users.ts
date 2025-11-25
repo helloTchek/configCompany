@@ -1,33 +1,33 @@
 export const users = {
-  title: 'Users',
-  subtitle: 'Manage user accounts and permissions',
-  create: 'Create New User',
-  edit: 'Edit User',
+  title: 'Användare',
+  subtitle: 'Hantera användarkonton och behörigheter',
+  create: 'Skapa Ny Användare',
+  edit: 'Redigera Användare',
   fields: {
-    email: 'Email',
-    name: 'Name',
-    role: 'Role',
-    company: 'Company',
+    email: 'E-post',
+    name: 'Namn',
+    role: 'Roll',
+    company: 'Företag',
     status: 'Status',
-    password: 'Password',
-    confirmPassword: 'Confirm Password'
+    password: 'Lösenord',
+    confirmPassword: 'Bekräfta Lösenord'
   },
   roles: {
-    superAdmin: 'Super Admin',
+    superAdmin: 'Superadmin',
     admin: 'Admin',
-    user: 'User'
+    user: 'Användare'
   },
   status: {
-    active: 'Active',
-    inactive: 'Inactive'
+    active: 'Aktiv',
+    inactive: 'Inaktiv'
   },
   messages: {
-    createSuccess: 'User created successfully',
-    updateSuccess: 'User updated successfully',
-    deleteSuccess: 'User deleted successfully',
-    deleteConfirm: 'Are you sure you want to delete this user?',
-    passwordMismatch: 'Passwords do not match',
-    emailExists: 'A user with this email already exists',
-    lastLoginNever: 'Never'
+    createSuccess: 'Användare skapad',
+    updateSuccess: 'Användare uppdaterad',
+    deleteSuccess: 'Användare borttagen',
+    deleteConfirm: 'Är du säker på att du vill ta bort denna användare?',
+    passwordMismatch: 'Lösenorden matchar inte',
+    emailExists: 'En användare med denna e-postadress finns redan',
+    lastLoginNever: 'Aldrig'
   }
 } as const;

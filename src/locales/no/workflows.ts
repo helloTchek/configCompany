@@ -1,61 +1,61 @@
 export const workflows = {
-  title: 'Workflows',
-  subtitle: 'Create and manage inspection journey workflows',
-  create: 'Create New Journey',
-  edit: 'Edit Journey',
-  duplicate: 'Duplicate Journey',
+  title: 'Arbeidsflyter',
+  subtitle: 'Opprett og administrer inspeksjonsreise-arbeidsflyter',
+  create: 'Opprett ny reise',
+  edit: 'Rediger reise',
+  duplicate: 'Dupliser reise',
   fields: {
-    name: 'Journey Name',
-    description: 'Description',
-    company: 'Company',
-    blocksCount: 'Blocks Count',
+    name: 'Reisenavn',
+    description: 'Beskrivelse',
+    company: 'Selskap',
+    blocksCount: 'Antall blokker',
     status: 'Status',
-    isActive: 'Active'
+    isActive: 'Aktiv'
   },
   blocks: {
-    title: 'Journey Blocks',
-    addBlock: 'Add Block',
-    form: 'Form Block',
-    shootInspection: 'Shoot Inspection Block',
-    fastTrack: 'Fast Track Block',
-    addDamage: 'Add Damage Block',
-    static: 'Static Screen Block'
+    title: 'Reiseblokker',
+    addBlock: 'Legg til blokk',
+    form: 'Skjemablokk',
+    shootInspection: 'Fotoinspiseringsblokk',
+    fastTrack: 'Rask spor-blokk',
+    addDamage: 'Legg til skadeblokk',
+    static: 'Statisk skjermblokk'
   },
   blockTypes: {
     form: {
-      name: 'Form Block',
-      description: 'Custom form with JSON configuration'
+      name: 'Skjemablokk',
+      description: 'Egendefinert skjema med JSON-konfigurasjon'
     },
     shootInspection: {
-      name: 'Shoot Inspection Block',
-      description: 'Photo capture workflow'
+      name: 'Fotoinspiseringsblokk',
+      description: 'Fotoinnsamlingsarbeidsflyt'
     },
     fastTrack: {
-      name: 'Fast Track Block',
-      description: 'Quick inspection process'
+      name: 'Rask spor-blokk',
+      description: 'Rask inspeksjonsprosess'
     },
     addDamage: {
-      name: 'Add Damage Block',
-      description: 'Manual damage reporting'
+      name: 'Legg til skadeblokk',
+      description: 'Manuell skaderapportering'
     },
     static: {
-      name: 'Static Screen Block',
-      description: 'Static content screens (onboarding/offboarding)'
+      name: 'Statisk skjermblokk',
+      description: 'Statisk innhold (onboarding/offboarding)'
     }
   },
   configuration: {
-    title: 'Journey Configuration',
-    importJson: 'Import JSON',
-    exportJson: 'Export JSON'
+    title: 'Reisekonfigurasjon',
+    importJson: 'Importer JSON',
+    exportJson: 'Eksporter JSON'
   },
   messages: {
-    createSuccess: 'Journey created successfully',
-    updateSuccess: 'Journey updated successfully',
-    deleteSuccess: 'Journey deleted successfully',
-    duplicateSuccess: 'Journey duplicated successfully',
-    deleteConfirm: 'Are you sure you want to delete this journey?',
-    noBlocks: 'No blocks added yet. Click "Add Block" to start building your journey.',
-    nameRequired: 'Please enter a journey name',
-    blocksRequired: 'Please add at least one block to the journey'
+    createSuccess: 'Reise opprettet',
+    updateSuccess: 'Reise oppdatert',
+    deleteSuccess: 'Reise slettet',
+    duplicateSuccess: 'Reise duplisert',
+    deleteConfirm: 'Er du sikker på at du vil slette denne reisen?',
+    noBlocks: 'Ingen blokker lagt til ennå. Klikk "Legg til blokk" for å starte reisen.',
+    nameRequired: 'Vennligst skriv inn et reisenavn',
+    blocksRequired: 'Vennligst legg til minst én blokk i reisen'
   }
 } as const;

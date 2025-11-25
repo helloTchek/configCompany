@@ -11,6 +11,7 @@ import { ChaseupRule } from '../../types';
 import chaseUpRulesService from '../../services/chaseupRulesService';
 import companiesService from '../../services/companiesService';
 import { CreditCard as Edit, Copy, Trash2, Plus, Search, ListFilter as Filter, X } from 'lucide-react';
+import { useModalState, useDebouncedSearch } from '@/hooks';
 
 export default function ChaseupRulesPage() {
   const navigate = useNavigate();
@@ -23,29 +24,19 @@ export default function ChaseupRulesPage() {
   const [rules, setRules] = useState<ChaseupRule[]>([]);
   const [allCompaniesLight, setAllCompaniesLight] = useState<Array<{ objectId: string; id: string; name: string; identifier?: string }>>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const [searchTerm, debouncedSearchTerm, setSearchTerm] = useDebouncedSearch(500);
   const [showFilters, setShowFilters] = useState(!!companyFromUrl);
   const [filters, setFilters] = useState({
     type: '',
     company: companyFromUrl || '',
     maxSendings: ''
   });
-  const [duplicateModal, setDuplicateModal] = useState<{ open: boolean; rule?: ChaseupRule }>({ open: false });
+  const duplicateModal = useModalState<ChaseupRule>();
   const [targetCompanyId, setTargetCompanyId] = useState('');
-  const [deleteModal, setDeleteModal] = useState<{ open: boolean; rule?: ChaseupRule }>({ open: false });
+  const deleteModal = useModalState<ChaseupRule>();
   // Sorting state
   const [sortKey, setSortKey] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-
-  // Debounce search term
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
 
   // Load all companies light (for dropdowns) - REUSING CompaniesPage logic
   useEffect(() => {
@@ -156,20 +147,20 @@ export default function ChaseupRulesPage() {
 
   const handleDuplicate = (rule: ChaseupRule) => {
     setTargetCompanyId('');
-    setDuplicateModal({ open: true, rule });
+    duplicateModal.open(rule);
   };
 
   const handleDelete = (rule: ChaseupRule) => {
-    setDeleteModal({ open: true, rule });
+    deleteModal.open(rule);
   };
 
   const confirmDelete = async () => {
-    if (!deleteModal.rule) return;
+    if (!deleteModal.data) return;
 
     try {
       setLoading(true);
-      await chaseUpRulesService.deleteChaseUpRule(deleteModal.rule.id);
-      setDeleteModal({ open: false });
+      await chaseUpRulesService.deleteChaseUpRule(deleteModal.data.id);
+      deleteModal.close();
       // Reload rules after deletion
       await loadChaseUpRules();
     } catch (error) {
@@ -180,14 +171,14 @@ export default function ChaseupRulesPage() {
   };
 
   const confirmDuplicate = async () => {
-    if (!duplicateModal.rule || !targetCompanyId.trim()) {
+    if (!duplicateModal.data || !targetCompanyId.trim()) {
       return;
     }
 
     try {
       setLoading(true);
-      await chaseUpRulesService.duplicateChaseUpRule(duplicateModal.rule.id, targetCompanyId);
-      setDuplicateModal({ open: false });
+      await chaseUpRulesService.duplicateChaseUpRule(duplicateModal.data.id, targetCompanyId);
+      duplicateModal.close();
       setTargetCompanyId('');
       // Reload rules after duplication
       await loadChaseUpRules();
@@ -415,14 +406,14 @@ export default function ChaseupRulesPage() {
 
       {/* Duplicate Modal */}
       <Modal
-        isOpen={duplicateModal.open}
-        onClose={() => setDuplicateModal({ open: false })}
+        isOpen={duplicateModal.isOpen}
+        onClose={() => duplicateModal.close()}
         title="Duplicate Chase-up Rule"
         size="md"
       >
         <div className="space-y-4">
           <p className="text-gray-600">
-            Duplicate the chase-up rule from <strong>{duplicateModal.rule?.company}</strong> to a company
+            Duplicate the chase-up rule from <strong>{duplicateModal.data?.company}</strong> to a company
           </p>
 
           <CompanySelector
@@ -443,7 +434,7 @@ export default function ChaseupRulesPage() {
             <Button
               variant="secondary"
               onClick={() => {
-                setDuplicateModal({ open: false });
+                duplicateModal.close();
                 setTargetCompanyId('');
               }}
             >
@@ -461,20 +452,20 @@ export default function ChaseupRulesPage() {
 
       {/* Delete Modal */}
       <Modal
-        isOpen={deleteModal.open}
-        onClose={() => setDeleteModal({ open: false })}
+        isOpen={deleteModal.isOpen}
+        onClose={() => deleteModal.close()}
         title="Delete Chase-up Rule"
         size="md"
       >
         <div className="space-y-4">
           <p className="text-gray-600">
-            Are you sure you want to delete the chase-up rule for <strong>{deleteModal.rule?.company}</strong>? 
+            Are you sure you want to delete the chase-up rule for <strong>{deleteModal.data?.company}</strong>?
             This action cannot be undone.
           </p>
           <div className="flex gap-3 justify-end pt-4">
             <Button
               variant="secondary"
-              onClick={() => setDeleteModal({ open: false })}
+              onClick={() => deleteModal.close()}
             >
               Cancel
             </Button>

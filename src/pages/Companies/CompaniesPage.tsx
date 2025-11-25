@@ -13,6 +13,7 @@ import { CreditCard as Edit, Archive, Copy, Plus, Upload, Search, ListFilter as 
 import { mockChaseupRules } from '../../data/mockData';
 import { PERMISSIONS } from '@/types/auth';
 import { FullCompanyData, ApiTokenData } from '@/types/api';
+import { useModalState, useDebouncedSearch } from '@/hooks';
 
 export default function CompaniesPage() {
   const navigate = useNavigate();
@@ -24,8 +25,7 @@ export default function CompaniesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(50);
   const [totalPages, setTotalPages] = useState(0);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const [searchTerm, debouncedSearchTerm, setSearchTerm] = useDebouncedSearch(500);
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     contractType: '',
@@ -34,8 +34,8 @@ export default function CompaniesPage() {
   });
   const [sortKey, setSortKey] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-  const [archiveModal, setArchiveModal] = useState<{ open: boolean; company?: Company }>({ open: false });
-  const [duplicateModal, setDuplicateModal] = useState<{ open: boolean; company?: Company }>({ open: false });
+  const archiveModal = useModalState<Company>();
+  const duplicateModal = useModalState<Company>();
   const [duplicateForm, setDuplicateForm] = useState({
     companyName: '',
     senderName: '',
@@ -48,15 +48,6 @@ export default function CompaniesPage() {
     }
   });
   const [parentCompanySearch, setParentCompanySearch] = useState('');
-
-  // Debounce search term
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
 
   // Reset to page 1 when search/filters change
   useEffect(() => {
@@ -136,29 +127,29 @@ export default function CompaniesPage() {
   };
 
   const handleArchive = (company: Company) => {
-    setArchiveModal({ open: true, company });
+    archiveModal.open(company);
   };
 
   const confirmArchive = async () => {
-    if (!archiveModal.company) return;
+    if (!archiveModal.data) return;
 
     try {
       setLoading(true);
-      const isCurrentlyArchived = archiveModal.company.archived || archiveModal.company.isArchived;
+      const isCurrentlyArchived = archiveModal.data.archived || archiveModal.data.isArchived;
 
       // Use the new archive endpoint which also disables the API token
-      await companiesService.archiveCompany(getCompanyId(archiveModal.company), !isCurrentlyArchived);
+      await companiesService.archiveCompany(getCompanyId(archiveModal.data), !isCurrentlyArchived);
 
       // Disable users from this company
       mockUsers.forEach(user => {
-        if (user.company === archiveModal.company!.name) {
+        if (user.company === archiveModal.data!.name) {
           user.status = !isCurrentlyArchived ? 'inactive' : 'active';
           user.isDeleted = !isCurrentlyArchived;
           user.disabledReason = !isCurrentlyArchived ? 'Company archived' : '';
         }
       });
 
-      setArchiveModal({ open: false });
+      archiveModal.close();
 
       // If archiving, switch filter to show archived companies
       if (!isCurrentlyArchived) {
@@ -223,7 +214,7 @@ export default function CompaniesPage() {
         }
       });
       setParentCompanySearch('');
-      setDuplicateModal({ open: true, company: enrichedCompanyData as Company });
+      duplicateModal.open(enrichedCompanyData as Company);
     } catch (error) {
       console.error('Error loading company for duplication:', error);
       alert('Failed to load company data');
@@ -271,12 +262,12 @@ export default function CompaniesPage() {
       return;
     }
 
-    if (!duplicateModal.company) return;
+    if (!duplicateModal.data) return;
 
     try {
       setLoading(true);
 
-      const companyId = getCompanyId(duplicateModal.company);
+      const companyId = getCompanyId(duplicateModal.data);
       const duplicatedCompany = await companiesService.duplicateCompany(
         companyId,
         duplicateForm.companyName,
@@ -286,7 +277,7 @@ export default function CompaniesPage() {
       );
 
       if (duplicatedCompany) {
-        setDuplicateModal({ open: false });
+        duplicateModal.close();
         setDuplicateForm({
           companyName: '',
           senderName: '',
@@ -792,28 +783,28 @@ export default function CompaniesPage() {
       </div>
 
       <Modal
-        isOpen={archiveModal.open}
-        onClose={() => setArchiveModal({ open: false })}
-        title={archiveModal.company?.archived || archiveModal.company?.isArchived ? "Unarchive Company" : "Archive Company"}
+        isOpen={archiveModal.isOpen}
+        onClose={() => archiveModal.close()}
+        title={archiveModal.data?.archived || archiveModal.data?.isArchived ? "Unarchive Company" : "Archive Company"}
         size="sm"
       >
         <div className="space-y-4">
           <p className="text-gray-600">
-            {archiveModal.company?.archived || archiveModal.company?.isArchived ? (
+            {archiveModal.data?.archived || archiveModal.data?.isArchived ? (
               <>
-                Are you sure you want to unarchive <strong>{archiveModal.company?.name}</strong>?
+                Are you sure you want to unarchive <strong>{archiveModal.data?.name}</strong>?
                 This will re-enable the API token and make the company active again.
               </>
             ) : (
               <>
-                Are you sure you want to archive <strong>{archiveModal.company?.name}</strong>?
+                Are you sure you want to archive <strong>{archiveModal.data?.name}</strong>?
                 This will disable the API token and all users from this company.
               </>
             )}
           </p>
           <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
             <p className="text-sm text-orange-800">
-              <strong>Note:</strong> {archiveModal.company?.archived || archiveModal.company?.isArchived ?
+              <strong>Note:</strong> {archiveModal.data?.archived || archiveModal.data?.isArchived ?
                 "Unarchiving will restore access to the company and its API token." :
                 "Archived companies can be restored later using the \"Show archived companies\" filter."}
             </p>
@@ -821,7 +812,7 @@ export default function CompaniesPage() {
           <div className="flex gap-3 justify-end">
             <Button
               variant="secondary"
-              onClick={() => setArchiveModal({ open: false })}
+              onClick={() => archiveModal.close()}
             >
               Cancel
             </Button>
@@ -830,15 +821,15 @@ export default function CompaniesPage() {
               onClick={confirmArchive}
               className="bg-orange-600 text-white hover:bg-orange-700"
             >
-              {archiveModal.company?.archived || archiveModal.company?.isArchived ? "Unarchive Company" : "Archive Company"}
+              {archiveModal.data?.archived || archiveModal.data?.isArchived ? "Unarchive Company" : "Archive Company"}
             </Button>
           </div>
         </div>
       </Modal>
 
       <Modal
-        isOpen={duplicateModal.open}
-        onClose={() => setDuplicateModal({ open: false })}
+        isOpen={duplicateModal.isOpen}
+        onClose={() => duplicateModal.close()}
         title="Duplicate Company"
         size="xl"
       >
@@ -866,7 +857,7 @@ export default function CompaniesPage() {
             <div className="relative">
               <textarea
                 rows={4}
-                defaultValue={duplicateModal.company?.reportSettings || ''}
+                defaultValue={duplicateModal.data?.reportSettings || ''}
                 className="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
                 placeholder="Report settings JSON configuration..."
               />
@@ -882,7 +873,7 @@ export default function CompaniesPage() {
             <div className="relative">
               <textarea
                 rows={4}
-                defaultValue={duplicateModal.company?.configModules || ''}
+                defaultValue={duplicateModal.data?.configModules || ''}
                 className="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
                 placeholder="Config modules JSON configuration..."
               />
@@ -924,7 +915,7 @@ export default function CompaniesPage() {
                   {allCompaniesLight
                     .filter(c => {
                       // Filter out the current company
-                      if ((c.objectId || c.id) === (duplicateModal.company?.objectId || duplicateModal.company?.id)) {
+                      if ((c.objectId || c.id) === (duplicateModal.data?.objectId || duplicateModal.data?.id)) {
                         return false;
                       }
                       // Filter by search term
@@ -946,7 +937,7 @@ export default function CompaniesPage() {
                 {/* Show count of filtered results */}
                 <p className="mt-1 text-xs text-gray-500">
                   {allCompaniesLight.filter(c => {
-                    if ((c.objectId || c.id) === (duplicateModal.company?.objectId || duplicateModal.company?.id)) {
+                    if ((c.objectId || c.id) === (duplicateModal.data?.objectId || duplicateModal.data?.id)) {
                       return false;
                     }
                     if (parentCompanySearch) {
@@ -1119,7 +1110,7 @@ export default function CompaniesPage() {
           <Button
             variant="secondary"
             onClick={() => {
-              setDuplicateModal({ open: false });
+              duplicateModal.close();
               setDuplicateForm({
                 companyName: '',
                 senderName: '',

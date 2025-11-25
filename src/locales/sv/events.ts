@@ -1,56 +1,56 @@
 export const events = {
-  title: 'Events & Webhooks',
-  subtitle: 'Configure notification templates and recipients for different events',
+  title: 'Händelser & Webhooks',
+  subtitle: 'Konfigurera meddelandemallar och mottagare för olika händelser',
   events: {
-    selfInspectionCreation: 'Self Inspection Creation',
-    automatedChaseUp: 'Automated Chase-up Message',
-    manualChaseUp: 'Manual Chase-up Message',
-    inspectionFinished: 'Inspection Finished Message',
-    damageReviewFinished: 'Damage Review Finished Message',
-    shareUpdatedReport: 'Share Updated Report Message'
+    selfInspectionCreation: 'Skapande av självinspektion',
+    automatedChaseUp: 'Automatiskt uppföljningsmeddelande',
+    manualChaseUp: 'Manuellt uppföljningsmeddelande',
+    inspectionFinished: 'Inspektion slutförd',
+    damageReviewFinished: 'Skaderevision slutförd',
+    shareUpdatedReport: 'Dela uppdaterad rapport'
   },
   recipients: {
-    title: 'Recipients',
-    customerPhone: 'Customer Phone Number',
-    companyEmail: 'Company Email Address',
-    agentEmail: 'Agent Email Address',
-    webhookUrl: 'Webhook URL',
-    addRecipient: 'Add Recipient'
+    title: 'Mottagare',
+    customerPhone: 'Kundens telefonnummer',
+    companyEmail: 'Företagets e-postadress',
+    agentEmail: 'Agentens e-postadress',
+    webhookUrl: 'Webhook-URL',
+    addRecipient: 'Lägg till mottagare'
   },
   messageContent: {
-    title: 'Message Content',
-    email: 'Email',
+    title: 'Meddelandeinnehåll',
+    email: 'E-post',
     sms: 'SMS',
-    subject: 'Subject',
-    htmlContent: 'HTML Content',
-    textContent: 'Text Content',
-    characterCount: 'Character count: {{count}}',
-    pageLimit: 'Page limit: {{limit}}'
+    subject: 'Ämne',
+    htmlContent: 'HTML-innehåll',
+    textContent: 'Textinnehåll',
+    characterCount: 'Antal tecken: {{count}}',
+    pageLimit: 'Sidgräns: {{limit}}'
   },
   variables: {
-    title: 'Available Variables',
-    description: 'Click any variable to copy it to your clipboard',
-    customerName: 'Customer Name',
-    customerEmail: 'Customer Email',
-    customerPhone: 'Customer Phone',
-    inspectionId: 'Inspection ID',
-    inspectionLink: 'Inspection Link',
-    vehicleMake: 'Vehicle Make',
-    vehicleModel: 'Vehicle Model',
-    licensePlate: 'License Plate',
-    companyName: 'Company Name',
-    agentName: 'Agent Name',
-    inspectionDate: 'Inspection Date',
-    trackingUrl: 'Tracking URL'
+    title: 'Tillgängliga variabler',
+    description: 'Klicka på en variabel för att kopiera den till urklipp',
+    customerName: 'Kundnamn',
+    customerEmail: 'Kundens e-post',
+    customerPhone: 'Kundens telefon',
+    inspectionId: 'Inspektions-ID',
+    inspectionLink: 'Inspektionslänk',
+    vehicleMake: 'Fordonstillverkare',
+    vehicleModel: 'Fordonsmodell',
+    licensePlate: 'Registreringsskylt',
+    companyName: 'Företagsnamn',
+    agentName: 'Agentnamn',
+    inspectionDate: 'Inspektionsdatum',
+    trackingUrl: 'Spårnings-URL'
   },
   fields: {
-    webhookUrl: 'Webhook URL',
-    senderName: 'Sender Name (for all events)'
+    webhookUrl: 'Webhook-URL',
+    senderName: 'Avsändarnamn (för alla händelser)'
   },
   messages: {
-    updateSuccess: 'Event configuration updated successfully',
-    testSuccess: 'Test message sent successfully',
-    testError: 'Failed to send test message',
-    variableCopied: 'Variable copied to clipboard'
+    updateSuccess: 'Händelsekonfiguration uppdaterad',
+    testSuccess: 'Testmeddelande skickat',
+    testError: 'Misslyckades med att skicka testmeddelande',
+    variableCopied: 'Variabel kopierad till urklipp'
   }
 } as const;

@@ -1,45 +1,45 @@
 export const costs = {
-  title: 'Cost Matrices',
-  subtitle: 'Manage repair costs by part types, locations, and severities',
-  create: 'Create New Matrix',
-  edit: 'Edit Cost Matrix',
+  title: 'Kostnadsmatriser',
+  subtitle: 'Hantera reparationskostnader efter deltyp, plats och allvarlighetsgrad',
+  create: 'Skapa ny matris',
+  edit: 'Redigera kostnadsmatris',
   fields: {
-    company: 'Company',
-    currency: 'Currency',
-    taxRate: 'Tax Rate (%)',
-    partsCount: 'Parts Count',
-    partType: 'Part Type',
-    location: 'Location',
-    severity: 'Severity',
-    cost: 'Cost'
+    company: 'Företag',
+    currency: 'Valuta',
+    taxRate: 'Momssats (%)',
+    partsCount: 'Antal delar',
+    partType: 'Deltyp',
+    location: 'Plats',
+    severity: 'Allvarlighetsgrad',
+    cost: 'Kostnad'
   },
   severities: {
-    minor: 'Minor',
-    moderate: 'Moderate',
-    major: 'Major',
-    severe: 'Severe'
+    minor: 'Mindre',
+    moderate: 'Måttlig',
+    major: 'Stor',
+    severe: 'Allvarlig'
   },
   locations: {
-    front: 'Front',
-    rear: 'Rear',
-    left: 'Left',
-    right: 'Right',
-    roof: 'Roof',
-    interior: 'Interior'
+    front: 'Fram',
+    rear: 'Bak',
+    left: 'Vänster',
+    right: 'Höger',
+    roof: 'Tak',
+    interior: 'Interiör'
   },
   actions: {
-    addPart: 'Add Part',
-    removePart: 'Remove Part',
-    importCsv: 'Import CSV',
-    exportCsv: 'Export CSV',
-    bulkEdit: 'Bulk Edit'
+    addPart: 'Lägg till del',
+    removePart: 'Ta bort del',
+    importCsv: 'Importera CSV',
+    exportCsv: 'Exportera CSV',
+    bulkEdit: 'Redigera i bulk'
   },
   messages: {
-    createSuccess: 'Cost matrix created successfully',
-    updateSuccess: 'Cost matrix updated successfully',
-    deleteSuccess: 'Cost matrix deleted successfully',
-    importSuccess: 'CSV imported successfully',
-    exportSuccess: 'CSV exported successfully',
-    invalidCsv: 'Invalid CSV format'
+    createSuccess: 'Kostnadsmatris skapad framgångsrikt',
+    updateSuccess: 'Kostnadsmatris uppdaterad framgångsrikt',
+    deleteSuccess: 'Kostnadsmatris raderad framgångsrikt',
+    importSuccess: 'CSV importerad framgångsrikt',
+    exportSuccess: 'CSV exporterad framgångsrikt',
+    invalidCsv: 'Ogiltigt CSV-format'
   }
 } as const;

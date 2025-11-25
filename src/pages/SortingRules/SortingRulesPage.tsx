@@ -11,6 +11,7 @@ import CompanySelector from '../../components/UI/CompanySelector';
 import { SortingRule } from '../../types';
 import sortingRulesService from '../../services/sortingRulesService';
 import { CreditCard as Edit, Plus, Search, ListFilter as Filter, X, Trash2 } from 'lucide-react';
+import { useModalState } from '@/hooks';
 
 export default function SortingRulesPage() {
   const navigate = useNavigate();
@@ -32,7 +33,7 @@ export default function SortingRulesPage() {
     company: companyFromUrl || '',
     priority: ''
   });
-  const [deleteModal, setDeleteModal] = useState<{ open: boolean; rule?: SortingRule }>({ open: false });
+  const deleteModal = useModalState<SortingRule>();
   // Sorting state
   const [sortKey, setSortKey] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
@@ -160,16 +161,16 @@ export default function SortingRulesPage() {
   }) : filteredRules;
 
   const handleDelete = (rule: SortingRule) => {
-    setDeleteModal({ open: true, rule });
+    deleteModal.open(rule);
   };
 
   const confirmDelete = async () => {
-    if (!deleteModal.rule) return;
+    if (!deleteModal.data) return;
 
     try {
       setLoading(true);
-      await sortingRulesService.delete(deleteModal.rule.id);
-      setDeleteModal({ open: false });
+      await sortingRulesService.delete(deleteModal.data.id);
+      deleteModal.close();
       // Reload rules after deletion
       await loadSortingRules();
     } catch (error) {
@@ -362,16 +363,16 @@ export default function SortingRulesPage() {
 
       {/* Delete Modal */}
       <Modal
-        isOpen={deleteModal.open}
-        onClose={() => setDeleteModal({ open: false })}
+        isOpen={deleteModal.isOpen}
+        onClose={() => deleteModal.close()}
         title={t('common:actions.delete') + ' ' + t('sortingRules:title')}
       >
         <div className="space-y-4">
           <p className="text-gray-700">
-            {t('common:messages.confirmDelete')} {deleteModal.rule?.type} ({deleteModal.rule?.fromCollection} → {deleteModal.rule?.targetCollection})?
+            {t('common:messages.confirmDelete')} {deleteModal.data?.type} ({deleteModal.data?.fromCollection} → {deleteModal.data?.targetCollection})?
           </p>
           <div className="flex justify-end gap-2">
-            <Button variant="secondary" onClick={() => setDeleteModal({ open: false })}>
+            <Button variant="secondary" onClick={() => deleteModal.close()}>
               {t('common:actions.cancel')}
             </Button>
             <Button variant="danger" onClick={confirmDelete}>

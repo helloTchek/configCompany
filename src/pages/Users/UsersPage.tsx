@@ -9,14 +9,15 @@ import { User } from '../../types';
 import { usersService } from '../../services/usersService';
 import { companiesService } from '../../services/companiesService';
 import { CreditCard as Edit, Trash2, Plus, Search, ListFilter as Filter, X, Mail, ChevronDown } from 'lucide-react';
+import { useModalState, useDebouncedSearch } from '@/hooks';
+import { createErrorHandler } from '@/utils';
 
 export default function UsersPage() {
   const { user } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const [searchTerm, debouncedSearchTerm, setSearchTerm] = useDebouncedSearch(500);
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     role: '',
@@ -52,9 +53,9 @@ export default function UsersPage() {
   const [filterCompanySearchTerm, setFilterCompanySearchTerm] = useState('');
   const [showFilterCompanyDropdown, setShowFilterCompanyDropdown] = useState(false);
   const filterCompanyDropdownRef = useRef<HTMLDivElement>(null);
-  const [editModal, setEditModal] = useState<{ open: boolean; user?: User }>({ open: false });
-  const [passwordResetModal, setPasswordResetModal] = useState<{ open: boolean; user?: User }>({ open: false });
-  const [passwordResetSuccessModal, setPasswordResetSuccessModal] = useState<{ open: boolean; user?: User }>({ open: false });
+  const editModal = useModalState<User>();
+  const passwordResetModal = useModalState<User>();
+  const passwordResetSuccessModal = useModalState<User>();
   const [editFormData, setEditFormData] = useState({
     email: '',
     role: '',
@@ -67,14 +68,8 @@ export default function UsersPage() {
     company: ''
   });
 
-  // Debounce search term
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
+  // Error handler
+  const handleError = createErrorHandler(setError);
 
   // Reset to page 1 when search/filters change
   useEffect(() => {
@@ -134,9 +129,9 @@ export default function UsersPage() {
       setUsers(response.data);
       setTotalPages(response.pagination.totalPages);
       setTotalUsers(response.pagination.total);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load users');
-      console.error('Error loading users:', err);
+    } catch (error) {
+      handleError(error);
+      console.error('Error loading users:', error);
     } finally {
       setLoading(false);
     }
@@ -146,8 +141,8 @@ export default function UsersPage() {
     try {
       const companiesData = await companiesService.getAllCompaniesLight();
       setCompanies(companiesData);
-    } catch (err: any) {
-      console.error('Error loading companies:', err);
+    } catch (error) {
+      console.error('Error loading companies:', error);
     }
   };
 
@@ -256,18 +251,18 @@ export default function UsersPage() {
   ];
 
   const handleSendPasswordReset = (user: User) => {
-    setPasswordResetModal({ open: true, user });
+    passwordResetModal.open(user);
   };
 
   const confirmPasswordReset = async () => {
-    if (!passwordResetModal.user) return;
+    if (!passwordResetModal.data) return;
 
     try {
-      await usersService.sendPasswordReset(passwordResetModal.user.id);
-      setPasswordResetModal({ open: false });
-      setPasswordResetSuccessModal({ open: true, user: passwordResetModal.user });
-    } catch (err: any) {
-      console.error('Error sending password reset:', err);
+      await usersService.sendPasswordReset(passwordResetModal.data.id);
+      passwordResetModal.close();
+      passwordResetSuccessModal.open(passwordResetModal.data);
+    } catch (error) {
+      console.error('Error sending password reset:', error);
       alert('Failed to send password reset email');
     }
   };
@@ -288,7 +283,7 @@ export default function UsersPage() {
       role: '',
       company: ''
     });
-    setEditModal({ open: true, user });
+    editModal.open(user);
   };
 
   const handleEditFormChange = (field: string, value: string) => {
@@ -322,23 +317,23 @@ export default function UsersPage() {
   };
 
   const handleSaveEdit = async () => {
-    if (!validateEditForm() || !editModal.user) {
+    if (!validateEditForm() || !editModal.data) {
       return;
     }
 
     try {
-      await usersService.updateUser(editModal.user.id, {
+      await usersService.updateUser(editModal.data.id, {
         email: editFormData.email,
         role: editFormData.role as 'superadmin' | 'admin' | 'user',
         companyId: editFormData.company,
         status: editFormData.status as 'active' | 'inactive'
       });
-      setEditModal({ open: false });
+      editModal.close();
       setEditCompanySearchTerm('');
       setShowEditCompanyDropdown(false);
       await loadUsers(); // Reload users
-    } catch (err: any) {
-      console.error('Error updating user:', err);
+    } catch (error) {
+      console.error('Error updating user:', error);
       alert('Failed to update user');
     }
   };
@@ -351,8 +346,8 @@ export default function UsersPage() {
     try {
       await usersService.deleteUser(user.id, 'Disabled');
       await loadUsers(); // Reload users
-    } catch (err: any) {
-      console.error('Error deleting user:', err);
+    } catch (error) {
+      console.error('Error deleting user:', error);
       alert('Failed to delete user');
     }
   };
@@ -398,8 +393,8 @@ export default function UsersPage() {
       setCompanySearchTerm('');
       setShowCompanyDropdown(false);
       await loadUsers(); // Reload users
-    } catch (err: any) {
-      console.error('Error creating user:', err);
+    } catch (error) {
+      console.error('Error creating user:', error);
       alert('Failed to create user');
     }
   };
@@ -828,15 +823,15 @@ export default function UsersPage() {
 
       {/* Password Reset Confirmation Modal */}
       <Modal
-        isOpen={passwordResetModal.open}
-        onClose={() => setPasswordResetModal({ open: false })}
+        isOpen={passwordResetModal.isOpen}
+        onClose={() => passwordResetModal.close()}
         title="Send Password Reset Email"
         size="md"
       >
         <div className="space-y-4">
           <p className="text-gray-600">
             Are you sure you want to send a password reset email to{' '}
-            <strong>{passwordResetModal.user?.email}</strong>?
+            <strong>{passwordResetModal.data?.email}</strong>?
           </p>
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
             <p className="text-sm text-blue-800">
@@ -846,7 +841,7 @@ export default function UsersPage() {
           <div className="flex gap-3 justify-end pt-4">
             <Button
               variant="secondary"
-              onClick={() => setPasswordResetModal({ open: false })}
+              onClick={() => passwordResetModal.close()}
             >
               Cancel
             </Button>
@@ -861,8 +856,8 @@ export default function UsersPage() {
 
       {/* Password Reset Success Modal */}
       <Modal
-        isOpen={passwordResetSuccessModal.open}
-        onClose={() => setPasswordResetSuccessModal({ open: false })}
+        isOpen={passwordResetSuccessModal.isOpen}
+        onClose={() => passwordResetSuccessModal.close()}
         title="Password Reset Email Sent"
         size="md"
       >
@@ -875,7 +870,7 @@ export default function UsersPage() {
               <h4 className="text-lg font-medium text-gray-900">Email Sent Successfully</h4>
               <p className="text-sm text-gray-600">
                 Password reset instructions have been sent to{' '}
-                <strong>{passwordResetSuccessModal.user?.email}</strong>
+                <strong>{passwordResetSuccessModal.data?.email}</strong>
               </p>
             </div>
           </div>
@@ -896,7 +891,7 @@ export default function UsersPage() {
 
           <div className="flex justify-end pt-4">
             <Button
-              onClick={() => setPasswordResetSuccessModal({ open: false })}
+              onClick={() => passwordResetSuccessModal.close()}
             >
               Got it
             </Button>
@@ -906,9 +901,9 @@ export default function UsersPage() {
 
       {/* Edit User Modal */}
       <Modal
-        isOpen={editModal.open}
+        isOpen={editModal.isOpen}
         onClose={() => {
-          setEditModal({ open: false });
+          editModal.close();
           setEditCompanySearchTerm('');
           setShowEditCompanyDropdown(false);
         }}
@@ -1008,7 +1003,7 @@ export default function UsersPage() {
           </div>
           <div className="flex gap-3 justify-end pt-4">
             <Button variant="secondary" onClick={() => {
-              setEditModal({ open: false });
+              editModal.close();
               setEditCompanySearchTerm('');
               setShowEditCompanyDropdown(false);
             }}>

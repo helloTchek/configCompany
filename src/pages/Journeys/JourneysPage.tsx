@@ -11,6 +11,7 @@ import { mockCompanies } from '@/mocks/companies.mock';
 import { InspectionJourney } from '../../types';
 import { getCompanyId } from '../../services/companiesService';
 import { CreditCard as Edit, Eye, Copy, Trash2, Plus, Search, ListFilter as Filter, X } from 'lucide-react';
+import { useModalState } from '@/hooks';
 
 export default function JourneysPage() {
   const navigate = useNavigate();
@@ -22,10 +23,10 @@ export default function JourneysPage() {
     status: '',
     company: ''
   });
-  const [duplicateModal, setDuplicateModal] = useState<{ open: boolean; journey?: InspectionJourney }>({ open: false });
+  const duplicateModal = useModalState<InspectionJourney>();
   const [duplicateName, setDuplicateName] = useState('');
   const [duplicateCompany, setDuplicateCompany] = useState('');
-  const [deleteModal, setDeleteModal] = useState<{ open: boolean; journey?: InspectionJourney }>({ open: false });
+  const deleteModal = useModalState<InspectionJourney>();
 
   const clearFilters = () => {
     setFilters({
@@ -64,42 +65,42 @@ export default function JourneysPage() {
   const handleDuplicate = (journey: InspectionJourney) => {
     setDuplicateName(`${journey.name} (Copy)`);
     setDuplicateCompany(user?.role === 'superAdmin' ? '' : journey.companyId);
-    setDuplicateModal({ open: true, journey });
+    duplicateModal.open(journey);
   };
 
   const handleDelete = (journey: InspectionJourney) => {
-    setDeleteModal({ open: true, journey });
+    deleteModal.open(journey);
   };
 
   const confirmDelete = () => {
-    if (!deleteModal.journey) return;
+    if (!deleteModal.data) return;
 
     // In a real app, this would make an API call to delete the journey
-    console.log('Deleting journey:', deleteModal.journey);
-    
+    console.log('Deleting journey:', deleteModal.data);
+
     // Remove from mock journeys array (in real app this would be handled by API)
-    const index = mockJourneys.findIndex(j => j.id === deleteModal.journey!.id);
+    const index = mockJourneys.findIndex(j => j.id === deleteModal.data!.id);
     if (index > -1) {
       mockJourneys.splice(index, 1);
     }
-    
-    setDeleteModal({ open: false });
-    
+
+    deleteModal.close();
+
     // Refresh the page to show updated list
     window.location.reload();
   };
 
   const confirmDuplicate = () => {
-    if (!duplicateModal.journey || !duplicateName.trim() || (user?.role === 'superAdmin' && !duplicateCompany)) {
+    if (!duplicateModal.data || !duplicateName.trim() || (user?.role === 'superAdmin' && !duplicateCompany)) {
       return;
     }
 
     const duplicatedJourney: InspectionJourney = {
-      ...duplicateModal.journey,
+      ...duplicateModal.data,
       id: `journey-${Date.now()}`,
       name: duplicateName,
-      companyId: user?.role === 'superAdmin' ? duplicateCompany : duplicateModal.journey.companyId,
-      blocks: duplicateModal.journey.blocks.map(block => ({
+      companyId: user?.role === 'superAdmin' ? duplicateCompany : duplicateModal.data.companyId,
+      blocks: duplicateModal.data.blocks.map(block => ({
         ...block,
         id: `block-${Date.now()}-${Math.random()}`,
       })),
@@ -107,14 +108,14 @@ export default function JourneysPage() {
 
     // In a real app, this would make an API call to create the journey
     console.log('Duplicating journey:', duplicatedJourney);
-    
+
     // Add to mock journeys array (in real app this would be handled by API)
     mockJourneys.push(duplicatedJourney);
-    
-    setDuplicateModal({ open: false });
+
+    duplicateModal.close();
     setDuplicateName('');
     setDuplicateCompany('');
-    
+
     // Refresh the page or update state to show the new journey
     window.location.reload();
   };
@@ -289,14 +290,14 @@ export default function JourneysPage() {
 
       {/* Duplicate Modal */}
       <Modal
-        isOpen={duplicateModal.open}
-        onClose={() => setDuplicateModal({ open: false })}
+        isOpen={duplicateModal.isOpen}
+        onClose={() => duplicateModal.close()}
         title="Duplicate Journey"
         size="md"
       >
         <div className="space-y-4">
           <p className="text-gray-600">
-            Create a copy of <strong>{duplicateModal.journey?.name}</strong>
+            Create a copy of <strong>{duplicateModal.data?.name}</strong>
           </p>
           {user?.role === 'superAdmin' && (
             <div>
@@ -325,7 +326,7 @@ export default function JourneysPage() {
             <Button
               variant="secondary"
               onClick={() => {
-                setDuplicateModal({ open: false });
+                duplicateModal.close();
                 setDuplicateName('');
                 setDuplicateCompany('');
               }}
@@ -344,20 +345,20 @@ export default function JourneysPage() {
 
       {/* Delete Modal */}
       <Modal
-        isOpen={deleteModal.open}
-        onClose={() => setDeleteModal({ open: false })}
+        isOpen={deleteModal.isOpen}
+        onClose={() => deleteModal.close()}
         title="Delete Journey"
         size="md"
       >
         <div className="space-y-4">
           <p className="text-gray-600">
-            Are you sure you want to delete <strong>{deleteModal.journey?.name}</strong>? 
+            Are you sure you want to delete <strong>{deleteModal.data?.name}</strong>?
             This action cannot be undone.
           </p>
           <div className="flex gap-3 justify-end pt-4">
             <Button
               variant="secondary"
-              onClick={() => setDeleteModal({ open: false })}
+              onClick={() => deleteModal.close()}
             >
               Cancel
             </Button>

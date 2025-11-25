@@ -1,46 +1,46 @@
 export const sortingRules = {
-  title: 'Règles de Tri',
-  subtitle: 'Configurer les règles de filtrage et de mise à jour automatisées par entreprise',
-  create: 'Créer une Nouvelle Règle',
-  edit: 'Modifier la Règle de Tri',
+  title: 'Sorteringsregler',
+  subtitle: 'Konfigurera automatiska filtrerings- och uppdateringsregler per företag',
+  create: 'Skapa Ny Regel',
+  edit: 'Redigera Sorteringsregel',
   fields: {
-    company: 'Entreprise',
-    type: 'Type',
-    fromCollection: 'Collection Source',
-    targetCollection: 'Collection Cible',
-    referenceKey: 'Clé de Référence',
-    referencePrefix: 'Préfixe de Référence',
-    filters: 'Filtres (JSON)',
-    updates: 'Mises à jour (JSON)',
-    processingPriority: 'Priorité de Traitement',
-    priority: 'Priorité'
+    company: 'Företag',
+    type: 'Typ',
+    fromCollection: 'Källsamling',
+    targetCollection: 'Målsamling',
+    referenceKey: 'Referensnyckel',
+    referencePrefix: 'Referensprefix',
+    filters: 'Filter (JSON)',
+    updates: 'Uppdateringar (JSON)',
+    processingPriority: 'Bearbetningsprioritet',
+    priority: 'Prioritet'
   },
   types: {
-    detectionPhase: 'Phase de Détection',
-    validationPhase: 'Phase de Validation',
-    reportGeneration: 'Génération de Rapport'
+    detectionPhase: 'Detektionsfas',
+    validationPhase: 'Valideringsfas',
+    reportGeneration: 'Rapportgenerering'
   },
   priorities: {
-    highest: '1 - Priorité la Plus Élevée',
-    high: '2 - Priorité Élevée',
-    medium: '3 - Priorité Moyenne',
-    low: '4 - Priorité Faible',
-    lowest: '5 - Priorité la Plus Faible',
-    highLevel: 'Priorité Élevée (1-2)',
-    mediumLevel: 'Priorité Moyenne (3-4)'
+    highest: '1 - Högsta Prioritet',
+    high: '2 - Hög Prioritet',
+    medium: '3 - Medelprioritet',
+    low: '4 - Låg Prioritet',
+    lowest: '5 - Lägsta Prioritet',
+    highLevel: 'Hög Prioritet (1-2)',
+    mediumLevel: 'Medelprioritet (3-4)'
   },
   examples: {
-    title: 'Exemples de Configuration',
-    filterExamples: 'Exemples de Filtres :',
-    updateExamples: 'Exemples de Mises à jour :',
-    filtersHelp: 'Objet JSON définissant les critères de filtrage',
-    updatesHelp: 'Objet JSON définissant les mises à jour à appliquer'
+    title: 'Konfigurationsexempel',
+    filterExamples: 'Filtrerexempel:',
+    updateExamples: 'Uppdateringsexempel:',
+    filtersHelp: 'JSON-objekt som definierar filterkriterier',
+    updatesHelp: 'JSON-objekt som definierar uppdateringar som ska tillämpas'
   },
   messages: {
-    createSuccess: 'Règle de tri créée avec succès',
-    updateSuccess: 'Règle de tri mise à jour avec succès',
-    deleteSuccess: 'Règle de tri supprimée avec succès',
-    invalidJson: 'Format JSON invalide',
-    loadingRule: 'Chargement de la règle de tri...'
+    createSuccess: 'Sorteringsregel skapad',
+    updateSuccess: 'Sorteringsregel uppdaterad',
+    deleteSuccess: 'Sorteringsregel borttagen',
+    invalidJson: 'Ogiltigt JSON-format',
+    loadingRule: 'Laddar sorteringsregel...'
   }
 } as const;
