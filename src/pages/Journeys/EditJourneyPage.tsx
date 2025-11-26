@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
+import { useAuth } from '@/auth/AuthContext';
 import Header from '../../components/Layout/Header';
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
@@ -9,12 +10,14 @@ import ShootInspectionConfig from '../../components/Journey/ShootInspectionConfi
 import { ArrowLeft, Plus, Upload, Download, GripVertical, Save } from 'lucide-react';
 import { JourneyBlock, InspectionJourney } from '../../types';
 import { ShootInspectionData } from '../../types';
-import { mockJourneys } from '../../data/mockData';
+import { workflowsService } from '../../services/workflowsService';
+import { screenConfigsService, ScreenConfigType } from '../../services/screenConfigsService';
 import onboardingData from '../../data/onboarding.json';
+import { toast } from 'react-hot-toast';
 
 const blockTypes = [
   { type: 'form', name: 'Form Block', description: 'Custom form with JSON configuration' },
-  { type: 'shootInspection', name: 'Shoot Inspection Block', description: 'Photo capture workflow' },
+  { type: 'shootInspect', name: 'Shoot Inspection Block', description: 'Photo capture workflow' },
   { type: 'fastTrack', name: 'Fast Track Block', description: 'Quick inspection process' },
   { type: 'addDamage', name: 'Add Damage Block', description: 'Manual damage reporting' },
   { type: 'static', name: 'Static Screen Block', description: 'Static content screens (onboarding/offboarding)' }
@@ -23,74 +26,107 @@ const blockTypes = [
 export default function EditJourneyPage() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { user } = useAuth();
   const [journey, setJourney] = useState<InspectionJourney | null>(null);
   const [journeyName, setJourneyName] = useState('');
   const [journeyDescription, setJourneyDescription] = useState('');
+  const [isActive, setIsActive] = useState(true);
   const [blocks, setBlocks] = useState<JourneyBlock[]>([]);
-  const [blockModal, setBlockModal] = useState<{ open: boolean; type?: string }>({ open: false });
+  const [blockModal, setBlockModal] = useState<{ open: boolean; type?: string; editingBlockId?: string }>({ open: false });
   const [showShootInspectionConfig, setShowShootInspectionConfig] = useState(false);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [loading, setLoading] = useState(true);
   const [editingBlock, setEditingBlock] = useState<JourneyBlock | null>(null);
   const [currentShootInspectionConfigData, setCurrentShootInspectionConfigData] = useState<ShootInspectionData | null>(null);
+  const [blockConfigs, setBlockConfigs] = useState<Map<string, any>>(new Map());
 
   // Load journey data on component mount
   useEffect(() => {
-    const loadJourney = () => {
-      // In a real app, this would be an API call
-      const foundJourney = mockJourneys.find(j => j.id === id);
-      
-      if (foundJourney) {
-        setJourney(foundJourney);
-        setJourneyName(foundJourney.name);
-        setJourneyDescription(foundJourney.description || '');
-        setBlocks(foundJourney.blocks);
-      } else {
-        // Journey not found, redirect to journeys list
+    const loadJourney = async () => {
+      if (!id) {
         navigate('/journeys');
         return;
       }
-      
-      setLoading(false);
+
+      try {
+        const foundJourney = await workflowsService.getWorkflowById(id);
+
+        if (foundJourney) {
+          setJourney(foundJourney);
+          setJourneyName(foundJourney.name);
+          setJourneyDescription(foundJourney.description || '');
+          setIsActive(foundJourney.isActive);
+          setBlocks(foundJourney.blocks);
+        } else {
+          toast.error('Journey not found');
+          navigate('/journeys');
+          return;
+        }
+      } catch (error: any) {
+        console.error('Error loading journey:', error);
+        toast.error('Failed to load journey');
+        navigate('/journeys');
+      } finally {
+        setLoading(false);
+      }
     };
 
-    if (id) {
-      loadJourney();
-    } else {
-      navigate('/journeys');
-    }
+    loadJourney();
   }, [id, navigate]);
 
-  const handleInputChange = () => {
-    setHasUnsavedChanges(true);
-  };
-
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!journeyName.trim()) {
-      alert('Please enter a journey name');
+      toast.error('Please enter a journey name');
       return;
     }
 
     if (blocks.length === 0) {
-      alert('Please add at least one block to the journey');
+      toast.error('Please add at least one block to the journey');
       return;
     }
 
-    // Update the journey object
-    const updatedJourney = {
-      ...journey!,
-      name: journeyName,
-      description: journeyDescription,
-      blocks: blocks,
-      updatedAt: new Date().toISOString()
-    };
+    if (!journey) return;
 
-    // In a real app, this would save to a backend
-    console.log('Updating journey:', updatedJourney);
-    
-    setHasUnsavedChanges(false);
-    // Navigate back to journeys list
-    navigate('/journeys');
+    try {
+      // Save any new or modified screen configs
+      const blocksWithConfigIds = await Promise.all(
+        blocks.map(async (block) => {
+          if (!blockConfigs.has(block.id)) return block;
+
+          const configData = blockConfigs.get(block.id);
+          let configType: ScreenConfigType | null = null;
+
+          if (block.type === 'shootInspect') configType = 'shoot-inspect';
+          else if (block.type === 'static') configType = 'static-screen';
+          else if (block.type === 'form') configType = 'form-screen';
+
+          if (configType && journey.companyId) {
+            const savedConfig = await screenConfigsService.createConfig(configType, {
+              companyId: journey.companyId,
+              id: configData.id,
+              name: configData.name,
+              description: configData.description,
+              config: configData.config
+            });
+            return { ...block, configId: savedConfig.id };
+          }
+          return block;
+        })
+      );
+
+      // Update the workflow
+      await workflowsService.updateWorkflow(journey.id, {
+        name: journeyName,
+        description: journeyDescription,
+        isActive,
+        blocks: blocksWithConfigIds
+      });
+
+      toast.success('Journey updated successfully');
+      navigate('/journeys');
+    } catch (error: any) {
+      console.error('Error updating journey:', error);
+      toast.error('Failed to update journey');
+    }
   };
 
   const handleDragEnd = (result: DropResult) => {
@@ -100,6 +136,9 @@ export default function EditJourneyPage() {
 
     const items = Array.from(blocks);
     const [reorderedItem] = items.splice(result.source.index, 1);
+
+    if (!reorderedItem) return;
+
     items.splice(result.destination.index, 0, reorderedItem);
 
     // Update order property
@@ -109,105 +148,155 @@ export default function EditJourneyPage() {
     }));
 
     setBlocks(updatedItems);
-    setHasUnsavedChanges(true);
-  };
-
-  const addBlock = (blockType: string) => {
-    if (blockType === 'shootInspection') {
-      setShowShootInspectionConfig(true);
-      setBlockModal({ open: false });
-      return;
-    }
-
-    const newBlock: JourneyBlock = {
-      id: `block-${Date.now()}`,
-      type: blockType === 'shootInspection' ? 'shootInspect' : blockType as any,
-      name: blockTypes.find(bt => bt.type === blockType)?.name || 'Unnamed Block',
-      description: '',
-      configId: blockType === 'static' ? `${blockType}-${blocks.length + 1}` : 
-                blockType === 'form' ? `${blockType}-${blocks.length + 1}` :
-                blockType === 'shootInspection' ? `${blockType}-${blocks.length + 1}` : undefined,
-      order: blocks.length + 1
-    };
-    setBlocks([...blocks, newBlock]);
-    setBlockModal({ open: false });
-    setHasUnsavedChanges(true);
   };
 
   const editBlock = (block: JourneyBlock) => {
     setEditingBlock(block);
-    
+
     if (block.type === 'shootInspect') {
-      // Create shoot inspection data for editing
-      const shootInspectionData: ShootInspectionData = {
-        id: block.id,
+      // Load existing config if available
+      const existingConfig = blockConfigs.get(block.id);
+      const shootInspectionData: ShootInspectionData = existingConfig || {
+        id: block.configId || block.id,
         name: block.name,
         description: block.description || '',
-        config: [] // Initialize with empty config, will be populated from existing data
+        config: []
       };
       setCurrentShootInspectionConfigData(shootInspectionData);
       setShowShootInspectionConfig(true);
     } else {
-      // For other block types, open the appropriate modal
-      setBlockModal({ open: true, type: block.type === 'shootInspect' ? 'shootInspection' : block.type });
+      // For other block types, open the appropriate modal with editing flag
+      setBlockModal({ open: true, type: block.type, editingBlockId: block.id });
     }
   };
 
   const removeBlock = (blockId: string) => {
     setBlocks(blocks.filter(b => b.id !== blockId));
-    setHasUnsavedChanges(true);
   };
 
   const handleShootInspectionSave = (config: ShootInspectionData) => {
     if (editingBlock) {
       // Update existing block
-      const updatedBlocks = blocks.map(block => 
-        block.id === editingBlock.id 
+      const updatedBlocks = blocks.map(block =>
+        block.id === editingBlock.id
           ? { ...block, name: config.name, description: config.description }
           : block
       );
       setBlocks(updatedBlocks);
+
+      // Update the config in blockConfigs
+      if (editingBlock.configId) {
+        setBlockConfigs(prev => {
+          const newMap = new Map(prev);
+          newMap.set(editingBlock.id, { ...config, id: editingBlock.configId });
+          return newMap;
+        });
+      }
+
       setEditingBlock(null);
     } else {
-      // Create new block
+      // Generate semantic IDs
+      const shootInspectCount = blocks.filter(b => b.type === 'shootInspect').length + 1;
+      const stepId = `shoot-inspect-step-${shootInspectCount}`;
+      const configId = `shoot-inspect-${shootInspectCount}`;
+
       const newBlock: JourneyBlock = {
-        id: `block-${Date.now()}`,
+        id: stepId,
         type: 'shootInspect',
         name: config.name,
         description: config.description,
-        configId: `shoot-inspect-${blocks.length + 1}`,
+        configId: configId,
         order: blocks.length + 1
       };
+
       setBlocks([...blocks, newBlock]);
+
+      // Store the full config data with semantic ID
+      setBlockConfigs(prev => {
+        const newMap = new Map(prev);
+        newMap.set(stepId, { ...config, id: configId });
+        return newMap;
+      });
     }
     setShowShootInspectionConfig(false);
     setCurrentShootInspectionConfigData(null);
-    setHasUnsavedChanges(true);
   };
 
   const BlockConfigModal = () => {
     if (!blockModal.type) return null;
 
     const blockTypeInfo = blockTypes.find(bt => bt.type === blockModal.type);
+    const isEditing = !!blockModal.editingBlockId;
+    const editingBlockData = isEditing ? blocks.find(b => b.id === blockModal.editingBlockId) : null;
+
+    // Initialize state with current block data or defaults
+    const [modalBlockName, setModalBlockName] = useState('');
+    const [modalBlockDesc, setModalBlockDesc] = useState('');
+
+    // Update modal state when opening with a block to edit
+    useEffect(() => {
+      if (blockModal.open) {
+        setModalBlockName(editingBlockData?.name || blockTypeInfo?.name || '');
+        setModalBlockDesc(editingBlockData?.description || '');
+      }
+    }, [blockModal.open, editingBlockData, blockTypeInfo]);
+
+    const handleSaveBlock = () => {
+      if (isEditing && blockModal.editingBlockId) {
+        // Update existing block
+        const updatedBlocks = blocks.map(block =>
+          block.id === blockModal.editingBlockId
+            ? { ...block, name: modalBlockName, description: modalBlockDesc }
+            : block
+        );
+        setBlocks(updatedBlocks);
+        setEditingBlock(null);
+      } else {
+        // Create new block
+        const typeCountMap: { [key: string]: number } = {};
+        blocks.forEach(b => {
+          typeCountMap[b.type] = (typeCountMap[b.type] || 0) + 1;
+        });
+
+        const finalType = blockModal.type || 'unknown';
+        const stepCount = (typeCountMap[finalType] || 0) + 1;
+        const stepId = `${finalType}-step-${stepCount}`;
+
+        const newBlock: JourneyBlock = {
+          id: stepId,
+          type: finalType as any,
+          name: modalBlockName || blockTypeInfo?.name || 'Unnamed Block',
+          description: modalBlockDesc,
+          order: blocks.length + 1
+        };
+
+        setBlocks([...blocks, newBlock]);
+      }
+      setBlockModal({ open: false });
+    };
 
     return (
       <Modal
-        isOpen={blockModal.open}
-        onClose={() => setBlockModal({ open: false })}
-        title={`Configure ${blockTypeInfo?.name}`}
+        isOpen={blockModal.open && !!blockModal.type}
+        onClose={() => {
+          setBlockModal({ open: false });
+          setEditingBlock(null);
+        }}
+        title={isEditing ? `Edit ${blockTypeInfo?.name}` : `Configure ${blockTypeInfo?.name}`}
         size="lg"
       >
         <div className="space-y-4">
-          <Input 
-            label="Block Name" 
-            defaultValue={blockTypeInfo?.name}
+          <Input
+            label="Block Name"
+            value={modalBlockName}
+            onChange={(e) => setModalBlockName(e.target.value)}
             placeholder="Enter block name"
-            onChange={handleInputChange}
           />
-          <Input 
-            label="Description" 
+          <Input
+            label="Description"
+            value={modalBlockDesc}
+            onChange={(e) => setModalBlockDesc(e.target.value)}
             placeholder="Enter block description"
-            onChange={handleInputChange}
           />
 
           {blockModal.type === 'form' && (
@@ -229,7 +318,6 @@ export default function EditJourneyPage() {
                 rows={6}
                 placeholder='{"fields": [{"type": "text", "name": "customerName", "label": "Customer Name", "required": true}]}'
                 className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
-                onChange={handleInputChange}
               />
             </div>
           )}
@@ -237,13 +325,12 @@ export default function EditJourneyPage() {
           {blockModal.type === 'shootInspection' && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <Input label="Max Retries" type="number" defaultValue="3" onChange={handleInputChange} />
+                <Input label="Max Retries" type="number" defaultValue="3" />
                 <label className="flex items-center">
                   <input
                     type="checkbox"
                     defaultChecked={true}
                     className="rounded border-gray-300 text-blue-600 shadow-sm"
-                    onChange={handleInputChange}
                   />
                   <span className="ml-2 text-sm text-gray-700">Quality Check Enabled</span>
                 </label>
@@ -257,7 +344,6 @@ export default function EditJourneyPage() {
                         type="checkbox"
                         defaultChecked={['Front', 'Back', 'Left Side', 'Right Side'].includes(angle)}
                         className="rounded border-gray-300 text-blue-600 shadow-sm"
-                        onChange={handleInputChange}
                       />
                       <span className="ml-2 text-sm text-gray-700">{angle}</span>
                     </label>
@@ -277,7 +363,6 @@ export default function EditJourneyPage() {
                       type="checkbox"
                       defaultChecked={true}
                       className="rounded border-gray-300 text-blue-600 shadow-sm"
-                      onChange={handleInputChange}
                     />
                     <span className="ml-2 text-sm text-gray-700">{type}</span>
                   </label>
@@ -306,19 +391,19 @@ export default function EditJourneyPage() {
                 defaultValue={JSON.stringify(onboardingData.screens, null, 2)}
                 className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
                 placeholder="Static screens JSON configuration (onboarding/offboarding)..."
-                onChange={handleInputChange}
               />
             </div>
           )}
 
           <div className="flex gap-3 justify-end pt-4">
-            <Button variant="secondary" onClick={() => setBlockModal({ open: false })}>
+            <Button variant="secondary" onClick={() => {
+              setBlockModal({ open: false });
+              setEditingBlock(null);
+            }}>
               Cancel
             </Button>
-            <Button onClick={() => {
-              addBlock(blockModal.type!);
-            }}>
-              Add Block
+            <Button onClick={handleSaveBlock}>
+              {isEditing ? 'Save Changes' : 'Add Block'}
             </Button>
           </div>
         </div>
@@ -380,10 +465,7 @@ export default function EditJourneyPage() {
               <Input
                 label="Journey Name"
                 value={journeyName}
-                onChange={(e) => {
-                  setJourneyName(e.target.value);
-                  setHasUnsavedChanges(true);
-                }}
+                onChange={(e) => setJourneyName(e.target.value)}
                 placeholder="Enter journey name"
               />
               <div>
@@ -391,10 +473,7 @@ export default function EditJourneyPage() {
                 <textarea
                   rows={3}
                   value={journeyDescription}
-                  onChange={(e) => {
-                    setJourneyDescription(e.target.value);
-                    setHasUnsavedChanges(true);
-                  }}
+                  onChange={(e) => setJourneyDescription(e.target.value)}
                   placeholder="Enter journey description"
                   className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
@@ -540,7 +619,16 @@ export default function EditJourneyPage() {
             <button
               key={blockType.type}
               onClick={() => {
-                if (blockType.type === 'shootInspection') {
+                if (blockType.type === 'shootInspect') {
+                  // Initialize shoot inspection data for new block
+                  const shootInspectCount = blocks.filter(b => b.type === 'shootInspect').length + 1;
+                  const shootInspectionData: ShootInspectionData = {
+                    id: `shoot-inspect-${shootInspectCount}`,
+                    name: 'Shoot Inspection Block',
+                    description: '',
+                    config: []
+                  };
+                  setCurrentShootInspectionConfigData(shootInspectionData);
                   setShowShootInspectionConfig(true);
                   setBlockModal({ open: false });
                 } else {

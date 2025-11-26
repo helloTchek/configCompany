@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthContext';
 import Header from '../../components/Layout/Header';
@@ -8,6 +8,7 @@ import Modal from '../../components/UI/Modal';
 import Input from '../../components/UI/Input';
 import { InspectionJourney } from '../../types';
 import { workflowsService } from '../../services/workflowsService';
+import { companiesService } from '../../services/companiesService';
 import { CreditCard as Edit, Copy, Trash2, Plus, Search, ListFilter as Filter, X } from 'lucide-react';
 import { useModalState } from '@/hooks';
 import { toast } from 'react-hot-toast';
@@ -27,12 +28,17 @@ export default function JourneysPage() {
   const [duplicateName, setDuplicateName] = useState('');
   const [duplicateCompany, setDuplicateCompany] = useState('');
   const deleteModal = useModalState<InspectionJourney>();
-  const [companies, setCompanies] = useState<Array<{ id: string; name: string }>>([]);
+  const [companies, setCompanies] = useState<Array<{ objectId: string; id: string; name: string; identifier?: string }>>([]);
 
   // Load workflows from API
   useEffect(() => {
     loadWorkflows();
   }, [user]);
+
+  // Load all companies from API
+  useEffect(() => {
+    loadCompanies();
+  }, []);
 
   const loadWorkflows = async () => {
     try {
@@ -46,20 +52,20 @@ export default function JourneysPage() {
 
       const data = await workflowsService.getWorkflows(params);
       setJourneys(data);
-
-      // Extract unique companies for filter
-      const uniqueCompanies = Array.from(
-        new Set(data.map(j => j.companyId))
-      ).map(id => ({
-        id,
-        name: id // TODO: fetch company name from companies service
-      }));
-      setCompanies(uniqueCompanies);
     } catch (error: any) {
       console.error('Error loading workflows:', error);
       toast.error('Failed to load journeys');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadCompanies = async () => {
+    try {
+      const companiesData = await companiesService.getAllCompaniesLight();
+      setCompanies(companiesData);
+    } catch (error) {
+      console.error('Error loading companies:', error);
     }
   };
 
@@ -120,10 +126,16 @@ export default function JourneysPage() {
     }
 
     try {
-      await workflowsService.duplicateWorkflow(duplicateModal.data.id, {
-        name: duplicateName,
-        companyId: user?.role === 'superAdmin' ? duplicateCompany : undefined
-      });
+      const duplicateData: { name: string; companyId?: string } = {
+        name: duplicateName
+      };
+
+      // Only include companyId if superAdmin and a company is selected
+      if (user?.role === 'superAdmin' && duplicateCompany) {
+        duplicateData.companyId = duplicateCompany;
+      }
+
+      await workflowsService.duplicateWorkflow(duplicateModal.data.id, duplicateData);
 
       toast.success('Journey duplicated successfully');
       duplicateModal.close();
@@ -139,22 +151,29 @@ export default function JourneysPage() {
   const columns = [
     { key: 'name', label: 'Journey Name', sortable: true },
     { key: 'companyId', label: 'Company', sortable: true,
-      render: (value: string) => {
-        const company = companies.find(c => c.id === value);
-        return company?.name || value;
+      render: (value: unknown) => {
+        const companyId = value as string;
+        const company = companies.find(c => c.id === companyId || c.objectId === companyId);
+        return company?.name || companyId;
       }
     },
     { key: 'blocks', label: 'Blocks Count', sortable: true,
-      render: (value: any[]) => value?.length || 0
+      render: (value: unknown) => {
+        const blocks = value as any[];
+        return blocks?.length || 0;
+      }
     },
     { key: 'isActive', label: 'Status', sortable: true,
-      render: (value: boolean) => (
-        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-          value ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-        }`}>
-          {value ? 'Active' : 'Inactive'}
-        </span>
-      )
+      render: (value: unknown) => {
+        const isActive = value as boolean;
+        return (
+          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+            isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+          }`}>
+            {isActive ? 'Active' : 'Inactive'}
+          </span>
+        );
+      }
     },
     {
       key: 'actions',
