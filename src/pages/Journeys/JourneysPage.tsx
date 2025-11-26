@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthContext';
 import Header from '../../components/Layout/Header';
@@ -6,17 +6,17 @@ import Table from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
 import Modal from '../../components/UI/Modal';
 import Input from '../../components/UI/Input';
-import { mockJourneys } from '../../data/mockData';
-import { mockCompanies } from '@/mocks/companies.mock';
 import { InspectionJourney } from '../../types';
-import { getCompanyId } from '../../services/companiesService';
-import { CreditCard as Edit, Eye, Copy, Trash2, Plus, Search, ListFilter as Filter, X } from 'lucide-react';
+import { workflowsService } from '../../services/workflowsService';
+import { CreditCard as Edit, Copy, Trash2, Plus, Search, ListFilter as Filter, X } from 'lucide-react';
 import { useModalState } from '@/hooks';
+import { toast } from 'react-hot-toast';
 
 export default function JourneysPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [journeys] = useState<InspectionJourney[]>(mockJourneys);
+  const [journeys, setJourneys] = useState<InspectionJourney[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
@@ -27,6 +27,41 @@ export default function JourneysPage() {
   const [duplicateName, setDuplicateName] = useState('');
   const [duplicateCompany, setDuplicateCompany] = useState('');
   const deleteModal = useModalState<InspectionJourney>();
+  const [companies, setCompanies] = useState<Array<{ id: string; name: string }>>([]);
+
+  // Load workflows from API
+  useEffect(() => {
+    loadWorkflows();
+  }, [user]);
+
+  const loadWorkflows = async () => {
+    try {
+      setLoading(true);
+      const params: any = {};
+
+      // If not superAdmin, filter by user's company
+      if (user?.role !== 'superAdmin' && user?.companyId) {
+        params.companyId = user.companyId;
+      }
+
+      const data = await workflowsService.getWorkflows(params);
+      setJourneys(data);
+
+      // Extract unique companies for filter
+      const uniqueCompanies = Array.from(
+        new Set(data.map(j => j.companyId))
+      ).map(id => ({
+        id,
+        name: id // TODO: fetch company name from companies service
+      }));
+      setCompanies(uniqueCompanies);
+    } catch (error: any) {
+      console.error('Error loading workflows:', error);
+      toast.error('Failed to load journeys');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const clearFilters = () => {
     setFilters({
@@ -41,7 +76,7 @@ export default function JourneysPage() {
   // Filter and search logic
   let filteredJourneys = journeys.filter(journey => {
     // Search filter
-    const matchesSearch = !searchTerm || 
+    const matchesSearch = !searchTerm ||
       journey.name.toLowerCase().includes(searchTerm.toLowerCase());
 
     // Status filter
@@ -55,13 +90,6 @@ export default function JourneysPage() {
     return matchesSearch && matchesStatus && matchesCompany;
   });
 
-  // Apply company-based filtering for non-superAdmin users
-  if (user?.role !== 'superAdmin') {
-    filteredJourneys = filteredJourneys.filter(journey => 
-      journey.companyId === user?.companyId
-    );
-  }
-
   const handleDuplicate = (journey: InspectionJourney) => {
     setDuplicateName(`${journey.name} (Copy)`);
     setDuplicateCompany(user?.role === 'superAdmin' ? '' : journey.companyId);
@@ -72,64 +100,52 @@ export default function JourneysPage() {
     deleteModal.open(journey);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!deleteModal.data) return;
 
-    // In a real app, this would make an API call to delete the journey
-    console.log('Deleting journey:', deleteModal.data);
-
-    // Remove from mock journeys array (in real app this would be handled by API)
-    const index = mockJourneys.findIndex(j => j.id === deleteModal.data!.id);
-    if (index > -1) {
-      mockJourneys.splice(index, 1);
+    try {
+      await workflowsService.deleteWorkflow(deleteModal.data.id);
+      toast.success('Journey deleted successfully');
+      deleteModal.close();
+      loadWorkflows(); // Reload list
+    } catch (error: any) {
+      console.error('Error deleting journey:', error);
+      toast.error('Failed to delete journey');
     }
-
-    deleteModal.close();
-
-    // Refresh the page to show updated list
-    window.location.reload();
   };
 
-  const confirmDuplicate = () => {
+  const confirmDuplicate = async () => {
     if (!duplicateModal.data || !duplicateName.trim() || (user?.role === 'superAdmin' && !duplicateCompany)) {
       return;
     }
 
-    const duplicatedJourney: InspectionJourney = {
-      ...duplicateModal.data,
-      id: `journey-${Date.now()}`,
-      name: duplicateName,
-      companyId: user?.role === 'superAdmin' ? duplicateCompany : duplicateModal.data.companyId,
-      blocks: duplicateModal.data.blocks.map(block => ({
-        ...block,
-        id: `block-${Date.now()}-${Math.random()}`,
-      })),
-    };
+    try {
+      await workflowsService.duplicateWorkflow(duplicateModal.data.id, {
+        name: duplicateName,
+        companyId: user?.role === 'superAdmin' ? duplicateCompany : undefined
+      });
 
-    // In a real app, this would make an API call to create the journey
-    console.log('Duplicating journey:', duplicatedJourney);
-
-    // Add to mock journeys array (in real app this would be handled by API)
-    mockJourneys.push(duplicatedJourney);
-
-    duplicateModal.close();
-    setDuplicateName('');
-    setDuplicateCompany('');
-
-    // Refresh the page or update state to show the new journey
-    window.location.reload();
+      toast.success('Journey duplicated successfully');
+      duplicateModal.close();
+      setDuplicateName('');
+      setDuplicateCompany('');
+      loadWorkflows(); // Reload list
+    } catch (error: any) {
+      console.error('Error duplicating journey:', error);
+      toast.error('Failed to duplicate journey');
+    }
   };
 
   const columns = [
     { key: 'name', label: 'Journey Name', sortable: true },
     { key: 'companyId', label: 'Company', sortable: true,
       render: (value: string) => {
-        // In real app, would look up company name by ID
-        return value === '1' ? 'AutoCorp Insurance' : 'Unknown Company';
+        const company = companies.find(c => c.id === value);
+        return company?.name || value;
       }
     },
     { key: 'blocks', label: 'Blocks Count', sortable: true,
-      render: (value: any[]) => value.length
+      render: (value: any[]) => value?.length || 0
     },
     { key: 'isActive', label: 'Status', sortable: true,
       render: (value: boolean) => (
@@ -171,10 +187,21 @@ export default function JourneysPage() {
     },
   ];
 
+  if (loading) {
+    return (
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header title="Inspection Journeys" />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-gray-500">Loading journeys...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <Header title="Inspection Journeys" />
-      
+
       <div className="flex-1 overflow-y-auto p-6">
         <div className="mb-6 flex justify-between items-center">
           <div>
@@ -244,18 +271,23 @@ export default function JourneysPage() {
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
-                  <select
-                    value={filters.company}
-                    onChange={(e) => setFilters(prev => ({ ...prev, company: e.target.value }))}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">All Companies</option>
-                    <option value="1">AutoCorp Insurance</option>
-                    <option value="2">FleetMax Leasing</option>
-                  </select>
-                </div>
+                {user?.role === 'superAdmin' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
+                    <select
+                      value={filters.company}
+                      onChange={(e) => setFilters(prev => ({ ...prev, company: e.target.value }))}
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">All Companies</option>
+                      {companies.map(company => (
+                        <option key={company.id} value={company.id}>
+                          {company.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
 
               {hasActiveFilters && (
@@ -274,7 +306,7 @@ export default function JourneysPage() {
 
         <div className="bg-white rounded-lg border border-gray-200">
           <Table columns={columns} data={filteredJourneys} />
-          
+
           {filteredJourneys.length === 0 && (
             <div className="text-center py-8 text-gray-500">
               <p>No journeys found matching your criteria.</p>
@@ -308,8 +340,8 @@ export default function JourneysPage() {
                 className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">Select Company</option>
-                {mockCompanies.map((company) => (
-                  <option key={getCompanyId(company)} value={getCompanyId(company)}>
+                {companies.map((company) => (
+                  <option key={company.id} value={company.id}>
                     {company.name}
                   </option>
                 ))}

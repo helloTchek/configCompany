@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { useAuth } from '@/auth/AuthContext';
@@ -10,12 +10,15 @@ import ShootInspectionConfig from '../../components/Journey/ShootInspectionConfi
 import { ArrowLeft, Plus, Upload, Download, GripVertical } from 'lucide-react';
 import { JourneyBlock } from '../../types';
 import { ShootInspectionData } from '../../types';
-import { mockCompanies } from '../../mocks/companies.mock';
+import { workflowsService } from '../../services/workflowsService';
+import { companiesService } from '../../services/companiesService';
+import { screenConfigsService, ScreenConfigType } from '../../services/screenConfigsService';
+import { toast } from 'react-hot-toast';
 import onboardingData from '../../data/onboarding.json';
 
 const blockTypes = [
   { type: 'form', name: 'Form Block', description: 'Custom form with JSON configuration' },
-  { type: 'shootInspection', name: 'Shoot Inspection Block', description: 'Photo capture workflow' },
+  { type: 'shootInspect', name: 'Shoot Inspection Block', description: 'Photo capture workflow' },
   { type: 'fastTrack', name: 'Fast Track Block', description: 'Quick inspection process' },
   { type: 'addDamage', name: 'Add Damage Block', description: 'Manual damage reporting' },
   { type: 'static', name: 'Static Screen Block', description: 'Static content screens (onboarding/offboarding)' }
@@ -27,43 +30,135 @@ export default function CreateJourneyPage() {
   const [journeyName, setJourneyName] = useState('');
   const [journeyDescription, setJourneyDescription] = useState('');
   const [selectedCompany, setSelectedCompany] = useState('');
+  const [isActive, setIsActive] = useState(true);
   const [blocks, setBlocks] = useState<JourneyBlock[]>([]);
   const [blockModal, setBlockModal] = useState<{ open: boolean; type?: string }>({ open: false });
   const [showShootInspectionConfig, setShowShootInspectionConfig] = useState(false);
   const [currentShootInspectionConfigData, setCurrentShootInspectionConfigData] = useState<ShootInspectionData | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [companies, setCompanies] = useState<Array<{ id: string; name: string }>>([]);
+  const [loadingCompanies, setLoadingCompanies] = useState(false);
+  // Store full config data for blocks that need it (indexed by block id)
+  const [blockConfigs, setBlockConfigs] = useState<Map<string, any>>(new Map());
 
-  const handleSave = () => {
+  // Load companies for superAdmin
+  useEffect(() => {
+    if (user?.role === 'superAdmin') {
+      loadCompanies();
+    } else if (user?.companyId) {
+      setSelectedCompany(user.companyId);
+    }
+  }, [user]);
+
+  const loadCompanies = async () => {
+    try {
+      setLoadingCompanies(true);
+      const data = await companiesService.getAllCompaniesLight();
+      setCompanies(data.map((c: any) => ({
+        id: c.objectId || c.id,
+        name: c.name
+      })));
+    } catch (error) {
+      console.error('Error loading companies:', error);
+      toast.error('Failed to load companies');
+    } finally {
+      setLoadingCompanies(false);
+    }
+  };
+
+  const handleSave = async (saveAndAddAnother = false) => {
     if (!journeyName.trim()) {
-      alert('Please enter a journey name');
+      toast.error('Please enter a journey name');
       return;
     }
 
-    if (user?.role === 'superAdmin' && !selectedCompany) {
-      alert('Please select a company');
+    if (!selectedCompany) {
+      toast.error('Please select a company');
       return;
     }
 
     if (blocks.length === 0) {
-      alert('Please add at least one block to the journey');
+      toast.error('Please add at least one block to the journey');
       return;
     }
 
-    // Create the journey object
-    const newJourney = {
-      id: `journey-${Date.now()}`,
-      name: journeyName,
-      description: journeyDescription,
-      companyId: user?.role === 'superAdmin' ? selectedCompany : user?.companyId || '1',
-      blocks: blocks,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
+    try {
+      setSaving(true);
 
-    // In a real app, this would save to a backend
-    console.log('Saving journey:', newJourney);
-    
-    // Navigate back to journeys list
-    navigate('/journeys');
+      // Step 1: Save all screen configs first and get their IDs
+      const blocksWithConfigIds = await Promise.all(
+        blocks.map(async (block) => {
+          // Only process blocks that have configs stored
+          if (!blockConfigs.has(block.id)) {
+            return block;
+          }
+
+          const configData = blockConfigs.get(block.id);
+          let configType: ScreenConfigType | null = null;
+
+          // Determine config type based on block type
+          if (block.type === 'shootInspect') {
+            configType = 'shoot-inspect';
+          } else if (block.type === 'static') {
+            configType = 'static-screen';
+          } else if (block.type === 'form') {
+            configType = 'form-screen';
+          }
+
+          // If this block needs config saved to backend
+          if (configType) {
+            try {
+              const savedConfig = await screenConfigsService.createConfig(configType, {
+                companyId: selectedCompany,
+                id: configData.id || `${block.type}-${Date.now()}`,
+                name: configData.name || block.name,
+                description: configData.description || block.description,
+                config: configData.config || configData
+              });
+
+              // Return block with the saved config ID
+              return {
+                ...block,
+                configId: savedConfig.id
+              };
+            } catch (error) {
+              console.error(`Error saving ${configType} config:`, error);
+              throw new Error(`Failed to save ${block.name} configuration`);
+            }
+          }
+
+          return block;
+        })
+      );
+
+      // Step 2: Create workflow with blocks that now have real config IDs
+      await workflowsService.createWorkflow({
+        companyId: selectedCompany,
+        name: journeyName,
+        description: journeyDescription,
+        isActive,
+        blocks: blocksWithConfigIds
+      });
+
+      toast.success('Journey created successfully');
+
+      if (saveAndAddAnother) {
+        // Reset form for new journey
+        setJourneyName('');
+        setJourneyDescription('');
+        setBlocks([]);
+        setBlockConfigs(new Map());
+        setIsActive(true);
+      } else {
+        // Navigate back to journeys list
+        navigate('/journeys');
+      }
+    } catch (error: any) {
+      console.error('Error creating journey:', error);
+      toast.error(error.message || 'Failed to create journey');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDragEnd = (result: DropResult) => {
@@ -73,6 +168,9 @@ export default function CreateJourneyPage() {
 
     const items = Array.from(blocks);
     const [reorderedItem] = items.splice(result.source.index, 1);
+
+    if (!reorderedItem) return;
+
     items.splice(result.destination.index, 0, reorderedItem);
 
     // Update order property
@@ -84,47 +182,49 @@ export default function CreateJourneyPage() {
     setBlocks(updatedItems);
   };
 
-  const addBlock = (blockType: string) => {
-    if (blockType === 'shootInspection') {
-      const shootInspectionData: ShootInspectionData = {
-        id: `shoot-inspect-${Date.now()}`,
-        name: 'Shoot Inspection Block',
-        description: '',
-        config: []
-      };
-      setCurrentShootInspectionConfigData(shootInspectionData);
-      setShowShootInspectionConfig(true);
-      setBlockModal({ open: false });
-      return;
-    }
-
-    const newBlock: JourneyBlock = {
-      id: `block-${Date.now()}`,
-      type: blockType === 'shootInspection' ? 'shootInspect' : blockType as any,
-      name: blockTypes.find(bt => bt.type === blockType)?.name || 'Unnamed Block',
-      description: '',
-      configId: blockType === 'static' ? `${blockType}-${blocks.length + 1}` : 
-                blockType === 'form' ? `${blockType}-${blocks.length + 1}` :
-                blockType === 'shootInspection' ? `${blockType}-${blocks.length + 1}` : undefined,
-      order: blocks.length + 1
-    };
-    setBlocks([...blocks, newBlock]);
-    setBlockModal({ open: false });
-  };
 
   const removeBlock = (blockId: string) => {
-    setBlocks(blocks.filter(b => b.id !== blockId));
+    const updatedBlocks = blocks
+      .filter(b => b.id !== blockId)
+      .map((block, index) => ({
+        ...block,
+        order: index + 1
+      }));
+    setBlocks(updatedBlocks);
+
+    // Remove config data if it exists
+    setBlockConfigs(prev => {
+      const newMap = new Map(prev);
+      newMap.delete(blockId);
+      return newMap;
+    });
   };
 
   const handleShootInspectionSave = (config: ShootInspectionData) => {
+    // Generate semantic IDs
+    const shootInspectCount = blocks.filter(b => b.type === 'shootInspect').length + 1;
+    const stepId = `shoot-inspect-step-${shootInspectCount}`;
+    const configId = `shoot-inspect-${shootInspectCount}`;
+
     const newBlock: JourneyBlock = {
-      id: `block-${Date.now()}`,
+      id: stepId,
       type: 'shootInspect',
       name: config.name,
       description: config.description,
-      configId: `shoot-inspect-${blocks.length + 1}`,
+      configId: configId,
       order: blocks.length + 1
     };
+
+    // Store the full config data with semantic ID
+    setBlockConfigs(prev => {
+      const newMap = new Map(prev);
+      newMap.set(stepId, {
+        ...config,
+        id: configId
+      });
+      return newMap;
+    });
+
     setBlocks([...blocks, newBlock]);
     setShowShootInspectionConfig(false);
     setCurrentShootInspectionConfigData(null);
@@ -134,6 +234,70 @@ export default function CreateJourneyPage() {
     if (!blockModal.type) return null;
 
     const blockTypeInfo = blockTypes.find(bt => bt.type === blockModal.type);
+    const [modalBlockName, setModalBlockName] = useState(blockTypeInfo?.name || '');
+    const [modalBlockDesc, setModalBlockDesc] = useState('');
+    const [modalConfigJson, setModalConfigJson] = useState(
+      blockModal.type === 'static' ? JSON.stringify(onboardingData.screens, null, 2) : ''
+    );
+
+    const handleAddBlockWithConfig = () => {
+      const blockTypeInfo = blockTypes.find(bt => bt.type === blockModal.type);
+
+      // Generate semantic IDs based on block type
+      let stepId: string;
+      let configId: string | undefined;
+
+      if (blockModal.type === 'static') {
+        const staticCount = blocks.filter(b => b.type === 'static').length + 1;
+        stepId = `static-step-${staticCount}`;
+        configId = `static-${staticCount}`;
+      } else if (blockModal.type === 'form') {
+        const formCount = blocks.filter(b => b.type === 'form').length + 1;
+        stepId = `form-step-${formCount}`;
+        configId = `form-${formCount}`;
+      } else if (blockModal.type === 'fastTrack') {
+        const fastTrackCount = blocks.filter(b => b.type === 'fastTrack').length + 1;
+        stepId = `fast-track-step-${fastTrackCount}`;
+      } else if (blockModal.type === 'addDamage') {
+        const addDamageCount = blocks.filter(b => b.type === 'addDamage').length + 1;
+        stepId = `add-damage-step-${addDamageCount}`;
+      } else {
+        stepId = `${blockModal.type}-step-${blocks.length + 1}`;
+      }
+
+      const newBlock: JourneyBlock = {
+        id: stepId,
+        type: blockModal.type as any,
+        name: modalBlockName || blockTypeInfo?.name || 'Unnamed Block',
+        description: modalBlockDesc,
+        ...(configId && { configId }),
+        order: blocks.length + 1
+      };
+
+      // For blocks that need config stored (form, static)
+      if (['form', 'static'].includes(blockModal.type!) && configId) {
+        try {
+          const parsedConfig = modalConfigJson ? JSON.parse(modalConfigJson) : {};
+
+          setBlockConfigs(prev => {
+            const newMap = new Map(prev);
+            newMap.set(stepId, {
+              id: configId,
+              name: modalBlockName,
+              description: modalBlockDesc,
+              config: parsedConfig
+            });
+            return newMap;
+          });
+        } catch (error) {
+          toast.error('Invalid JSON configuration');
+          return;
+        }
+      }
+
+      setBlocks([...blocks, newBlock]);
+      setBlockModal({ open: false });
+    };
 
     return (
       <Modal
@@ -143,13 +307,16 @@ export default function CreateJourneyPage() {
         size="lg"
       >
         <div className="space-y-4">
-          <Input 
-            label="Block Name" 
-            defaultValue={blockTypeInfo?.name}
+          <Input
+            label="Block Name"
+            value={modalBlockName}
+            onChange={(e) => setModalBlockName(e.target.value)}
             placeholder="Enter block name"
           />
-          <Input 
-            label="Description" 
+          <Input
+            label="Description"
+            value={modalBlockDesc}
+            onChange={(e) => setModalBlockDesc(e.target.value)}
             placeholder="Enter block description"
           />
 
@@ -170,40 +337,11 @@ export default function CreateJourneyPage() {
               </div>
               <textarea
                 rows={6}
+                value={modalConfigJson}
+                onChange={(e) => setModalConfigJson(e.target.value)}
                 placeholder='{"fields": [{"type": "text", "name": "customerName", "label": "Customer Name", "required": true}]}'
                 className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
               />
-            </div>
-          )}
-
-          {blockModal.type === 'shootInspection' && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <Input label="Max Retries" type="number" defaultValue="3" />
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    defaultChecked={true}
-                    className="rounded border-gray-300 text-blue-600 shadow-sm"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Quality Check Enabled</span>
-                </label>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Photo Angles</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {['Front', 'Back', 'Left Side', 'Right Side', 'Interior', 'Dashboard'].map((angle) => (
-                    <label key={angle} className="flex items-center">
-                      <input
-                        type="checkbox"
-                        defaultChecked={['Front', 'Back', 'Left Side', 'Right Side'].includes(angle)}
-                        className="rounded border-gray-300 text-blue-600 shadow-sm"
-                      />
-                      <span className="ml-2 text-sm text-gray-700">{angle}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
             </div>
           )}
 
@@ -242,7 +380,8 @@ export default function CreateJourneyPage() {
               </div>
               <textarea
                 rows={12}
-                defaultValue={JSON.stringify(onboardingData.screens, null, 2)}
+                value={modalConfigJson}
+                onChange={(e) => setModalConfigJson(e.target.value)}
                 className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
                 placeholder="Static screens JSON configuration (onboarding/offboarding)..."
               />
@@ -253,9 +392,7 @@ export default function CreateJourneyPage() {
             <Button variant="secondary" onClick={() => setBlockModal({ open: false })}>
               Cancel
             </Button>
-            <Button onClick={() => {
-              addBlock(blockModal.type!);
-            }}>
+            <Button onClick={handleAddBlockWithConfig}>
               Add Block
             </Button>
           </div>
@@ -267,7 +404,7 @@ export default function CreateJourneyPage() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <Header title="Create Inspection Journey" />
-      
+
       <div className="flex-1 overflow-y-auto p-6">
         <div className="mb-6">
           <Button
@@ -285,28 +422,28 @@ export default function CreateJourneyPage() {
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Journey Details</h3>
             <div className="grid grid-cols-1 gap-4">
-              {user?.role === 'superAdmin' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
-                  <select
-                    value={selectedCompany}
-                    onChange={(e) => setSelectedCompany(e.target.value)}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">Select Company</option>
-                    {mockCompanies.map((company) => (
-                      <option key={company.id} value={company.id}>
-                        {company.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
+                <select
+                  value={selectedCompany}
+                  onChange={(e) => setSelectedCompany(e.target.value)}
+                  disabled={user?.role !== 'superAdmin' || loadingCompanies}
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
+                >
+                  <option value="">Select Company</option>
+                  {companies.map((company) => (
+                    <option key={company.id} value={company.id}>
+                      {company.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <Input
                 label="Journey Name"
                 value={journeyName}
                 onChange={(e) => setJourneyName(e.target.value)}
                 placeholder="Enter journey name"
+                required
               />
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
@@ -317,6 +454,17 @@ export default function CreateJourneyPage() {
                   placeholder="Enter journey description"
                   className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
+              </div>
+              <div>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={isActive}
+                    onChange={(e) => setIsActive(e.target.checked)}
+                    className="rounded border-gray-300 text-blue-600 shadow-sm"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Active</span>
+                </label>
               </div>
             </div>
           </div>
@@ -350,9 +498,9 @@ export default function CreateJourneyPage() {
                       </div>
                     )}
                     {blocks.map((block, index) => (
-                      <Draggable 
-                        key={block.id} 
-                        draggableId={block.id} 
+                      <Draggable
+                        key={block.id}
+                        draggableId={block.id}
                         index={index}
                       >
                         {(provided, snapshot) => (
@@ -364,9 +512,9 @@ export default function CreateJourneyPage() {
                             }`}
                           >
                             <div {...provided.dragHandleProps}>
-                              <GripVertical 
-                                size={16} 
-                                className="text-gray-400 cursor-grab hover:text-gray-600" 
+                              <GripVertical
+                                size={16}
+                                className="text-gray-400 cursor-grab hover:text-gray-600"
                               />
                             </div>
                             <div className="flex-1">
@@ -382,18 +530,8 @@ export default function CreateJourneyPage() {
                               )}
                             </div>
                             <div className="flex items-center gap-2">
-                              <Button 
-                                variant="secondary" 
-                                size="sm"
-                                onClick={() => {
-                                  // For create page, we can add edit functionality later
-                                  console.log('Edit block:', block);
-                                }}
-                              >
-                                Edit
-                              </Button>
-                              <Button 
-                                variant="danger" 
+                              <Button
+                                variant="danger"
                                 size="sm"
                                 onClick={() => removeBlock(block.id)}
                               >
@@ -411,51 +549,27 @@ export default function CreateJourneyPage() {
             </DragDropContext>
           </div>
 
-          {/* JSON Import/Export */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Journey Configuration</h3>
-            <textarea
-              rows={8}
-              placeholder="Journey JSON configuration will appear here..."
-              className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
-              value={JSON.stringify([{
-                id: `workflow-${Date.now()}`,
-                steps: blocks.map((block, index) => ({
-                  id: `${block.type}-${index + 1}`,
-                  type: block.type,
-                  ...(block.configId && { configId: block.configId })
-                }))
-              }], null, 2)}
-              readOnly
-            />
-          </div>
-
           {/* Save Buttons */}
           <div className="flex gap-4 justify-end">
-            <Button 
+            <Button
               variant="secondary"
               onClick={() => navigate('/journeys')}
+              disabled={saving}
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               variant="secondary"
-              onClick={() => {
-                handleSave();
-                // Reset form for new journey
-                setJourneyName('');
-                setJourneyDescription('');
-                setBlocks([]);
-              }}
-              disabled={!journeyName || blocks.length === 0}
+              onClick={() => handleSave(true)}
+              disabled={!journeyName || !selectedCompany || blocks.length === 0 || saving}
             >
-              Save and Add Another
+              {saving ? 'Saving...' : 'Save and Add Another'}
             </Button>
-            <Button 
-              onClick={handleSave}
-              disabled={!journeyName || blocks.length === 0 || (user?.role === 'superAdmin' && !selectedCompany)}
+            <Button
+              onClick={() => handleSave(false)}
+              disabled={!journeyName || !selectedCompany || blocks.length === 0 || saving}
             >
-              Save Journey
+              {saving ? 'Saving...' : 'Save Journey'}
             </Button>
           </div>
         </div>
@@ -473,7 +587,16 @@ export default function CreateJourneyPage() {
             <button
               key={blockType.type}
               onClick={() => {
-                if (blockType.type === 'shootInspection') {
+                if (blockType.type === 'shootInspect') {
+                  // Initialize shoot inspection data with default structure
+                  const shootInspectCount = blocks.filter(b => b.type === 'shootInspect').length + 1;
+                  const shootInspectionData: ShootInspectionData = {
+                    id: `shoot-inspect-${shootInspectCount}`,
+                    name: 'Shoot Inspection Block',
+                    description: '',
+                    config: [] // Will be populated with default steps by ShootInspectionConfig
+                  };
+                  setCurrentShootInspectionConfigData(shootInspectionData);
                   setShowShootInspectionConfig(true);
                   setBlockModal({ open: false });
                 } else {

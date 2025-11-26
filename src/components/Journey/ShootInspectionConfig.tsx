@@ -1524,14 +1524,12 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
     }
   ];
 
-  const [shootData, setShootData] = useState<ShootInspectionData>(
-    initialData || {
-      id: '',
-      name: '',
-      description: '',
-      config: defaultSteps
-    }
-  );
+  const [shootData, setShootData] = useState<ShootInspectionData>({
+    id: initialData?.id || '',
+    name: initialData?.name || '',
+    description: initialData?.description || '',
+    config: (initialData?.config && initialData.config.length > 0) ? initialData.config : defaultSteps
+  });
 
   const [editingStep, setEditingStep] = useState<{ step: ShootStep; index: number } | null>(null);
   const [showStepModal, setShowStepModal] = useState(false);
@@ -1542,6 +1540,9 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
 
     const items = Array.from(shootData.config);
     const [reorderedItem] = items.splice(result.source.index, 1);
+
+    if (!reorderedItem) return;
+
     items.splice(result.destination.index, 0, reorderedItem);
 
     setShootData({ ...shootData, config: items });
@@ -1732,7 +1733,10 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
                 label="Angle"
                 type="number"
                 value={step.angle?.toString() || ''}
-                onChange={(e) => updateStep({ angle: e.target.value ? parseInt(e.target.value) : undefined })}
+                onChange={(e) => {
+                  const value = e.target.value ? parseInt(e.target.value) : 0;
+                  updateStep({ angle: value });
+                }}
                 placeholder="Enter angle"
               />
               <Input
@@ -1770,25 +1774,25 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
                   onChange={(e) => {
                     const value = e.target.value;
                     if (value === 'exterior') {
-                      updateStep({ 
+                      const { typeInterior, typeAdditional, ...rest } = step;
+                      setStep({
+                        ...rest,
                         typeImage: 0,
-                        typeExterior: step.typeExterior || 0,
-                        typeInterior: undefined,
-                        typeAdditional: undefined
+                        typeExterior: step.typeExterior || 0
                       });
                     } else if (value === 'interior') {
-                      updateStep({ 
+                      const { typeExterior, typeAdditional, ...rest } = step;
+                      setStep({
+                        ...rest,
                         typeImage: 3,
-                        typeInterior: step.typeInterior || 0,
-                        typeExterior: undefined,
-                        typeAdditional: undefined
+                        typeInterior: step.typeInterior || 0
                       });
                     } else {
-                      updateStep({ 
+                      const { typeExterior, typeInterior, ...rest } = step;
+                      setStep({
+                        ...rest,
                         typeImage: 1,
-                        typeAdditional: step.typeAdditional || 0,
-                        typeExterior: undefined,
-                        typeInterior: undefined
+                        typeAdditional: step.typeAdditional || 0
                       });
                     }
                   }}
