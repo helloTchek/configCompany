@@ -42,6 +42,13 @@ export default function CompaniesPage() {
     }
   });
 
+  const {
+    companies,
+    loading,
+    archiveCompany,
+    duplicateCompany
+  } = useCompanies();
+
   // Debounce search term to avoid too many API calls
   useEffect(() => {
     const timer = setTimeout(() => {
