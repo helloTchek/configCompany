@@ -188,29 +188,12 @@ export default function CompaniesPage() {
     }
 
     if (duplicateModal.company) {
-      try {
-        setLoading(true);
-        const response = await companiesApi.duplicateCompany(
-          duplicateModal.company.id, 
-          duplicateForm.companyName
-        );
-        
-        if (response.success) {
-          // Update local state to include the new company
-          setCompanies(prev => [...prev, response.data]);
-          
-          console.log('Company duplicated successfully:', response.data);
-          
-          // Navigate back to companies list to see the new company
-          navigate('/companies');
-        } else {
-          showToast('Failed to duplicate company', 'error');
-        }
-      } catch (error) {
-        console.error('Failed to duplicate company:', error);
-        showToast('Failed to duplicate company', 'error');
-      } finally {
-        setLoading(false);
+      const result = await duplicateCompany(
+        duplicateModal.company.id,
+        duplicateForm.companyName
+      );
+
+      if (result) {
         setDuplicateModal({ open: false });
         setDuplicateForm({
           companyName: '',
