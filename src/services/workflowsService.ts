@@ -48,9 +48,15 @@ class WorkflowsService {
   /**
    * Get workflow by ID
    */
-  async getWorkflowById(id: string): Promise<InspectionJourney | null> {
+  async getWorkflowById(id: string, companyId?: string): Promise<InspectionJourney | null> {
     try {
-      const response = await apiClient.get<InspectionJourney>(`${this.baseUrl}/${id}`);
+      const queryParams: Record<string, string> = {};
+      if (companyId) queryParams.companyId = companyId;
+
+      const response = await apiClient.get<InspectionJourney>(
+        `${this.baseUrl}/${id}`,
+        queryParams
+      );
       return response || null;
     } catch (error: any) {
       if (error.message?.includes('404')) return null;
@@ -69,25 +75,39 @@ class WorkflowsService {
   /**
    * Update workflow
    */
-  async updateWorkflow(id: string, data: UpdateWorkflowData): Promise<InspectionJourney> {
-    const response = await apiClient.put<InspectionJourney>(`${this.baseUrl}/${id}`, data);
+  async updateWorkflow(id: string, data: UpdateWorkflowData, companyId?: string): Promise<InspectionJourney> {
+    const queryParams: Record<string, string> = {};
+    if (companyId) queryParams.companyId = companyId;
+
+    const response = await apiClient.put<InspectionJourney>(
+      `${this.baseUrl}/${id}`,
+      data,
+      queryParams
+    );
     return response;
   }
 
   /**
    * Delete workflow
    */
-  async deleteWorkflow(id: string): Promise<void> {
-    await apiClient.delete(`${this.baseUrl}/${id}`);
+  async deleteWorkflow(id: string, companyId?: string): Promise<void> {
+    const queryParams: Record<string, string> = {};
+    if (companyId) queryParams.companyId = companyId;
+
+    await apiClient.delete(`${this.baseUrl}/${id}`, queryParams);
   }
 
   /**
    * Duplicate workflow
    */
-  async duplicateWorkflow(id: string, data: DuplicateWorkflowData): Promise<InspectionJourney> {
+  async duplicateWorkflow(id: string, data: DuplicateWorkflowData, companyId?: string): Promise<InspectionJourney> {
+    const queryParams: Record<string, string> = {};
+    if (companyId) queryParams.companyId = companyId;
+
     const response = await apiClient.post<InspectionJourney>(
       `${this.baseUrl}/${id}/duplicate`,
-      data
+      data,
+      queryParams
     );
     return response;
   }

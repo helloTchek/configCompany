@@ -6,6 +6,7 @@ import Table from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
 import Modal from '../../components/UI/Modal';
 import Input from '../../components/UI/Input';
+import CompanySelector from '../../components/UI/CompanySelector';
 import { InspectionJourney } from '../../types';
 import { workflowsService } from '../../services/workflowsService';
 import { companiesService } from '../../services/companiesService';
@@ -110,7 +111,7 @@ export default function JourneysPage() {
     if (!deleteModal.data) return;
 
     try {
-      await workflowsService.deleteWorkflow(deleteModal.data.id);
+      await workflowsService.deleteWorkflow(deleteModal.data.id, deleteModal.data.companyId);
       toast.success('Journey deleted successfully');
       deleteModal.close();
       loadWorkflows(); // Reload list
@@ -135,7 +136,11 @@ export default function JourneysPage() {
         duplicateData.companyId = duplicateCompany;
       }
 
-      await workflowsService.duplicateWorkflow(duplicateModal.data.id, duplicateData);
+      await workflowsService.duplicateWorkflow(
+        duplicateModal.data.id,
+        duplicateData,
+        duplicateModal.data.companyId
+      );
 
       toast.success('Journey duplicated successfully');
       duplicateModal.close();
@@ -351,21 +356,13 @@ export default function JourneysPage() {
             Create a copy of <strong>{duplicateModal.data?.name}</strong>
           </p>
           {user?.role === 'superAdmin' && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
-              <select
-                value={duplicateCompany}
-                onChange={(e) => setDuplicateCompany(e.target.value)}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">Select Company</option>
-                {companies.map((company) => (
-                  <option key={company.id} value={company.id}>
-                    {company.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <CompanySelector
+              companies={companies}
+              selectedCompanyId={duplicateCompany}
+              onSelect={setDuplicateCompany}
+              label="Company"
+              placeholder="Search and select company..."
+            />
           )}
           <Input
             label="New Journey Name"

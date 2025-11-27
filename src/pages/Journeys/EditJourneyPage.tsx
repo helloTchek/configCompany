@@ -119,7 +119,7 @@ export default function EditJourneyPage() {
         description: journeyDescription,
         isActive,
         blocks: blocksWithConfigIds
-      });
+      }, journey.companyId);
 
       toast.success('Journey updated successfully');
       navigate('/journeys');
