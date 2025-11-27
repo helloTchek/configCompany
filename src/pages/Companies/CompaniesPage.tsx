@@ -45,6 +45,7 @@ export default function CompaniesPage() {
   const {
     companies,
     loading,
+    error,
     archiveCompany,
     duplicateCompany
   } = useCompanies();
