@@ -240,6 +240,21 @@ export default function CreateJourneyPage() {
       blockModal.type === 'static' ? JSON.stringify(onboardingData.screens, null, 2) : ''
     );
 
+    // Reset modal fields when modal opens or type changes
+    useEffect(() => {
+      if (blockModal.open && blockModal.type) {
+        const typeInfo = blockTypes.find(bt => bt.type === blockModal.type);
+        setModalBlockName(typeInfo?.name || '');
+        setModalBlockDesc('');
+
+        if (blockModal.type === 'static') {
+          setModalConfigJson(JSON.stringify(onboardingData.screens, null, 2));
+        } else {
+          setModalConfigJson('');
+        }
+      }
+    }, [blockModal.open, blockModal.type]);
+
     const handleAddBlockWithConfig = () => {
       const blockTypeInfo = blockTypes.find(bt => bt.type === blockModal.type);
 
@@ -290,6 +305,7 @@ export default function CreateJourneyPage() {
             return newMap;
           });
         } catch (error) {
+          console.error('JSON parse error:', error);
           toast.error('Invalid JSON configuration');
           return;
         }

@@ -56,6 +56,29 @@ export default function EditJourneyPage() {
           setJourneyDescription(foundJourney.description || '');
           setIsActive(foundJourney.isActive);
           setBlocks(foundJourney.blocks);
+
+          // Load existing configs for blocks that have configId
+          const configsToLoad = new Map<string, any>();
+          for (const block of foundJourney.blocks) {
+            if (block.configId && ['shootInspect', 'static', 'form'].includes(block.type)) {
+              try {
+                let configType: ScreenConfigType | null = null;
+                if (block.type === 'shootInspect') configType = 'shoot-inspect';
+                else if (block.type === 'static') configType = 'static-screen';
+                else if (block.type === 'form') configType = 'form-screen';
+
+                if (configType) {
+                  const config = await screenConfigsService.getConfigById(configType, block.configId, foundJourney.companyId);
+                  if (config) {
+                    configsToLoad.set(block.id, config);
+                  }
+                }
+              } catch (error) {
+                console.error(`Error loading config for block ${block.id}:`, error);
+              }
+            }
+          }
+          setBlockConfigs(configsToLoad);
         } else {
           toast.error('Journey not found');
           navigate('/journeys');
@@ -232,14 +255,29 @@ export default function EditJourneyPage() {
     // Initialize state with current block data or defaults
     const [modalBlockName, setModalBlockName] = useState('');
     const [modalBlockDesc, setModalBlockDesc] = useState('');
+    const [modalConfigJson, setModalConfigJson] = useState('');
 
     // Update modal state when opening with a block to edit
     useEffect(() => {
       if (blockModal.open) {
         setModalBlockName(editingBlockData?.name || blockTypeInfo?.name || '');
         setModalBlockDesc(editingBlockData?.description || '');
+
+        // Load existing config if editing a block with config
+        if (isEditing && editingBlockData?.id) {
+          const existingConfig = blockConfigs.get(editingBlockData.id);
+          if (existingConfig?.config) {
+            setModalConfigJson(JSON.stringify(existingConfig.config, null, 2));
+          } else {
+            setModalConfigJson('');
+          }
+        } else if (blockModal.type === 'static') {
+          setModalConfigJson(JSON.stringify(onboardingData.screens, null, 2));
+        } else {
+          setModalConfigJson('');
+        }
       }
-    }, [blockModal.open, editingBlockData, blockTypeInfo]);
+    }, [blockModal.open, editingBlockData, blockTypeInfo, isEditing]);
 
     const handleSaveBlock = () => {
       if (isEditing && blockModal.editingBlockId) {
@@ -250,6 +288,29 @@ export default function EditJourneyPage() {
             : block
         );
         setBlocks(updatedBlocks);
+
+        // Update config if this is a form or static block
+        if (['form', 'static'].includes(blockModal.type!) && modalConfigJson) {
+          try {
+            const parsedConfig = JSON.parse(modalConfigJson);
+            const existingBlock = blocks.find(b => b.id === blockModal.editingBlockId);
+
+            setBlockConfigs(prev => {
+              const newMap = new Map(prev);
+              newMap.set(blockModal.editingBlockId!, {
+                id: existingBlock?.configId || `${blockModal.type}-${Date.now()}`,
+                name: modalBlockName,
+                description: modalBlockDesc,
+                config: parsedConfig
+              });
+              return newMap;
+            });
+          } catch (error) {
+            toast.error('Invalid JSON configuration');
+            return;
+          }
+        }
+
         setEditingBlock(null);
       } else {
         // Create new block
@@ -262,13 +323,41 @@ export default function EditJourneyPage() {
         const stepCount = (typeCountMap[finalType] || 0) + 1;
         const stepId = `${finalType}-step-${stepCount}`;
 
+        // Generate configId for blocks that need it
+        let configId: string | undefined;
+        if (['form', 'static'].includes(finalType)) {
+          configId = `${finalType}-${stepCount}`;
+        }
+
         const newBlock: JourneyBlock = {
           id: stepId,
           type: finalType as any,
           name: modalBlockName || blockTypeInfo?.name || 'Unnamed Block',
           description: modalBlockDesc,
+          ...(configId && { configId }),
           order: blocks.length + 1
         };
+
+        // Save config for form and static blocks
+        if (['form', 'static'].includes(finalType) && configId) {
+          try {
+            const parsedConfig = modalConfigJson ? JSON.parse(modalConfigJson) : {};
+
+            setBlockConfigs(prev => {
+              const newMap = new Map(prev);
+              newMap.set(stepId, {
+                id: configId,
+                name: modalBlockName,
+                description: modalBlockDesc,
+                config: parsedConfig
+              });
+              return newMap;
+            });
+          } catch (error) {
+            toast.error('Invalid JSON configuration');
+            return;
+          }
+        }
 
         setBlocks([...blocks, newBlock]);
       }
@@ -316,6 +405,8 @@ export default function EditJourneyPage() {
               </div>
               <textarea
                 rows={6}
+                value={modalConfigJson}
+                onChange={(e) => setModalConfigJson(e.target.value)}
                 placeholder='{"fields": [{"type": "text", "name": "customerName", "label": "Customer Name", "required": true}]}'
                 className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
               />
