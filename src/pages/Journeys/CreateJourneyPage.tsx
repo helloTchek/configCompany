@@ -6,6 +6,7 @@ import Header from '../../components/Layout/Header';
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
 import Modal from '../../components/UI/Modal';
+import CompanySelector from '../../components/UI/CompanySelector';
 import ShootInspectionConfig from '../../components/Journey/ShootInspectionConfig';
 import { ArrowLeft, Plus, Upload, Download, GripVertical } from 'lucide-react';
 import { JourneyBlock } from '../../types';
@@ -36,7 +37,7 @@ export default function CreateJourneyPage() {
   const [showShootInspectionConfig, setShowShootInspectionConfig] = useState(false);
   const [currentShootInspectionConfigData, setCurrentShootInspectionConfigData] = useState<ShootInspectionData | null>(null);
   const [saving, setSaving] = useState(false);
-  const [companies, setCompanies] = useState<Array<{ id: string; name: string }>>([]);
+  const [companies, setCompanies] = useState<Array<{ objectId: string; id: string; name: string; identifier?: string }>>([]);
   const [loadingCompanies, setLoadingCompanies] = useState(false);
   // Store full config data for blocks that need it (indexed by block id)
   const [blockConfigs, setBlockConfigs] = useState<Map<string, any>>(new Map());
@@ -54,10 +55,7 @@ export default function CreateJourneyPage() {
     try {
       setLoadingCompanies(true);
       const data = await companiesService.getAllCompaniesLight();
-      setCompanies(data.map((c: any) => ({
-        id: c.objectId || c.id,
-        name: c.name
-      })));
+      setCompanies(data);
     } catch (error) {
       console.error('Error loading companies:', error);
       toast.error('Failed to load companies');
@@ -438,22 +436,14 @@ export default function CreateJourneyPage() {
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Journey Details</h3>
             <div className="grid grid-cols-1 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
-                <select
-                  value={selectedCompany}
-                  onChange={(e) => setSelectedCompany(e.target.value)}
-                  disabled={user?.role !== 'superAdmin' || loadingCompanies}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
-                >
-                  <option value="">Select Company</option>
-                  {companies.map((company) => (
-                    <option key={company.id} value={company.id}>
-                      {company.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <CompanySelector
+                companies={companies}
+                selectedCompanyId={selectedCompany}
+                onSelect={setSelectedCompany}
+                label="Company"
+                placeholder="Search and select company..."
+                disabled={user?.role !== 'superAdmin' || loadingCompanies}
+              />
               <Input
                 label="Journey Name"
                 value={journeyName}

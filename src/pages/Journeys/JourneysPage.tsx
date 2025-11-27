@@ -296,21 +296,13 @@ export default function JourneysPage() {
                 </div>
 
                 {user?.role === 'superAdmin' && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
-                    <select
-                      value={filters.company}
-                      onChange={(e) => setFilters(prev => ({ ...prev, company: e.target.value }))}
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="">All Companies</option>
-                      {companies.map(company => (
-                        <option key={company.id} value={company.id}>
-                          {company.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <CompanySelector
+                    companies={companies}
+                    selectedCompanyId={filters.company}
+                    onSelect={(companyId) => setFilters(prev => ({ ...prev, company: companyId }))}
+                    label="Company"
+                    placeholder="All Companies"
+                  />
                 )}
               </div>
 
