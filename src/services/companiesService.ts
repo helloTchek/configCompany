@@ -64,10 +64,17 @@ class CompaniesService {
 
       if (params?.search) {
         const searchLower = params.search.toLowerCase();
-        filteredData = filteredData.filter(c =>
-          c.name?.toLowerCase().includes(searchLower) ||
-          c.identifier?.toLowerCase().includes(searchLower)
-        );
+        filteredData = filteredData.filter(c => {
+          // Search in name, identifier, objectId/id (company ID), and API token
+          const matchesName = c.name?.toLowerCase().includes(searchLower);
+          const matchesIdentifier = c.identifier?.toLowerCase().includes(searchLower);
+          const matchesCompanyId = (c.objectId || c.id || '').toLowerCase().includes(searchLower);
+          const matchesApiToken = typeof c.apiToken === 'string'
+            ? c.apiToken.toLowerCase().includes(searchLower)
+            : (c.apiToken as any)?.token?.toLowerCase().includes(searchLower);
+
+          return matchesName || matchesIdentifier || matchesCompanyId || matchesApiToken;
+        });
       }
 
       if (params?.archived === 'archived') {
