@@ -203,5 +203,4 @@ export class JourneyService {
   }
 }
 
-export const companyService = new CompanyService();
 export const journeyService = new JourneyService();
