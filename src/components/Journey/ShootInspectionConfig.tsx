@@ -3,8 +3,10 @@ import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import Button from '../UI/Button';
 import Input from '../UI/Input';
 import Modal from '../UI/Modal';
-import { Upload, Download, Plus, Edit, Trash2, GripVertical, X } from 'lucide-react';
+import TemplateSelector from './TemplateSelector';
+import { Upload, Download, Plus, Edit, Trash2, GripVertical, X, Grid3X3 } from 'lucide-react';
 import { ShootStep, ShootInspectionData } from '../../types';
+import type { ShootSideTemplate } from '../../constants/shootSidesTemplates';
 
 interface ShootInspectionConfigProps {
   onSave: (config: ShootInspectionData) => void;
@@ -1533,6 +1535,7 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
 
   const [editingStep, setEditingStep] = useState<{ step: ShootStep; index: number } | null>(null);
   const [showStepModal, setShowStepModal] = useState(false);
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
 
   const handleDragEnd = (result: any) => {
@@ -1592,6 +1595,58 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
   const deleteStep = (index: number) => {
     const newConfig = shootData.config.filter((_, i) => i !== index);
     setShootData({ ...shootData, config: newConfig });
+  };
+
+  const handleTemplateSelect = (template: ShootSideTemplate) => {
+    // Convert template to ShootStep
+    const typeImage = template.category === 'exterior' ? 0 : template.category === 'interior' ? 3 : 1;
+
+    const newStep: ShootStep = {
+      angle: template.angle,
+      quality: template.category === 'exterior',
+      optional: false,
+      typeImage,
+      ...(typeImage === 0 && { typeExterior: 0 }),
+      ...(typeImage === 3 && { typeInterior: 0 }),
+      ...(typeImage === 1 && { typeAdditional: 0 }),
+      retry: 2,
+      showHelp: true,
+      urlThumb: template.thumbUrl,
+      title: {
+        name: template.id,
+        localization: [
+          { locale: 'en', title: template.name }
+        ]
+      },
+      help: {
+        localization: [
+          { locale: 'en', title: null, content: template.description }
+        ]
+      },
+      ...(template.overlayUrl && {
+        overlay: {
+          url: template.overlayUrl,
+          constraints: {
+            portrait: {
+              position: 0,
+              scaleType: 0,
+              marginStart: true,
+              marginEnd: true
+            },
+            landscape: {
+              position: 0,
+              scaleType: 0,
+              marginStart: true,
+              marginEnd: true
+            }
+          }
+        }
+      })
+    };
+
+    setEditingStep({ step: newStep, index: -1 });
+    setShowStepModal(true);
+    setActiveTab('general');
   };
 
   const exportJSON = () => {
@@ -2225,15 +2280,22 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-900">Inspection Steps</h3>
-          <Button onClick={addNewStep} className="flex items-center gap-2">
-            <Plus size={16} />
-            Add Step
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setShowTemplateSelector(true)} variant="secondary" className="flex items-center gap-2">
+              <Grid3X3 size={16} />
+              Select from Templates
+            </Button>
+            <Button onClick={addNewStep} className="flex items-center gap-2">
+              <Plus size={16} />
+              Add Custom Step
+            </Button>
+          </div>
         </div>
 
         {shootData.config.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
-            <p>No steps configured yet. Click "Add Step" to start building your inspection flow.</p>
+            <p>No steps configured yet.</p>
+            <p className="text-sm mt-2">Click "Select from Templates" to choose pre-configured steps or "Add Custom Step" to create your own.</p>
           </div>
         ) : (
           <DragDropContext onDragEnd={handleDragEnd}>
@@ -2341,6 +2403,13 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
       </div>
 
       <StepEditModal />
+
+      {/* Template Selector */}
+      <TemplateSelector
+        isOpen={showTemplateSelector}
+        onClose={() => setShowTemplateSelector(false)}
+        onSelect={handleTemplateSelect}
+      />
     </div>
   );
 }
