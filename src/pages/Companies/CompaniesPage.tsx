@@ -41,6 +41,10 @@ export default function CompaniesPage() {
     senderName: '',
     webhookUrl: '',
     parentCompanyId: '',
+    duplicateJourneys: true,
+    duplicateCostSettings: false,
+    duplicateSortingRules: true,
+    duplicateWebhookEvents: true,
     errors: {
       companyName: '',
       senderName: '',
@@ -207,6 +211,10 @@ export default function CompaniesPage() {
         senderName,
         webhookUrl,
         parentCompanyId: parentCompanyId || '',
+        duplicateJourneys: true,
+        duplicateCostSettings: false,
+        duplicateSortingRules: true,
+        duplicateWebhookEvents: true,
         errors: {
           companyName: '',
           senderName: '',
@@ -273,7 +281,13 @@ export default function CompaniesPage() {
         duplicateForm.companyName,
         duplicateForm.senderName,
         duplicateForm.webhookUrl,
-        duplicateForm.parentCompanyId || undefined
+        duplicateForm.parentCompanyId || undefined,
+        {
+          duplicateJourneys: duplicateForm.duplicateJourneys,
+          duplicateCostSettings: duplicateForm.duplicateCostSettings,
+          duplicateSortingRules: duplicateForm.duplicateSortingRules,
+          duplicateWebhookEvents: duplicateForm.duplicateWebhookEvents
+        }
       );
 
       if (duplicatedCompany) {
@@ -283,6 +297,10 @@ export default function CompaniesPage() {
           senderName: '',
           webhookUrl: '',
           parentCompanyId: '',
+          duplicateJourneys: true,
+          duplicateCostSettings: false,
+          duplicateSortingRules: true,
+          duplicateWebhookEvents: true,
           errors: {
             companyName: '',
             senderName: '',
@@ -964,35 +982,39 @@ export default function CompaniesPage() {
             <div className="space-y-3">
               <p className="text-sm text-gray-600">Choose what should be copied from the source company:</p>
               <div className="space-y-2">
-                <label className="flex items-center">
+                <label className="flex items-center cursor-pointer">
                   <input
                     type="checkbox"
-                    defaultChecked={true}
-                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+                    checked={duplicateForm.duplicateJourneys}
+                    onChange={(e) => setDuplicateForm(prev => ({ ...prev, duplicateJourneys: e.target.checked }))}
+                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 cursor-pointer"
                   />
                   <span className="ml-2 text-sm text-gray-700">Duplicate Inspection Journeys</span>
                 </label>
-                <label className="flex items-center">
+                <label className="flex items-center cursor-pointer">
                   <input
                     type="checkbox"
-                    defaultChecked={false}
-                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+                    checked={duplicateForm.duplicateCostSettings}
+                    onChange={(e) => setDuplicateForm(prev => ({ ...prev, duplicateCostSettings: e.target.checked }))}
+                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 cursor-pointer"
                   />
                   <span className="ml-2 text-sm text-gray-700">Duplicate Cost Settings</span>
                 </label>
-                <label className="flex items-center">
+                <label className="flex items-center cursor-pointer">
                   <input
                     type="checkbox"
-                    defaultChecked={true}
-                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+                    checked={duplicateForm.duplicateSortingRules}
+                    onChange={(e) => setDuplicateForm(prev => ({ ...prev, duplicateSortingRules: e.target.checked }))}
+                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 cursor-pointer"
                   />
                   <span className="ml-2 text-sm text-gray-700">Duplicate Sorting Rules</span>
                 </label>
-                <label className="flex items-center">
+                <label className="flex items-center cursor-pointer">
                   <input
                     type="checkbox"
-                    defaultChecked={true}
-                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
+                    checked={duplicateForm.duplicateWebhookEvents}
+                    onChange={(e) => setDuplicateForm(prev => ({ ...prev, duplicateWebhookEvents: e.target.checked }))}
+                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 cursor-pointer"
                   />
                   <span className="ml-2 text-sm text-gray-700">Duplicate Webhook & Events Configuration</span>
                 </label>
@@ -1116,6 +1138,10 @@ export default function CompaniesPage() {
                 senderName: '',
                 webhookUrl: '',
                 parentCompanyId: '',
+                duplicateJourneys: true,
+                duplicateCostSettings: false,
+                duplicateSortingRules: true,
+                duplicateWebhookEvents: true,
                 errors: {
                   companyName: '',
                   senderName: '',

@@ -205,7 +205,19 @@ class CompaniesService {
     }
   }
 
-  async duplicateCompany(id: string, newName: string, senderName?: string, webhookUrl?: string, parentCompanyId?: string): Promise<Company | null> {
+  async duplicateCompany(
+    id: string,
+    newName: string,
+    senderName?: string,
+    webhookUrl?: string,
+    parentCompanyId?: string,
+    options?: {
+      duplicateJourneys?: boolean;
+      duplicateCostSettings?: boolean;
+      duplicateSortingRules?: boolean;
+      duplicateWebhookEvents?: boolean;
+    }
+  ): Promise<Company | null> {
     if (isMockMode()) {
       await mockDelay(config.mock.delay);
       const sourceCompany = mockCompanies.find(c => getCompanyId(c) === id);
@@ -228,7 +240,8 @@ class CompaniesService {
       newName,
       senderName,
       webhookUrl,
-      parentCompanyId
+      parentCompanyId,
+      ...options
     });
   }
 
