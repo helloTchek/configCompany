@@ -25,7 +25,7 @@ const blockTypes = [
 
 export default function EditJourneyPage() {
   const navigate = useNavigate();
-  const { id } = useParams();
+  const { id, companyId } = useParams<{ id: string; companyId: string }>();
   const { user } = useAuth();
   const [journey, setJourney] = useState<InspectionJourney | null>(null);
   const [journeyName, setJourneyName] = useState('');
@@ -42,13 +42,13 @@ export default function EditJourneyPage() {
   // Load journey data on component mount
   useEffect(() => {
     const loadJourney = async () => {
-      if (!id) {
+      if (!id || !companyId) {
         navigate('/journeys');
         return;
       }
 
       try {
-        const foundJourney = await workflowsService.getWorkflowById(id, user?.companyId);
+        const foundJourney = await workflowsService.getWorkflowById(id, companyId);
 
         if (foundJourney) {
           setJourney(foundJourney);
@@ -94,7 +94,7 @@ export default function EditJourneyPage() {
     };
 
     loadJourney();
-  }, [id, navigate]);
+  }, [id, companyId, navigate]);
 
   const handleSave = async () => {
     if (!journeyName.trim()) {
@@ -123,14 +123,31 @@ export default function EditJourneyPage() {
           else if (block.type === 'form') configType = 'form-screen';
 
           if (configType && journey.companyId) {
-            const savedConfig = await screenConfigsService.createConfig(configType, {
-              companyId: journey.companyId,
-              id: configData.id,
-              name: configData.name,
-              description: configData.description,
-              config: configData.config
-            });
-            return { ...block, configId: savedConfig.id };
+            // Check if this is an existing config (has configId) or a new one
+            if (block.configId) {
+              // Update existing config
+              const savedConfig = await screenConfigsService.updateConfig(
+                configType,
+                block.configId,
+                journey.companyId,
+                {
+                  name: configData.name,
+                  description: configData.description,
+                  config: configData.config
+                }
+              );
+              return { ...block, configId: savedConfig.id };
+            } else {
+              // Create new config
+              const savedConfig = await screenConfigsService.createConfig(configType, {
+                companyId: journey.companyId,
+                id: configData.id,
+                name: configData.name,
+                description: configData.description,
+                config: configData.config
+              });
+              return { ...block, configId: savedConfig.id };
+            }
           }
           return block;
         })
@@ -479,7 +496,8 @@ export default function EditJourneyPage() {
               </div>
               <textarea
                 rows={12}
-                defaultValue={JSON.stringify(onboardingData.screens, null, 2)}
+                value={modalConfigJson}
+                onChange={(e) => setModalConfigJson(e.target.value)}
                 className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
                 placeholder="Static screens JSON configuration (onboarding/offboarding)..."
               />

@@ -85,7 +85,7 @@ function App() {
                         <CreateJourneyPage />
                       </ProtectedRoute>
                     } />
-                    <Route path="/journeys/:id/edit" element={
+                    <Route path="/journeys/:companyId/:id/edit" element={
                       <ProtectedRoute requiredPermission={PERMISSIONS.WORKFLOWS.UPDATE}>
                         <EditJourneyPage />
                       </ProtectedRoute>
