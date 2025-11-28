@@ -19,6 +19,10 @@ export type DuplicateWorkflowData = {
 interface WorkflowsListResponse {
   results: InspectionJourney[];
   count: number;
+  total?: number;
+  page?: number;
+  totalPages?: number;
+  limit?: number;
 }
 
 class WorkflowsService {
@@ -31,18 +35,22 @@ class WorkflowsService {
     companyId?: string;
     search?: string;
     isActive?: boolean;
-  }): Promise<InspectionJourney[]> {
+    page?: number;
+    limit?: number;
+  }): Promise<WorkflowsListResponse> {
     const queryParams: Record<string, string> = {};
     if (params?.companyId) queryParams.companyId = params.companyId;
     if (params?.search) queryParams.search = params.search;
     if (params?.isActive !== undefined) queryParams.isActive = String(params.isActive);
+    if (params?.page !== undefined) queryParams.page = String(params.page);
+    if (params?.limit !== undefined) queryParams.limit = String(params.limit);
 
     const response = await apiClient.get<WorkflowsListResponse>(
       this.baseUrl,
       queryParams
     );
 
-    return response?.results || [];
+    return response || { results: [], count: 0 };
   }
 
   /**

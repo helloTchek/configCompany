@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthContext';
 import Header from '../../components/Layout/Header';
@@ -31,6 +31,51 @@ export default function JourneysPage() {
   const deleteModal = useModalState<InspectionJourney>();
   const [companies, setCompanies] = useState<Array<{ objectId: string; id: string; name: string; identifier?: string }>>([]);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [pageSize] = useState(50);
+
+  const loadWorkflows = useCallback(async () => {
+    try {
+      setLoading(true);
+      const params: any = {
+        page: currentPage,
+        limit: pageSize
+      };
+
+      // Regular user with companyId
+      if (user?.companyId) {
+        params.companyId = user.companyId;
+      } else if (user?.role === 'superAdmin') {
+        // For superAdmin without companyId, no companyId filter means all workflows
+        if (filters.company) {
+          params.companyId = filters.company;
+        }
+        // If no company filter, fetch all workflows (pagination will handle the load)
+      } else {
+        // No companyId available
+        toast.error('No company selected');
+        setJourneys([]);
+        setLoading(false);
+        return;
+      }
+
+      const response = await workflowsService.getWorkflows(params);
+      setJourneys(response.results || []);
+      setTotalCount(response.total || response.count || 0);
+      setTotalPages(response.totalPages || 1);
+    } catch (error: any) {
+      console.error('Error loading workflows:', error);
+      const errorMessage = error?.message || 'Failed to load journeys';
+      toast.error(errorMessage);
+      setJourneys([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [user, currentPage, pageSize, filters.company]);
+
   // Load workflows from API
   useEffect(() => {
     if (user) {
@@ -42,57 +87,26 @@ export default function JourneysPage() {
     } else {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, loadWorkflows]);
 
   // Load all companies from API
   useEffect(() => {
     loadCompanies();
   }, []);
 
-  // Reload workflows when company filter changes
+  // Reload workflows when company filter changes (reset to page 1)
   useEffect(() => {
-    if (user && filters.company) {
-      loadWorkflows();
+    if (user) {
+      setCurrentPage(1);
     }
   }, [filters.company]);
 
-  const loadWorkflows = async () => {
-    try {
-      setLoading(true);
-      const params: any = {};
-
-      // Regular user with companyId
-      if (user?.companyId) {
-        params.companyId = user.companyId;
-      } else if (user?.role === 'superAdmin') {
-        // For superAdmin without companyId, require company filter selection
-        if (filters.company) {
-          params.companyId = filters.company;
-        } else {
-          // SuperAdmin must select a company via filter
-          setJourneys([]);
-          setLoading(false);
-          return;
-        }
-      } else {
-        // No companyId available
-        toast.error('No company selected');
-        setJourneys([]);
-        setLoading(false);
-        return;
-      }
-
-      const data = await workflowsService.getWorkflows(params);
-      setJourneys(data);
-    } catch (error: any) {
-      console.error('Error loading workflows:', error);
-      const errorMessage = error?.message || 'Failed to load journeys';
-      toast.error(errorMessage);
-      setJourneys([]);
-    } finally {
-      setLoading(false);
+  // Reload workflows when page changes
+  useEffect(() => {
+    if (user && currentPage > 1) {
+      loadWorkflows();
     }
-  };
+  }, [currentPage, user, loadWorkflows]);
 
   const loadCompanies = async () => {
     try {
@@ -109,6 +123,7 @@ export default function JourneysPage() {
       company: ''
     });
     setSearchTerm('');
+    setCurrentPage(1);
   };
 
   const hasActiveFilters = searchTerm || Object.values(filters).some(filter => filter !== '');
@@ -360,8 +375,8 @@ export default function JourneysPage() {
             <div className="text-center py-8 text-gray-500">
               {user?.role === 'superAdmin' && !user?.companyId && !filters.company ? (
                 <>
-                  <p className="text-lg mb-2">Please select a company to view workflows</p>
-                  <p className="text-sm">Use the "Company" filter above to select a company</p>
+                  <p className="text-lg mb-2">View all workflows from all companies</p>
+                  <p className="text-sm">Workflows are paginated for better performance</p>
                 </>
               ) : (
                 <>
@@ -376,6 +391,88 @@ export default function JourneysPage() {
             </div>
           )}
         </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="mt-4 flex items-center justify-between bg-white rounded-lg border border-gray-200 px-4 py-3">
+            <div className="text-sm text-gray-700">
+              Showing <span className="font-medium">{(currentPage - 1) * pageSize + 1}</span> to{' '}
+              <span className="font-medium">{Math.min(currentPage * pageSize, totalCount)}</span> of{' '}
+              <span className="font-medium">{totalCount}</span> workflows
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </Button>
+
+              <div className="flex items-center gap-1">
+                {/* Show first page */}
+                {currentPage > 3 && (
+                  <>
+                    <button
+                      onClick={() => setCurrentPage(1)}
+                      className="px-3 py-1 text-sm rounded hover:bg-gray-100"
+                    >
+                      1
+                    </button>
+                    {currentPage > 4 && <span className="px-2 text-gray-500">...</span>}
+                  </>
+                )}
+
+                {/* Show pages around current page */}
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(page =>
+                    page === currentPage ||
+                    page === currentPage - 1 ||
+                    page === currentPage + 1 ||
+                    (page === currentPage - 2 && currentPage <= 3) ||
+                    (page === currentPage + 2 && currentPage >= totalPages - 2)
+                  )
+                  .map(page => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-3 py-1 text-sm rounded ${
+                        page === currentPage
+                          ? 'bg-blue-600 text-white'
+                          : 'hover:bg-gray-100 text-gray-700'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+
+                {/* Show last page */}
+                {currentPage < totalPages - 2 && (
+                  <>
+                    {currentPage < totalPages - 3 && <span className="px-2 text-gray-500">...</span>}
+                    <button
+                      onClick={() => setCurrentPage(totalPages)}
+                      className="px-3 py-1 text-sm rounded hover:bg-gray-100"
+                    >
+                      {totalPages}
+                    </button>
+                  </>
+                )}
+              </div>
+
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Duplicate Modal */}
