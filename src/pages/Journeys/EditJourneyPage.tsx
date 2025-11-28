@@ -407,26 +407,67 @@ export default function EditJourneyPage() {
 
           {blockModal.type === 'form' && (
             <div>
+              <div className="mb-3">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Form Configuration</label>
+                <p className="text-xs text-gray-600 mb-2">
+                  Configure the form screens and fields. Enter only the <code className="bg-gray-100 px-1 rounded">config</code> content (not id/name/description).
+                </p>
+              </div>
+
+              {/* Example */}
+              <details className="mb-3 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <summary className="text-sm font-medium text-blue-900 cursor-pointer">
+                  📖 Show example structure
+                </summary>
+                <pre className="mt-2 text-xs bg-white p-2 rounded border border-blue-100 overflow-x-auto">
+{`{
+  "isLogoDisplayed": true,
+  "screens": [
+    {
+      "id": "screen1",
+      "order": 1,
+      "body": {
+        "blockListing": [
+          {
+            "id": "text-screen1-1",
+            "type": "text",
+            "form": true,
+            "businessType": "save#Vehicle@vin",
+            "optional": false,
+            "data": {
+              "title": "VIN Number"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}`}</pre>
+              </details>
+
               <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700">JSON Configuration</label>
+                <label className="block text-sm font-medium text-gray-700">JSON Content</label>
                 <div className="flex gap-2">
                   <Button variant="secondary" size="sm" className="flex items-center gap-1">
                     <Download size={14} />
-                    Download JSON
+                    Download
                   </Button>
                   <Button variant="secondary" size="sm" className="flex items-center gap-1">
                     <Upload size={14} />
-                    Upload JSON
+                    Upload
                   </Button>
                 </div>
               </div>
               <textarea
-                rows={6}
+                rows={12}
                 value={modalConfigJson}
                 onChange={(e) => setModalConfigJson(e.target.value)}
-                placeholder='{"fields": [{"type": "text", "name": "customerName", "label": "Customer Name", "required": true}]}'
+                placeholder='Enter form configuration JSON here (see example above)'
                 className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
               />
+              <p className="text-xs text-gray-500 mt-1">
+                💡 Field types: text, number, date, radio, checkbox, dropdown, textArea
+              </p>
             </div>
           )}
 
@@ -481,16 +522,48 @@ export default function EditJourneyPage() {
 
           {blockModal.type === 'static' && (
             <div>
+              <div className="mb-3">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Static Screens Configuration</label>
+                <p className="text-xs text-gray-600 mb-2">
+                  Configure static screens (onboarding/offboarding). Enter the screens array configuration.
+                </p>
+              </div>
+
+              {/* Example */}
+              <details className="mb-3 bg-green-50 border border-green-200 rounded-lg p-3">
+                <summary className="text-sm font-medium text-green-900 cursor-pointer">
+                  📖 Show example structure
+                </summary>
+                <pre className="mt-2 text-xs bg-white p-2 rounded border border-green-100 overflow-x-auto">
+{`[
+  {
+    "id": "onboarding-1",
+    "order": 1,
+    "title": "Welcome",
+    "description": "Welcome to the inspection",
+    "image": "https://example.com/welcome.png",
+    "type": "onboarding"
+  },
+  {
+    "id": "offboarding-1",
+    "order": 2,
+    "title": "Thank You",
+    "description": "Inspection completed",
+    "type": "offboarding"
+  }
+]`}</pre>
+              </details>
+
               <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700">Static Screens JSON Configuration</label>
+                <label className="block text-sm font-medium text-gray-700">JSON Content</label>
                 <div className="flex gap-2">
                   <Button variant="secondary" size="sm" className="flex items-center gap-1">
                     <Download size={14} />
-                    Download JSON
+                    Download
                   </Button>
                   <Button variant="secondary" size="sm" className="flex items-center gap-1">
                     <Upload size={14} />
-                    Upload JSON
+                    Upload
                   </Button>
                 </div>
               </div>
@@ -499,8 +572,11 @@ export default function EditJourneyPage() {
                 value={modalConfigJson}
                 onChange={(e) => setModalConfigJson(e.target.value)}
                 className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
-                placeholder="Static screens JSON configuration (onboarding/offboarding)..."
+                placeholder="Enter static screens JSON configuration (see example above)"
               />
+              <p className="text-xs text-gray-500 mt-1">
+                💡 Screen types: onboarding, offboarding, info
+              </p>
             </div>
           )}
 
