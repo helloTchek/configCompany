@@ -1,0 +1,14 @@
+<svg width="300" height="300" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M300 10.9474C300 4.9013 295.099 0 289.053 0H10.9474C4.90131 0 0 4.9013 0 10.9474V289.053C0 295.099 4.90131 300 10.9474 300H289.053C295.099 300 300 295.099 300 289.053V10.9474ZM263.416 37.4792C263.416 32.9447 259.74 29.2687 255.205 29.2687H45.1554C40.6209 29.2687 36.9449 32.9447 36.9449 37.4792V153.411C36.9449 157.946 40.6209 161.622 45.1555 161.622H255.205C259.74 161.622 263.416 157.946 263.416 153.411V37.4792ZM255.205 195.731C259.74 195.731 263.416 199.407 263.416 203.942V263.991C263.416 268.526 259.74 272.202 255.205 272.202H45.1555C40.6209 272.202 36.9449 268.526 36.9449 263.991V203.942C36.9449 199.407 40.6209 195.731 45.1554 195.731H255.205Z" fill="white"/>
+<circle r="17.6471" transform="matrix(-1 0 0 1 228.12 233.968)" fill="white"/>
+<circle r="17.6471" transform="matrix(-1 0 0 1 148.708 233.968)" fill="white"/>
+<circle r="17.6471" transform="matrix(-1 0 0 1 69.2968 233.968)" fill="white"/>
+<rect width="29.4118" height="29.4118" rx="1.36842" transform="matrix(-1 0 0 1 225.18 58.6812)" fill="white"/>
+<rect width="29.4118" height="29.4118" rx="1.36842" transform="matrix(-1 0 0 1 225.18 102.798)" fill="white"/>
+<rect width="29.4118" height="29.4118" rx="1.36842" transform="matrix(-1 0 0 1 184.001 58.6812)" fill="white"/>
+<rect width="29.4118" height="29.4118" rx="1.36842" transform="matrix(-1 0 0 1 184.001 102.798)" fill="white"/>
+<rect width="29.4118" height="29.4118" rx="1.36842" transform="matrix(-1 0 0 1 142.825 58.6812)" fill="white"/>
+<rect width="29.4118" height="29.4118" rx="1.36842" transform="matrix(-1 0 0 1 142.825 102.798)" fill="white"/>
+<rect width="29.4118" height="29.4118" rx="1.36842" transform="matrix(-1 0 0 1 101.649 58.6812)" fill="white"/>
+<rect width="29.4118" height="29.4118" rx="1.36842" transform="matrix(-1 0 0 1 101.649 102.798)" fill="white"/>
+</svg>

@@ -33,7 +33,15 @@ export default function JourneysPage() {
 
   // Load workflows from API
   useEffect(() => {
-    loadWorkflows();
+    if (user) {
+      loadWorkflows();
+      // Auto-show filters for superAdmin without companyId
+      if (user.role === 'superAdmin' && !user.companyId) {
+        setShowFilters(true);
+      }
+    } else {
+      setLoading(false);
+    }
   }, [user]);
 
   // Load all companies from API
@@ -41,21 +49,46 @@ export default function JourneysPage() {
     loadCompanies();
   }, []);
 
+  // Reload workflows when company filter changes
+  useEffect(() => {
+    if (user && filters.company) {
+      loadWorkflows();
+    }
+  }, [filters.company]);
+
   const loadWorkflows = async () => {
     try {
       setLoading(true);
       const params: any = {};
 
-      // If not superAdmin, filter by user's company
-      if (user?.role !== 'superAdmin' && user?.companyId) {
+      // Regular user with companyId
+      if (user?.companyId) {
         params.companyId = user.companyId;
+      } else if (user?.role === 'superAdmin') {
+        // For superAdmin without companyId, require company filter selection
+        if (filters.company) {
+          params.companyId = filters.company;
+        } else {
+          // SuperAdmin must select a company via filter
+          setJourneys([]);
+          setLoading(false);
+          return;
+        }
+      } else {
+        // No companyId available
+        toast.error('No company selected');
+        setJourneys([]);
+        setLoading(false);
+        return;
       }
 
       const data = await workflowsService.getWorkflows(params);
       setJourneys(data);
     } catch (error: any) {
       console.error('Error loading workflows:', error);
-      toast.error('Failed to load journeys');
+      const errorMessage = error?.message || 'Failed to load journeys';
+      toast.error(errorMessage);
+      setJourneys([]);
     } finally {
       setLoading(false);
     }
@@ -325,11 +358,20 @@ export default function JourneysPage() {
 
           {filteredJourneys.length === 0 && (
             <div className="text-center py-8 text-gray-500">
-              <p>No journeys found matching your criteria.</p>
-              {hasActiveFilters && (
-                <Button variant="secondary" onClick={clearFilters} className="mt-2">
-                  Clear Filters
-                </Button>
+              {user?.role === 'superAdmin' && !user?.companyId && !filters.company ? (
+                <>
+                  <p className="text-lg mb-2">Please select a company to view workflows</p>
+                  <p className="text-sm">Use the "Company" filter above to select a company</p>
+                </>
+              ) : (
+                <>
+                  <p>No journeys found matching your criteria.</p>
+                  {hasActiveFilters && (
+                    <Button variant="secondary" onClick={clearFilters} className="mt-2">
+                      Clear Filters
+                    </Button>
+                  )}
+                </>
               )}
             </div>
           )}

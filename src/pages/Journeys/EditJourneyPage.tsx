@@ -48,7 +48,7 @@ export default function EditJourneyPage() {
       }
 
       try {
-        const foundJourney = await workflowsService.getWorkflowById(id);
+        const foundJourney = await workflowsService.getWorkflowById(id, user?.companyId);
 
         if (foundJourney) {
           setJourney(foundJourney);

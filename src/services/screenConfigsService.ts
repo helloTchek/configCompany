@@ -80,7 +80,8 @@ class ScreenConfigsService {
   ): Promise<BaseScreenConfig> {
     const response = await apiClient.put<BaseScreenConfig>(
       `${this.getBaseUrl(type)}/${id}`,
-      { ...data, companyId }
+      data,
+      { params: { companyId } }
     );
     return response;
   }
@@ -89,7 +90,7 @@ class ScreenConfigsService {
    * Delete config
    */
   async deleteConfig(type: ScreenConfigType, id: string, companyId: string): Promise<void> {
-    await apiClient.delete(`${this.getBaseUrl(type)}/${id}`, { companyId });
+    await apiClient.delete(`${this.getBaseUrl(type)}/${id}`, { params: { companyId } });
   }
 }
 

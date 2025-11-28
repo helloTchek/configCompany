@@ -82,7 +82,7 @@ class WorkflowsService {
     const response = await apiClient.put<InspectionJourney>(
       `${this.baseUrl}/${id}`,
       data,
-      queryParams
+      { params: queryParams }
     );
     return response;
   }
@@ -94,7 +94,7 @@ class WorkflowsService {
     const queryParams: Record<string, string> = {};
     if (companyId) queryParams.companyId = companyId;
 
-    await apiClient.delete(`${this.baseUrl}/${id}`, queryParams);
+    await apiClient.delete(`${this.baseUrl}/${id}`, { params: queryParams });
   }
 
   /**
@@ -107,7 +107,7 @@ class WorkflowsService {
     const response = await apiClient.post<InspectionJourney>(
       `${this.baseUrl}/${id}/duplicate`,
       data,
-      queryParams
+      { params: queryParams }
     );
     return response;
   }
