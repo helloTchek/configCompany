@@ -106,13 +106,22 @@ export default function CreateJourneyPage() {
           // If this block needs config saved to backend
           if (configType) {
             try {
-              const savedConfig = await screenConfigsService.createConfig(configType, {
-                companyId: selectedCompany,
-                id: configData.id || `${block.type}-${Date.now()}`,
-                name: configData.name || block.name,
-                description: configData.description || block.description,
-                config: configData.config || configData
-              });
+              // For form blocks, configData already contains the complete structure
+              // For static blocks, configData has {id, name, description, config}
+              const configPayload = block.type === 'form'
+                ? {
+                    companyId: selectedCompany,
+                    ...configData  // Already has id, name, description, config
+                  }
+                : {
+                    companyId: selectedCompany,
+                    id: configData.id || `${block.type}-${Date.now()}`,
+                    name: configData.name || block.name,
+                    description: configData.description || block.description,
+                    config: configData.config || configData
+                  };
+
+              const savedConfig = await screenConfigsService.createConfig(configType, configPayload);
 
               // Return block with the saved config ID
               return {
@@ -278,28 +287,83 @@ export default function CreateJourneyPage() {
         stepId = `${blockModal.type}-step-${blocks.length + 1}`;
       }
 
+      // For blocks that need config stored (form, static), parse JSON first to get metadata
+      let formConfigData: any = null;
+      if (['form', 'static'].includes(blockModal.type!) && configId) {
+        try {
+          let parsedJson = modalConfigJson ? JSON.parse(modalConfigJson) : {};
+
+          // For form blocks, handle both array and object formats
+          if (blockModal.type === 'form') {
+            // If the JSON is an array, extract the first element
+            if (Array.isArray(parsedJson)) {
+              if (parsedJson.length === 0) {
+                toast.error('Form configuration array is empty');
+                return;
+              }
+              parsedJson = parsedJson[0];
+            }
+
+            // Validate that the form JSON has required fields
+            if (!parsedJson.id) {
+              toast.error('Form configuration must have an "id" field');
+              return;
+            }
+
+            formConfigData = parsedJson;
+          }
+        } catch (error) {
+          console.error('JSON parse error:', error);
+          toast.error('Invalid JSON configuration');
+          return;
+        }
+      }
+
       const newBlock: JourneyBlock = {
         id: stepId,
         type: blockModal.type as any,
-        name: modalBlockName || blockTypeInfo?.name || 'Unnamed Block',
-        description: modalBlockDesc,
-        ...(configId && { configId }),
+        name: (blockModal.type === 'form' && formConfigData?.name)
+          ? formConfigData.name
+          : (modalBlockName || blockTypeInfo?.name || 'Unnamed Block'),
+        description: (blockModal.type === 'form' && formConfigData?.description)
+          ? formConfigData.description
+          : modalBlockDesc,
+        configId: (blockModal.type === 'form' && formConfigData?.id)
+          ? formConfigData.id
+          : configId,
         order: blocks.length + 1
       };
 
       // For blocks that need config stored (form, static)
       if (['form', 'static'].includes(blockModal.type!) && configId) {
         try {
-          const parsedConfig = modalConfigJson ? JSON.parse(modalConfigJson) : {};
+          let parsedJson = modalConfigJson ? JSON.parse(modalConfigJson) : {};
+
+          // For form blocks, handle both array and object formats
+          if (blockModal.type === 'form') {
+            // If the JSON is an array, extract the first element
+            if (Array.isArray(parsedJson)) {
+              parsedJson = parsedJson[0];
+            }
+            formConfigData = parsedJson;
+          }
 
           setBlockConfigs(prev => {
             const newMap = new Map(prev);
-            newMap.set(stepId, {
-              id: configId,
-              name: modalBlockName,
-              description: modalBlockDesc,
-              config: parsedConfig
-            });
+
+            // For form blocks, use the complete JSON structure as-is
+            if (blockModal.type === 'form') {
+              newMap.set(stepId, parsedJson);
+            } else {
+              // For static blocks, build the structure
+              newMap.set(stepId, {
+                id: configId,
+                name: modalBlockName,
+                description: modalBlockDesc,
+                config: parsedJson
+              });
+            }
+
             return newMap;
           });
         } catch (error) {
@@ -321,25 +385,30 @@ export default function CreateJourneyPage() {
         size="lg"
       >
         <div className="space-y-4">
-          <Input
-            label="Block Name"
-            value={modalBlockName}
-            onChange={(e) => setModalBlockName(e.target.value)}
-            placeholder="Enter block name"
-          />
-          <Input
-            label="Description"
-            value={modalBlockDesc}
-            onChange={(e) => setModalBlockDesc(e.target.value)}
-            placeholder="Enter block description"
-          />
+          {/* Only show Block Name and Description for non-form blocks */}
+          {blockModal.type !== 'form' && (
+            <>
+              <Input
+                label="Block Name"
+                value={modalBlockName}
+                onChange={(e) => setModalBlockName(e.target.value)}
+                placeholder="Enter block name"
+              />
+              <Input
+                label="Description"
+                value={modalBlockDesc}
+                onChange={(e) => setModalBlockDesc(e.target.value)}
+                placeholder="Enter block description"
+              />
+            </>
+          )}
 
           {blockModal.type === 'form' && (
             <div>
               <div className="mb-3">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Form Configuration</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Form Configuration (Complete JSON)</label>
                 <p className="text-xs text-gray-600 mb-2">
-                  Configure the form screens and fields. Enter only the <code className="bg-gray-100 px-1 rounded">config</code> content (not id/name/description).
+                  Enter the complete form configuration JSON including <code className="bg-gray-100 px-1 rounded">id</code>, <code className="bg-gray-100 px-1 rounded">name</code>, <code className="bg-gray-100 px-1 rounded">description</code>, and <code className="bg-gray-100 px-1 rounded">config</code> fields.
                 </p>
               </div>
 
@@ -350,27 +419,32 @@ export default function CreateJourneyPage() {
                 </summary>
                 <pre className="mt-2 text-xs bg-white p-2 rounded border border-blue-100 overflow-x-auto">
 {`{
-  "isLogoDisplayed": true,
-  "screens": [
-    {
-      "id": "screen1",
-      "order": 1,
-      "body": {
-        "blockListing": [
-          {
-            "id": "text-screen1-1",
-            "type": "text",
-            "form": true,
-            "businessType": "save#Vehicle@vin",
-            "optional": false,
-            "data": {
-              "title": "VIN Number"
+  "id": "form-onboard-1",
+  "name": "Customer Onboarding Form",
+  "description": "Form for customer onboarding process",
+  "config": {
+    "isLogoDisplayed": true,
+    "screens": [
+      {
+        "id": "screen1",
+        "order": 1,
+        "body": {
+          "blockListing": [
+            {
+              "id": "text-screen1-1",
+              "type": "text",
+              "form": true,
+              "businessType": "save#Vehicle@vin",
+              "optional": false,
+              "data": {
+                "title": "VIN Number"
+              }
             }
-          }
-        ]
+          ]
+        }
       }
-    }
-  ]
+    ]
+  }
 }`}</pre>
               </details>
 
@@ -391,11 +465,11 @@ export default function CreateJourneyPage() {
                 rows={12}
                 value={modalConfigJson}
                 onChange={(e) => setModalConfigJson(e.target.value)}
-                placeholder='Enter form configuration JSON here (see example above)'
+                placeholder='{"id": "form-1", "name": "Form Name", "description": "Form Description", "config": {...}}'
                 className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
               />
               <p className="text-xs text-gray-500 mt-1">
-                💡 Field types: text, number, date, radio, checkbox, dropdown, textArea
+                💡 Paste your complete form JSON including id, name, description, and config
               </p>
             </div>
           )}
