@@ -37,8 +37,8 @@ export default function CreateCostMatrixPage() {
   const loadCompanies = async () => {
     try {
       setLoadingCompanies(true);
-      const data = await companiesService.getAllCompanies();
-      setCompanies(data);
+      const data = await companiesService.getAllCompaniesLight();
+      setCompanies(data as unknown as Company[]);
     } catch (err) {
       console.error('Error loading companies:', err);
     } finally {
