@@ -123,39 +123,34 @@ export default function EditJourneyPage() {
           else if (block.type === 'form') configType = 'form-screen';
 
           if (configType && journey.companyId) {
-            // Prepare payload based on block type
-            const isFormBlock = block.type === 'form';
-            const updatePayload = isFormBlock
-              ? configData  // For form blocks, configData already contains id, name, description, config
-              : {
-                  name: configData.name,
-                  description: configData.description,
-                  config: configData.config
-                };
+            // For both form and static blocks, configData already contains the complete structure
+            const updatePayload = configData;  // Already has id, name, description, config
+            const createPayload = {
+              companyId: journey.companyId,
+              ...configData  // Already has id, name, description, config
+            };
 
-            const createPayload = isFormBlock
-              ? {
-                  companyId: journey.companyId,
-                  ...configData  // For form blocks, spread the complete structure
-                }
-              : {
-                  companyId: journey.companyId,
-                  id: configData.id,
-                  name: configData.name,
-                  description: configData.description,
-                  config: configData.config
-                };
-
-            // Check if this is an existing config (has configId) or a new one
+            // Try to update if block has configId, fallback to create if it doesn't exist
             if (block.configId) {
-              // Update existing config
-              const savedConfig = await screenConfigsService.updateConfig(
-                configType,
-                block.configId,
-                journey.companyId,
-                updatePayload
-              );
-              return { ...block, configId: savedConfig.id };
+              try {
+                // Try to update existing config
+                const savedConfig = await screenConfigsService.updateConfig(
+                  configType,
+                  block.configId,
+                  journey.companyId,
+                  updatePayload
+                );
+                return { ...block, configId: savedConfig.id };
+              } catch (error: any) {
+                // If config doesn't exist (404), create it instead
+                if (error.message?.includes('404') || error.message?.includes('not found')) {
+                  console.log(`Config ${block.configId} not found, creating new one`);
+                  const savedConfig = await screenConfigsService.createConfig(configType, createPayload);
+                  return { ...block, configId: savedConfig.id };
+                }
+                // Re-throw other errors
+                throw error;
+              }
             } else {
               // Create new config
               const savedConfig = await screenConfigsService.createConfig(configType, createPayload);
@@ -297,15 +292,8 @@ export default function EditJourneyPage() {
         if (isEditing && editingBlockData?.id) {
           const existingConfig = blockConfigs.get(editingBlockData.id);
           if (existingConfig) {
-            // For form blocks, show the complete JSON structure
-            if (blockModal.type === 'form') {
-              setModalConfigJson(JSON.stringify(existingConfig, null, 2));
-            } else if (existingConfig.config) {
-              // For static blocks, show only the config part
-              setModalConfigJson(JSON.stringify(existingConfig.config, null, 2));
-            } else {
-              setModalConfigJson('');
-            }
+            // For both form and static blocks, show the complete JSON structure
+            setModalConfigJson(JSON.stringify(existingConfig, null, 2));
           } else {
             setModalConfigJson('');
           }
@@ -333,20 +321,20 @@ export default function EditJourneyPage() {
             let parsedJson = JSON.parse(modalConfigJson);
             const existingBlock = blocks.find(b => b.id === blockModal.editingBlockId);
 
-            // For form blocks, handle both array and object formats
-            if (blockModal.type === 'form') {
+            // Handle both array and object formats for both types
+            if (blockModal.type === 'form' || blockModal.type === 'static') {
               // If the JSON is an array, extract the first element
               if (Array.isArray(parsedJson)) {
                 if (parsedJson.length === 0) {
-                  toast.error('Form configuration array is empty');
+                  toast.error(`${blockModal.type === 'form' ? 'Form' : 'Static'} configuration array is empty`);
                   return;
                 }
                 parsedJson = parsedJson[0];
               }
 
-              // Validate that the form JSON has required fields
+              // Validate that the JSON has required fields
               if (!parsedJson.id) {
-                toast.error('Form configuration must have an "id" field');
+                toast.error(`${blockModal.type === 'form' ? 'Form' : 'Static'} configuration must have an "id" field`);
                 return;
               }
 
@@ -366,20 +354,8 @@ export default function EditJourneyPage() {
 
             setBlockConfigs(prev => {
               const newMap = new Map(prev);
-
-              // For form blocks, use the complete JSON structure as-is
-              if (blockModal.type === 'form') {
-                newMap.set(blockModal.editingBlockId!, parsedJson);
-              } else {
-                // For static blocks, build the structure
-                newMap.set(blockModal.editingBlockId!, {
-                  id: existingBlock?.configId || `${blockModal.type}-${Date.now()}`,
-                  name: modalBlockName,
-                  description: modalBlockDesc,
-                  config: parsedJson
-                });
-              }
-
+              // For both form and static blocks, use the complete JSON structure as-is
+              newMap.set(blockModal.editingBlockId!, parsedJson);
               return newMap;
             });
           } catch (error) {
@@ -407,29 +383,29 @@ export default function EditJourneyPage() {
         }
 
         // For blocks that need config stored (form, static), parse JSON first to get metadata
-        let formConfigData: any = null;
+        let configData: any = null;
         if (['form', 'static'].includes(finalType) && configId) {
           try {
             let parsedJson = modalConfigJson ? JSON.parse(modalConfigJson) : {};
 
-            // For form blocks, handle both array and object formats
-            if (finalType === 'form') {
+            // Handle both array and object formats for both types
+            if (finalType === 'form' || finalType === 'static') {
               // If the JSON is an array, extract the first element
               if (Array.isArray(parsedJson)) {
                 if (parsedJson.length === 0) {
-                  toast.error('Form configuration array is empty');
+                  toast.error(`${finalType === 'form' ? 'Form' : 'Static'} configuration array is empty`);
                   return;
                 }
                 parsedJson = parsedJson[0];
               }
 
-              // Validate that the form JSON has required fields
+              // Validate that the JSON has required fields
               if (!parsedJson.id) {
-                toast.error('Form configuration must have an "id" field');
+                toast.error(`${finalType === 'form' ? 'Form' : 'Static'} configuration must have an "id" field`);
                 return;
               }
 
-              formConfigData = parsedJson;
+              configData = parsedJson;
             }
           } catch (error) {
             console.error('JSON parse error:', error);
@@ -441,14 +417,14 @@ export default function EditJourneyPage() {
         const newBlock: JourneyBlock = {
           id: stepId,
           type: finalType as any,
-          name: (finalType === 'form' && formConfigData?.name)
-            ? formConfigData.name
+          name: (['form', 'static'].includes(finalType) && configData?.name)
+            ? configData.name
             : (modalBlockName || blockTypeInfo?.name || 'Unnamed Block'),
-          description: (finalType === 'form' && formConfigData?.description)
-            ? formConfigData.description
+          description: (['form', 'static'].includes(finalType) && configData?.description)
+            ? configData.description
             : modalBlockDesc,
-          configId: (finalType === 'form' && formConfigData?.id)
-            ? formConfigData.id
+          configId: (['form', 'static'].includes(finalType) && configData?.id)
+            ? configData.id
             : configId,
           order: blocks.length + 1
         };
@@ -456,33 +432,11 @@ export default function EditJourneyPage() {
         // Save config for form and static blocks
         if (['form', 'static'].includes(finalType) && configId) {
           try {
-            let parsedJson = modalConfigJson ? JSON.parse(modalConfigJson) : {};
-
-            // For form blocks, handle both array and object formats
-            if (finalType === 'form') {
-              // If the JSON is an array, extract the first element
-              if (Array.isArray(parsedJson)) {
-                parsedJson = parsedJson[0];
-              }
-              formConfigData = parsedJson;
-            }
-
+            // configData already has the complete structure from earlier parsing
             setBlockConfigs(prev => {
               const newMap = new Map(prev);
-
-              // For form blocks, use the complete JSON structure as-is
-              if (finalType === 'form') {
-                newMap.set(stepId, parsedJson);
-              } else {
-                // For static blocks, build the structure
-                newMap.set(stepId, {
-                  id: configId,
-                  name: modalBlockName,
-                  description: modalBlockDesc,
-                  config: parsedJson
-                });
-              }
-
+              // For both form and static blocks, use the complete JSON structure as-is
+              newMap.set(stepId, configData);
               return newMap;
             });
           } catch (error) {
@@ -507,8 +461,8 @@ export default function EditJourneyPage() {
         size="lg"
       >
         <div className="space-y-4">
-          {/* Only show Block Name and Description for non-form blocks */}
-          {blockModal.type !== 'form' && (
+          {/* Only show Block Name and Description for non-form and non-static blocks */}
+          {!['form', 'static'].includes(blockModal.type!) && (
             <>
               <Input
                 label="Block Name"
@@ -648,9 +602,9 @@ export default function EditJourneyPage() {
           {blockModal.type === 'static' && (
             <div>
               <div className="mb-3">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Static Screens Configuration</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Static Screen Configuration (Complete JSON)</label>
                 <p className="text-xs text-gray-600 mb-2">
-                  Configure static screens (onboarding/offboarding). Enter the screens array configuration.
+                  Enter the complete static screen configuration JSON including <code className="bg-gray-100 px-1 rounded">id</code>, <code className="bg-gray-100 px-1 rounded">name</code>, <code className="bg-gray-100 px-1 rounded">description</code>, and <code className="bg-gray-100 px-1 rounded">config</code> fields.
                 </p>
               </div>
 
@@ -660,23 +614,28 @@ export default function EditJourneyPage() {
                   📖 Show example structure
                 </summary>
                 <pre className="mt-2 text-xs bg-white p-2 rounded border border-green-100 overflow-x-auto">
-{`[
-  {
-    "id": "onboarding-1",
-    "order": 1,
-    "title": "Welcome",
-    "description": "Welcome to the inspection",
-    "image": "https://example.com/welcome.png",
-    "type": "onboarding"
-  },
-  {
-    "id": "offboarding-1",
-    "order": 2,
-    "title": "Thank You",
-    "description": "Inspection completed",
-    "type": "offboarding"
-  }
-]`}</pre>
+{`{
+  "id": "static-onboard-1",
+  "name": "Onboarding Screens",
+  "description": "Welcome and instruction screens",
+  "config": [
+    {
+      "id": "onboarding-1",
+      "order": 1,
+      "title": "Welcome",
+      "description": "Welcome to the inspection",
+      "image": "https://example.com/welcome.png",
+      "type": "onboarding"
+    },
+    {
+      "id": "offboarding-1",
+      "order": 2,
+      "title": "Thank You",
+      "description": "Inspection completed",
+      "type": "offboarding"
+    }
+  ]
+}`}</pre>
               </details>
 
               <div className="flex items-center justify-between mb-2">
@@ -696,11 +655,11 @@ export default function EditJourneyPage() {
                 rows={12}
                 value={modalConfigJson}
                 onChange={(e) => setModalConfigJson(e.target.value)}
+                placeholder='{"id": "static-1", "name": "Static Name", "description": "Static Description", "config": [...]}'
                 className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
-                placeholder="Enter static screens JSON configuration (see example above)"
               />
               <p className="text-xs text-gray-500 mt-1">
-                💡 Screen types: onboarding, offboarding, info
+                💡 Paste your complete static screen JSON including id, name, description, and config
               </p>
             </div>
           )}

@@ -106,21 +106,13 @@ export default function CreateJourneyPage() {
           // If this block needs config saved to backend
           if (configType) {
             try {
-              // For form blocks, configData already contains the complete structure
-              // For static blocks, configData has {id, name, description, config}
-              const configPayload = block.type === 'form'
-                ? {
-                    companyId: selectedCompany,
-                    ...configData  // Already has id, name, description, config
-                  }
-                : {
-                    companyId: selectedCompany,
-                    id: configData.id || `${block.type}-${Date.now()}`,
-                    name: configData.name || block.name,
-                    description: configData.description || block.description,
-                    config: configData.config || configData
-                  };
+              // For form and static blocks, configData already contains the complete structure
+              const configPayload = {
+                companyId: selectedCompany,
+                ...configData  // Already has id, name, description, config
+              };
 
+              // Try to create the config
               const savedConfig = await screenConfigsService.createConfig(configType, configPayload);
 
               // Return block with the saved config ID
@@ -128,7 +120,28 @@ export default function CreateJourneyPage() {
                 ...block,
                 configId: savedConfig.id
               };
-            } catch (error) {
+            } catch (error: any) {
+              // If creation failed, it might be because the ID already exists
+              // Try to update instead
+              if (configData?.id) {
+                try {
+                  console.log(`Failed to create config ${configData.id}, attempting to update instead`);
+                  const updatePayload = configData;
+                  const savedConfig = await screenConfigsService.updateConfig(
+                    configType,
+                    configData.id,
+                    selectedCompany,
+                    updatePayload
+                  );
+                  return {
+                    ...block,
+                    configId: savedConfig.id
+                  };
+                } catch (updateError) {
+                  console.error(`Error updating ${configType} config:`, updateError);
+                  throw new Error(`Failed to save ${block.name} configuration`);
+                }
+              }
               console.error(`Error saving ${configType} config:`, error);
               throw new Error(`Failed to save ${block.name} configuration`);
             }
@@ -288,29 +301,29 @@ export default function CreateJourneyPage() {
       }
 
       // For blocks that need config stored (form, static), parse JSON first to get metadata
-      let formConfigData: any = null;
+      let configData: any = null;
       if (['form', 'static'].includes(blockModal.type!) && configId) {
         try {
           let parsedJson = modalConfigJson ? JSON.parse(modalConfigJson) : {};
 
-          // For form blocks, handle both array and object formats
-          if (blockModal.type === 'form') {
+          // For form and static blocks, handle both array and object formats
+          if (blockModal.type === 'form' || blockModal.type === 'static') {
             // If the JSON is an array, extract the first element
             if (Array.isArray(parsedJson)) {
               if (parsedJson.length === 0) {
-                toast.error('Form configuration array is empty');
+                toast.error(`${blockModal.type === 'form' ? 'Form' : 'Static'} configuration array is empty`);
                 return;
               }
               parsedJson = parsedJson[0];
             }
 
-            // Validate that the form JSON has required fields
+            // Validate that the JSON has required fields
             if (!parsedJson.id) {
-              toast.error('Form configuration must have an "id" field');
+              toast.error(`${blockModal.type === 'form' ? 'Form' : 'Static'} configuration must have an "id" field`);
               return;
             }
 
-            formConfigData = parsedJson;
+            configData = parsedJson;
           }
         } catch (error) {
           console.error('JSON parse error:', error);
@@ -322,14 +335,14 @@ export default function CreateJourneyPage() {
       const newBlock: JourneyBlock = {
         id: stepId,
         type: blockModal.type as any,
-        name: (blockModal.type === 'form' && formConfigData?.name)
-          ? formConfigData.name
+        name: (['form', 'static'].includes(blockModal.type!) && configData?.name)
+          ? configData.name
           : (modalBlockName || blockTypeInfo?.name || 'Unnamed Block'),
-        description: (blockModal.type === 'form' && formConfigData?.description)
-          ? formConfigData.description
+        description: (['form', 'static'].includes(blockModal.type!) && configData?.description)
+          ? configData.description
           : modalBlockDesc,
-        configId: (blockModal.type === 'form' && formConfigData?.id)
-          ? formConfigData.id
+        configId: (['form', 'static'].includes(blockModal.type!) && configData?.id)
+          ? configData.id
           : configId,
         order: blocks.length + 1
       };
@@ -339,29 +352,21 @@ export default function CreateJourneyPage() {
         try {
           let parsedJson = modalConfigJson ? JSON.parse(modalConfigJson) : {};
 
-          // For form blocks, handle both array and object formats
-          if (blockModal.type === 'form') {
+          // For form and static blocks, handle both array and object formats
+          if (blockModal.type === 'form' || blockModal.type === 'static') {
             // If the JSON is an array, extract the first element
             if (Array.isArray(parsedJson)) {
               parsedJson = parsedJson[0];
             }
-            formConfigData = parsedJson;
+            configData = parsedJson;
           }
 
           setBlockConfigs(prev => {
             const newMap = new Map(prev);
 
-            // For form blocks, use the complete JSON structure as-is
-            if (blockModal.type === 'form') {
+            // For form and static blocks, use the complete JSON structure as-is
+            if (blockModal.type === 'form' || blockModal.type === 'static') {
               newMap.set(stepId, parsedJson);
-            } else {
-              // For static blocks, build the structure
-              newMap.set(stepId, {
-                id: configId,
-                name: modalBlockName,
-                description: modalBlockDesc,
-                config: parsedJson
-              });
             }
 
             return newMap;
