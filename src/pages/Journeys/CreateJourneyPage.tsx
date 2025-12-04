@@ -13,7 +13,6 @@ import { JourneyBlock } from '../../types';
 import { ShootInspectionData } from '../../types';
 import { workflowsService } from '../../services/workflowsService';
 import { companiesService } from '../../services/companiesService';
-import { screenConfigsService, ScreenConfigType } from '../../services/screenConfigsService';
 import { toast } from 'react-hot-toast';
 import onboardingData from '../../data/onboarding.json';
 
@@ -83,81 +82,25 @@ export default function CreateJourneyPage() {
     try {
       setSaving(true);
 
-      // Step 1: Save all screen configs first and get their IDs
-      const blocksWithConfigIds = await Promise.all(
-        blocks.map(async (block) => {
-          // Only process blocks that have configs stored
-          if (!blockConfigs.has(block.id)) {
-            return block;
-          }
-
+      // Include configData directly in blocks for the backend to handle
+      const blocksWithConfigData = blocks.map((block) => {
+        if (blockConfigs.has(block.id) && ['shootInspect', 'static', 'form'].includes(block.type)) {
           const configData = blockConfigs.get(block.id);
-          let configType: ScreenConfigType | null = null;
+          return {
+            ...block,
+            configData: configData  // Backend will handle creating the config
+          };
+        }
+        return block;
+      });
 
-          // Determine config type based on block type
-          if (block.type === 'shootInspect') {
-            configType = 'shoot-inspect';
-          } else if (block.type === 'static') {
-            configType = 'static-screen';
-          } else if (block.type === 'form') {
-            configType = 'form-screen';
-          }
-
-          // If this block needs config saved to backend
-          if (configType) {
-            try {
-              // For form and static blocks, configData already contains the complete structure
-              const configPayload = {
-                companyId: selectedCompany,
-                ...configData  // Already has id, name, description, config
-              };
-
-              // Try to create the config
-              const savedConfig = await screenConfigsService.createConfig(configType, configPayload);
-
-              // Return block with the saved config ID
-              return {
-                ...block,
-                configId: savedConfig.id
-              };
-            } catch (error: any) {
-              // If creation failed, it might be because the ID already exists
-              // Try to update instead
-              if (configData?.id) {
-                try {
-                  console.log(`Failed to create config ${configData.id}, attempting to update instead`);
-                  const updatePayload = configData;
-                  const savedConfig = await screenConfigsService.updateConfig(
-                    configType,
-                    configData.id,
-                    selectedCompany,
-                    updatePayload
-                  );
-                  return {
-                    ...block,
-                    configId: savedConfig.id
-                  };
-                } catch (updateError) {
-                  console.error(`Error updating ${configType} config:`, updateError);
-                  throw new Error(`Failed to save ${block.name} configuration`);
-                }
-              }
-              console.error(`Error saving ${configType} config:`, error);
-              throw new Error(`Failed to save ${block.name} configuration`);
-            }
-          }
-
-          return block;
-        })
-      );
-
-      // Step 2: Create workflow with blocks that now have real config IDs
+      // Create workflow with configData - backend handles config creation
       await workflowsService.createWorkflow({
         companyId: selectedCompany,
         name: journeyName,
         description: journeyDescription,
         isActive,
-        blocks: blocksWithConfigIds
+        blocks: blocksWithConfigData
       });
 
       toast.success('Journey created successfully');

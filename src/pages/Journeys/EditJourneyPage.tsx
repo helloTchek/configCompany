@@ -11,7 +11,6 @@ import { ArrowLeft, Plus, Upload, Download, GripVertical, Save } from 'lucide-re
 import { JourneyBlock, InspectionJourney } from '../../types';
 import { ShootInspectionData } from '../../types';
 import { workflowsService } from '../../services/workflowsService';
-import { screenConfigsService, ScreenConfigType } from '../../services/screenConfigsService';
 import onboardingData from '../../data/onboarding.json';
 import { toast } from 'react-hot-toast';
 
@@ -57,25 +56,11 @@ export default function EditJourneyPage() {
           setIsActive(foundJourney.isActive);
           setBlocks(foundJourney.blocks);
 
-          // Load existing configs for blocks that have configId
+          // Extract configs from blocks (backend now includes configData in blocks)
           const configsToLoad = new Map<string, any>();
           for (const block of foundJourney.blocks) {
-            if (block.configId && ['shootInspect', 'static', 'form'].includes(block.type)) {
-              try {
-                let configType: ScreenConfigType | null = null;
-                if (block.type === 'shootInspect') configType = 'shoot-inspect';
-                else if (block.type === 'static') configType = 'static-screen';
-                else if (block.type === 'form') configType = 'form-screen';
-
-                if (configType) {
-                  const config = await screenConfigsService.getConfigById(configType, block.configId, foundJourney.companyId);
-                  if (config) {
-                    configsToLoad.set(block.id, config);
-                  }
-                }
-              } catch (error) {
-                console.error(`Error loading config for block ${block.id}:`, error);
-              }
+            if (block.configData) {
+              configsToLoad.set(block.id, block.configData);
             }
           }
           setBlockConfigs(configsToLoad);
@@ -110,63 +95,24 @@ export default function EditJourneyPage() {
     if (!journey) return;
 
     try {
-      // Save any new or modified screen configs
-      const blocksWithConfigIds = await Promise.all(
-        blocks.map(async (block) => {
-          if (!blockConfigs.has(block.id)) return block;
-
+      // Include configData directly in blocks for the backend to handle
+      const blocksWithConfigData = blocks.map((block) => {
+        if (blockConfigs.has(block.id) && ['shootInspect', 'static', 'form'].includes(block.type)) {
           const configData = blockConfigs.get(block.id);
-          let configType: ScreenConfigType | null = null;
+          return {
+            ...block,
+            configData: configData  // Backend will handle creating/updating the config
+          };
+        }
+        return block;
+      });
 
-          if (block.type === 'shootInspect') configType = 'shoot-inspect';
-          else if (block.type === 'static') configType = 'static-screen';
-          else if (block.type === 'form') configType = 'form-screen';
-
-          if (configType && journey.companyId) {
-            // For both form and static blocks, configData already contains the complete structure
-            const updatePayload = configData;  // Already has id, name, description, config
-            const createPayload = {
-              companyId: journey.companyId,
-              ...configData  // Already has id, name, description, config
-            };
-
-            // Try to update if block has configId, fallback to create if it doesn't exist
-            if (block.configId) {
-              try {
-                // Try to update existing config
-                const savedConfig = await screenConfigsService.updateConfig(
-                  configType,
-                  block.configId,
-                  journey.companyId,
-                  updatePayload
-                );
-                return { ...block, configId: savedConfig.id };
-              } catch (error: any) {
-                // If config doesn't exist (404), create it instead
-                if (error.message?.includes('404') || error.message?.includes('not found')) {
-                  console.log(`Config ${block.configId} not found, creating new one`);
-                  const savedConfig = await screenConfigsService.createConfig(configType, createPayload);
-                  return { ...block, configId: savedConfig.id };
-                }
-                // Re-throw other errors
-                throw error;
-              }
-            } else {
-              // Create new config
-              const savedConfig = await screenConfigsService.createConfig(configType, createPayload);
-              return { ...block, configId: savedConfig.id };
-            }
-          }
-          return block;
-        })
-      );
-
-      // Update the workflow
+      // Update the workflow with configData - backend handles config creation/updates
       await workflowsService.updateWorkflow(journey.id, {
         name: journeyName,
         description: journeyDescription,
         isActive,
-        blocks: blocksWithConfigIds
+        blocks: blocksWithConfigData
       }, journey.companyId);
 
       toast.success('Journey updated successfully');
