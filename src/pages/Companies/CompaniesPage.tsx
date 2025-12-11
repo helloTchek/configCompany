@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/auth/AuthContext';
 import Header from '../../components/Layout/Header';
 import Table, { Column } from '../../components/UI/Table';
@@ -18,6 +19,7 @@ import { useColumnOrder } from '../../hooks/useColumnOrder';
 
 export default function CompaniesPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation(['company', 'common']);
   const { user, hasPermission } = useAuth();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [allCompaniesLight, setAllCompaniesLight] = useState<Array<{ objectId: string; id: string; name: string; identifier?: string }>>([]);

@@ -1,45 +1,92 @@
 export const costs = {
-  title: 'Matrices de costos',
-  subtitle: 'Administrar costos de reparación por tipo de pieza, ubicación y gravedad',
-  create: 'Crear nueva matriz',
+  title: 'Gestión de costos de reparación',
+  subtitle: 'Gestionar matrices de costos para estimaciones de reparación de vehículos',
+  pageTitle: 'Matrices de costos',
+  pageSubtitle: 'Seleccione y gestione sus matrices de costos de reparación',
+  create: 'Crear matriz',
   edit: 'Editar matriz de costos',
+  duplicate: 'Duplicar matriz',
+  downloadTemplate: 'Descargar plantilla',
+  searchPlaceholder: 'Buscar matrices de costos...',
+  noMatricesFound: 'No se encontraron matrices de costos',
+  tryAdjustSearch: 'Intente ajustar su búsqueda',
+  createToGetStarted: 'Cree una nueva matriz de costos para comenzar',
   fields: {
+    matrix: 'Matriz',
     company: 'Empresa',
     currency: 'Moneda',
+    currencyAndTax: 'Moneda e Impuesto',
+    tax: 'Impuesto',
     taxRate: 'Tasa de impuesto (%)',
+    status: 'Estado',
+    lastUpdated: 'Última actualización',
     partsCount: 'Cantidad de piezas',
     partType: 'Tipo de pieza',
     location: 'Ubicación',
-    severity: 'Gravedad',
-    cost: 'Costo'
+    severity: 'Severidad',
+    cost: 'Costo',
+    totalEntries: 'Entradas totales',
+    validated: 'Validado',
+    created: 'Creado'
   },
   severities: {
     minor: 'Leve',
     moderate: 'Moderada',
-    major: 'Alta',
+    major: 'Mayor',
     severe: 'Severa'
   },
   locations: {
-    front: 'Frente',
-    rear: 'Parte trasera',
+    front: 'Frontal',
+    rear: 'Trasera',
     left: 'Izquierda',
     right: 'Derecha',
     roof: 'Techo',
     interior: 'Interior'
+  },
+  status: {
+    active: 'Activo'
   },
   actions: {
     addPart: 'Agregar pieza',
     removePart: 'Eliminar pieza',
     importCsv: 'Importar CSV',
     exportCsv: 'Exportar CSV',
-    bulkEdit: 'Edición masiva'
+    bulkEdit: 'Edición masiva',
+    view: 'Ver',
+    edit: 'Editar',
+    duplicate: 'Duplicar',
+    delete: 'Eliminar'
+  },
+  modal: {
+    viewTitle: 'Detalles de la matriz de costos',
+    deleteTitle: 'Confirmar eliminación',
+    deleteQuestion: '¿Está seguro de que desea eliminar esta matriz?',
+    deleteDescription: 'Está a punto de eliminar la matriz de costos',
+    forCompany: 'para',
+    deleteWarning: 'Esta acción es irreversible.',
+    deleteWarningDetail: 'Todos los parámetros de costos asociados también se eliminarán permanentemente.',
+    duplicateTitle: 'Duplicar matriz de costos',
+    duplicateDescription: 'Se creará una copia completa de esta matriz de costos con todos sus parámetros asociados.',
+    newMatrixName: 'Nuevo nombre de la matriz',
+    duplicateNamePlaceholder: 'Nombre de la matriz duplicada',
+    cancel: 'Cancelar',
+    confirm: 'Sí, eliminar',
+    confirmDuplicate: 'Duplicar',
+    deleting: 'Eliminando...',
+    duplicating: 'Duplicando...',
+    close: 'Cerrar',
+    editMatrix: 'Editar matriz',
+    costMatrixConfiguration: 'Configuración de la matriz de costos'
   },
   messages: {
     createSuccess: 'Matriz de costos creada con éxito',
     updateSuccess: 'Matriz de costos actualizada con éxito',
     deleteSuccess: 'Matriz de costos eliminada con éxito',
+    duplicateSuccess: 'Matriz de costos "{{name}}" duplicada con éxito',
+    deleteFailed: 'Error al eliminar: {{error}}',
+    duplicateFailed: 'Error al duplicar: {{error}}',
     importSuccess: 'CSV importado con éxito',
     exportSuccess: 'CSV exportado con éxito',
-    invalidCsv: 'Formato CSV inválido'
+    invalidCsv: 'Formato CSV no válido'
   }
 } as const;

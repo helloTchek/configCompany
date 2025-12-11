@@ -1,23 +1,63 @@
 export const costs = {
-  title: 'Kostenmatrices',
-  subtitle: 'Beheer reparatiekosten per type onderdeel, locatie en ernst',
-  create: 'Nieuwe matrix aanmaken',
-  edit: 'Kostenmatrix bewerken',
+  title: 'Beheer van Reparatiekosten',
+  subtitle: 'Beheer kostenmatrices voor voertuigreparatieoffertes',
+  pageTitle: 'Kostenmatrices',
+  pageSubtitle: 'Selecteer en beheer uw reparatiekostenmatrices',
+  create: 'Matrix maken',
+  createNew: 'Nieuwe kostenmatrix maken',
+  createCostMatrix: 'Kostenmatrix maken',
+  edit: 'Matrix bewerken',
+  duplicate: 'Matrix dupliceren',
+  downloadTemplate: 'Sjabloon downloaden',
+  searchPlaceholder: 'Zoek kostenmatrices...',
+  noMatricesFound: 'Geen kostenmatrices gevonden',
+  tryAdjustSearch: 'Probeer uw zoekopdracht aan te passen',
+  createToGetStarted: 'Maak een nieuwe kostenmatrix om te beginnen',
+  backToCostMatrices: 'Terug naar Kostenmatrices',
+  loading: 'Laden...',
+  loadingCostMatrix: 'Kostenmatrix laden...',
+  error: 'Fout',
+  costMatrixNotFound: 'Kostenmatrix niet gevonden',
+  failedToLoad: 'Laden van kostenmatrix mislukt',
   fields: {
+    matrix: 'Matrix',
+    matrixName: 'Matrixnaam',
     company: 'Bedrijf',
     currency: 'Valuta',
+    currencyAndTax: 'Valuta & Belasting',
+    tax: 'Belasting',
     taxRate: 'Belastingtarief (%)',
+    status: 'Status',
+    lastUpdated: 'Laatst bijgewerkt',
     partsCount: 'Aantal onderdelen',
-    partType: 'Type onderdeel',
+    partType: 'Onderdeeltype',
     location: 'Locatie',
     severity: 'Ernst',
-    cost: 'Kosten'
+    cost: 'Kosten',
+    totalEntries: 'Totaal aantal vermeldingen',
+    validated: 'Geverifieerd',
+    created: 'Gemaakt',
+    description: 'Beschrijving',
+    vehiclePart: 'VOERTUIGONDERDEEL',
+    severityType: 'ERNSTTYPE',
+    code: 'Code: ',
+    level: 'Niveau ',
+    companyLabel: 'Bedrijf: '
+  },
+  placeholders: {
+    matrixName: 'bijv. PREMIUM_MATRIX',
+    description: 'Korte beschrijving van deze kostenmatrix',
+    searchCompany: 'Zoek een bedrijf...',
+    searchVehicleParts: 'Zoek voertuigonderdelen...',
+    searchLocations: 'Zoek locaties...',
+    allSeverityTypes: 'Alle ernsttypen...'
   },
   severities: {
-    minor: 'Mild',
-    moderate: 'Gemiddeld',
-    major: 'Ernstig',
-    severe: 'Zeer ernstig'
+    minor: 'Klein',
+    light: 'Licht',
+    moderate: 'Matig',
+    major: 'Belangrijk',
+    severe: 'Ernstig'
   },
   locations: {
     front: 'Voor',
@@ -27,19 +67,101 @@ export const costs = {
     roof: 'Dak',
     interior: 'Interieur'
   },
+  currencies: {
+    eur: 'EUR (€)',
+    usd: 'USD ($)',
+    gbp: 'GBP (£)'
+  },
+  status: {
+    active: 'Actief'
+  },
   actions: {
     addPart: 'Onderdeel toevoegen',
     removePart: 'Onderdeel verwijderen',
     importCsv: 'CSV importeren',
     exportCsv: 'CSV exporteren',
-    bulkEdit: 'Bulkbewerking'
+    bulkEdit: 'Bulkbewerking',
+    view: 'Bekijken',
+    edit: 'Bewerken',
+    duplicate: 'Dupliceren',
+    delete: 'Verwijderen',
+    downloadXlsx: 'XLSX downloaden',
+    importFromExcel: 'Importeren vanuit Excel',
+    importInProgress: 'Importeren in uitvoering... {{progress}}%',
+    saveChanges: 'Wijzigingen opslaan',
+    createMatrix: 'Matrix maken',
+    cancel: 'Annuleren',
+    deleteAllParams: 'Verwijder alle kostenparameters',
+    deleteAllParamsTitle: 'Verwijder alle kostenparameters'
+  },
+  sections: {
+    matrixSettings: 'Matrixinstellingen',
+    filters: 'Filters',
+    costEntries: 'Kostenitems',
+    filterByVehiclePart: 'Filter op voertuigonderdeel',
+    filterByLocation: 'Filter op locatie',
+    filterBySeverityType: 'Filter op ernsttype'
+  },
+  modal: {
+    viewTitle: 'Kostenmatrixdetails',
+    deleteTitle: 'Verwijderen bevestigen',
+    deleteQuestion: 'Weet u zeker dat u deze matrix wilt verwijderen?',
+    deleteDescription: 'U staat op het punt de kostenmatrix te verwijderen',
+    forCompany: 'voor',
+    deleteWarning: 'Deze actie is onomkeerbaar.',
+    deleteWarningDetail: 'Alle bijbehorende kostenparameters worden ook permanent verwijderd.',
+    duplicateTitle: 'Kostenmatrix dupliceren',
+    duplicateDescription: 'Er wordt een volledige kopie van deze matrix gemaakt met alle bijbehorende parameters.',
+    newMatrixName: 'Nieuwe matrixnaam',
+    duplicateNamePlaceholder: 'Duplicaat van matrixnaam',
+    cancel: 'Annuleren',
+    confirm: 'Ja, verwijderen',
+    confirmDuplicate: 'Dupliceren',
+    deleting: 'Verwijderen...',
+    duplicating: 'Dupliceren...',
+    close: 'Sluiten',
+    editMatrix: 'Matrix bewerken',
+    costMatrixConfiguration: 'Kostenmatrixconfiguratie',
+    confirmDeleteAll: 'Verwijderen bevestigen',
+    deleteAllQuestion: 'Alle kostenparameters verwijderen?',
+    deleteAllDescription: 'U staat op het punt <strong>{{count}} kostenparameters</strong> te verwijderen uit de matrix "{{name}}".',
+    deleteAllWarning: '<strong>Deze actie is onomkeerbaar.</strong> Alle kostenitems worden verwijderd, maar de matrix zelf blijft bestaan. U kunt later gegevens opnieuw importeren.',
+    cancelButton: 'Annuleren',
+    deletingButton: 'Verwijderen...',
+    deleteEntriesButton: 'Kostenitems verwijderen'
+  },
+  template: {
+    needTemplate: 'Heeft u een starttemplate nodig?',
+    downloadDescription: 'Download onze standaardtemplate om te beginnen met veelvoorkomende voertuigonderdelen en reparatiekosten.'
+  },
+  display: {
+    showingEntries: 'Weergegeven {{filtered}} van {{total}} items',
+    noCostEntries: 'Geen kostenitems gevonden',
+    loadingCompanies: 'Bedrijven laden...',
+    taxRateLabel: 'Belastingtarief',
+    currencyLabel: 'Valuta'
+  },
+  validation: {
+    nameRequired: 'Matrixnaam is verplicht',
+    companyRequired: 'Bedrijf is verplicht',
+    currencyRequired: 'Valuta is verplicht',
+    taxRateRange: 'Belastingtarief moet tussen 0 en 100 liggen'
   },
   messages: {
     createSuccess: 'Kostenmatrix succesvol aangemaakt',
     updateSuccess: 'Kostenmatrix succesvol bijgewerkt',
+    updateSuccessWithParams: 'Kostenmatrix succesvol bijgewerkt!\n\n{{count}} kostenparameter(s) bijgewerkt.',
     deleteSuccess: 'Kostenmatrix succesvol verwijderd',
-    importSuccess: 'CSV succesvol geïmporteerd',
+    deleteParamsSuccess: '{{count}} kostenparameters succesvol verwijderd',
+    duplicateSuccess: 'Kostenmatrix "{{name}}" succesvol gedupliceerd',
+    deleteFailed: 'Verwijderen mislukt: {{error}}',
+    deleteParamsFailed: 'Verwijderen mislukt: {{error}}',
+    duplicateFailed: 'Dupliceren mislukt: {{error}}',
+    importSuccess: 'Import succesvol: {{count}} kostenparameters geïmporteerd!',
+    importSuccessWithErrors: 'Import succesvol: {{count}} kostenparameters geïmporteerd!\n\nWaarschuwing: {{errors}} rijen bevatten fouten.',
+    importFailed: 'Import mislukt: {{error}}',
     exportSuccess: 'CSV succesvol geëxporteerd',
-    invalidCsv: 'Ongeldig CSV-formaat'
+    invalidCsv: 'Ongeldig CSV-formaat',
+    saveFailed: 'Opslaan van kostenmatrix mislukt: {{error}}'
   }
 } as const;

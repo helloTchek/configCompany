@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import Header from '../../components/Layout/Header';
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
@@ -42,6 +43,7 @@ const getCurrencyCode = (currencySymbol: string): string => {
 };
 
 export default function EditCostMatrixPage() {
+  const { t } = useTranslation(['costs', 'common']);
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -88,7 +90,7 @@ export default function EditCostMatrixPage() {
       ]);
 
       if (!settings) {
-        setError('Cost matrix not found');
+        setError(t('costs:costMatrixNotFound'));
         setTimeout(() => navigate('/cost-matrices'), 2000);
         return;
       }
@@ -102,7 +104,7 @@ export default function EditCostMatrixPage() {
       });
     } catch (err: any) {
       console.error('Error loading cost matrix:', err);
-      setError(err.message || 'Failed to load cost matrix');
+      setError(err.message || t('costs:failedToLoad'));
     } finally {
       setLoading(false);
     }
@@ -131,15 +133,15 @@ export default function EditCostMatrixPage() {
     };
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Matrix name is required';
+      newErrors.name = t('costs:validation.nameRequired');
     }
 
     if (!formData.currency.trim()) {
-      newErrors.currency = 'Currency is required';
+      newErrors.currency = t('costs:validation.currencyRequired');
     }
 
     if (formData.tax < 0 || formData.tax > 100) {
-      newErrors.tax = 'Tax rate must be between 0 and 100';
+      newErrors.tax = t('costs:validation.taxRateRange');
     }
 
     setErrors(newErrors);
@@ -166,11 +168,11 @@ export default function EditCostMatrixPage() {
       await Promise.all(updatePromises);
 
       const updatedParamsCount = Object.keys(editedParams).length;
-      alert(`Cost matrix updated successfully!${updatedParamsCount > 0 ? `\n\n${updatedParamsCount} cost param(s) updated.` : ''}`);
+      alert(updatedParamsCount > 0 ? t('costs:messages.updateSuccessWithParams', { count: updatedParamsCount }) : t('costs:messages.updateSuccess'));
       navigate('/cost-matrices');
     } catch (err: any) {
       console.error('Error saving cost matrix:', err);
-      alert(`Failed to save cost matrix: ${err.message}`);
+      alert(t('costs:messages.saveFailed', { error: err.message }));
     }
   };
 
@@ -185,10 +187,10 @@ export default function EditCostMatrixPage() {
       // Reload data to show empty list
       await loadData();
 
-      alert(`${result.deleted} paramètres de coûts supprimés avec succès`);
+      alert(t('costs:messages.deleteParamsSuccess', { count: result.deleted }));
     } catch (err: any) {
       console.error('Error deleting cost params:', err);
-      alert(`Échec de la suppression: ${err.message}`);
+      alert(t('costs:messages.deleteParamsFailed', { error: err.message }));
     } finally {
       setDeleting(false);
     }
@@ -276,7 +278,10 @@ export default function EditCostMatrixPage() {
 
       if (result.success) {
         setTimeout(() => {
-          alert(`Import réussi: ${result.created} paramètres de coûts importés!${result.errors.length > 0 ? `\n\nAttention: ${result.errors.length} lignes avec erreurs.` : ''}`);
+          alert(result.errors.length > 0
+            ? t('costs:messages.importSuccessWithErrors', { count: result.created, errors: result.errors.length })
+            : t('costs:messages.importSuccess', { count: result.created })
+          );
         }, 300);
 
         // Reload cost params after successful import
@@ -285,7 +290,7 @@ export default function EditCostMatrixPage() {
     } catch (err: any) {
       clearInterval(progressInterval);
       console.error('Error importing Excel file:', err);
-      alert(`Échec de l'import: ${err.message}`);
+      alert(t('costs:messages.importFailed', { error: err.message }));
     } finally {
       setTimeout(() => {
         setImporting(false);
@@ -320,11 +325,11 @@ export default function EditCostMatrixPage() {
   if (loading) {
     return (
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header title="Loading..." />
+        <Header title={t('costs:loading')} />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading cost matrix...</p>
+            <p className="text-gray-600">{t('costs:loadingCostMatrix')}</p>
           </div>
         </div>
       </div>
@@ -334,12 +339,12 @@ export default function EditCostMatrixPage() {
   if (error || !costSettings) {
     return (
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header title="Error" />
+        <Header title={t('costs:error')} />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <p className="text-red-600 mb-4">{error || 'Cost matrix not found'}</p>
+            <p className="text-red-600 mb-4">{error || t('costs:costMatrixNotFound')}</p>
             <Button onClick={() => navigate('/cost-matrices')}>
-              Back to Cost Matrices
+              {t('costs:backToCostMatrices')}
             </Button>
           </div>
         </div>
@@ -361,7 +366,7 @@ export default function EditCostMatrixPage() {
             className="flex items-center gap-2 mb-4"
           >
             <ArrowLeft size={16} />
-            Back to Cost Matrices
+            {t('costs:backToCostMatrices')}
           </Button>
         </div>
 
@@ -371,29 +376,29 @@ export default function EditCostMatrixPage() {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">{formData.name}</h2>
-                <p className="text-gray-600">Company: {companyName}</p>
-                <p className="text-sm text-gray-500">Last updated: {formatDate(costSettings.updatedAt)}</p>
+                <p className="text-gray-600">{t('costs:fields.companyLabel')}{companyName}</p>
+                <p className="text-sm text-gray-500">{t('costs:fields.lastUpdated')}: {formatDate(costSettings.updatedAt)}</p>
               </div>
               <div className="flex items-center gap-4 text-sm">
                 <div className="text-center">
                   <div className="font-semibold text-gray-900">{formData.tax}%</div>
-                  <div className="text-gray-600">Tax Rate</div>
+                  <div className="text-gray-600">{t('costs:display.taxRateLabel')}</div>
                 </div>
                 <div className="text-center">
                   <div className="font-semibold text-gray-900">{costSettings?.currency || getCurrencySymbol(formData.currency)}</div>
-                  <div className="text-gray-600">Currency</div>
+                  <div className="text-gray-600">{t('costs:display.currencyLabel')}</div>
                 </div>
                 <div className="text-center">
                   <div className="flex items-center gap-2 justify-center">
                     <div>
                       <div className="font-semibold text-gray-900">{costParams.length}</div>
-                      <div className="text-gray-600">Cost Entries</div>
+                      <div className="text-gray-600">{t('costs:sections.costEntries')}</div>
                     </div>
                     {costParams.length > 0 && (
                       <button
                         onClick={() => setShowDeleteModal(true)}
                         className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Supprimer tous les paramètres de coûts"
+                        title={t('costs:actions.deleteAllParamsTitle')}
                       >
                         <Trash2 size={16} />
                       </button>
@@ -412,7 +417,7 @@ export default function EditCostMatrixPage() {
                   size="sm"
                 >
                   <Download size={16} />
-                  Download XLSX
+                  {t('costs:actions.downloadXlsx')}
                 </Button>
                 <Button
                   variant="primary"
@@ -422,7 +427,7 @@ export default function EditCostMatrixPage() {
                   disabled={importing}
                 >
                   <Upload size={16} />
-                  {importing ? `Import en cours... ${importProgress}%` : 'Import from Excel'}
+                  {importing ? t('costs:actions.importInProgress', { progress: importProgress }) : t('costs:actions.importFromExcel')}
                 </Button>
                 <input
                   ref={fileInputRef}
@@ -447,17 +452,17 @@ export default function EditCostMatrixPage() {
 
           {/* Matrix Settings */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Matrix Settings</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('costs:sections.matrixSettings')}</h3>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <Input
-                label="Matrix Name"
+                label={t('costs:fields.matrixName')}
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
                 error={errors.name}
               />
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('costs:fields.currency')}</label>
                 <select
                   value={formData.currency}
                   onChange={(e) => handleInputChange('currency', e.target.value)}
@@ -465,15 +470,15 @@ export default function EditCostMatrixPage() {
                     errors.currency ? 'border-red-500' : 'border-gray-300'
                   }`}
                 >
-                  <option value="EUR">EUR (€)</option>
-                  <option value="USD">USD ($)</option>
-                  <option value="GBP">GBP (£)</option>
+                  <option value="EUR">{t('costs:currencies.eur')}</option>
+                  <option value="USD">{t('costs:currencies.usd')}</option>
+                  <option value="GBP">{t('costs:currencies.gbp')}</option>
                 </select>
                 {errors.currency && <p className="text-sm text-red-600 mt-1">{errors.currency}</p>}
               </div>
 
               <Input
-                label="Tax Rate (%)"
+                label={t('costs:fields.taxRate')}
                 type="number"
                 value={formData.tax}
                 onChange={(e) => handleInputChange('tax', parseFloat(e.target.value) || 0)}
@@ -487,41 +492,41 @@ export default function EditCostMatrixPage() {
 
           {/* Filters */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Filters</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('costs:sections.filters')}</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Vehicle Part</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('costs:sections.filterByVehiclePart')}</label>
                 <input
                   type="text"
-                  placeholder="Search vehicle parts..."
+                  placeholder={t('costs:placeholders.searchVehicleParts')}
                   value={filterByPart}
                   onChange={(e) => setFilterByPart(e.target.value)}
                   className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Location</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('costs:sections.filterByLocation')}</label>
                 <input
                   type="text"
-                  placeholder="Search locations..."
+                  placeholder={t('costs:placeholders.searchLocations')}
                   value={filterByLocation}
                   onChange={(e) => setFilterByLocation(e.target.value)}
                   className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Severity Type</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('costs:sections.filterBySeverityType')}</label>
                 <select
                   value={filterBySeverity}
                   onChange={(e) => setFilterBySeverity(e.target.value)}
                   className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="">All severity types...</option>
-                  <option value="SEV1">Minor</option>
-                  <option value="SEV2">Light</option>
-                  <option value="SEV3">Moderate</option>
-                  <option value="SEV4">Major</option>
-                  <option value="SEV5">Severe</option>
+                  <option value="">{t('costs:placeholders.allSeverityTypes')}</option>
+                  <option value="SEV1">{t('costs:severities.minor')}</option>
+                  <option value="SEV2">{t('costs:severities.light')}</option>
+                  <option value="SEV3">{t('costs:severities.moderate')}</option>
+                  <option value="SEV4">{t('costs:severities.major')}</option>
+                  <option value="SEV5">{t('costs:severities.severe')}</option>
                 </select>
               </div>
             </div>
@@ -530,26 +535,26 @@ export default function EditCostMatrixPage() {
           {/* Cost Params Table */}
           <div className="bg-white rounded-lg border border-gray-200">
             <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">Cost Entries</h3>
+              <h3 className="text-lg font-medium text-gray-900">{t('costs:sections.costEntries')}</h3>
               <p className="text-sm text-gray-600">
-                Showing {filteredParams.length} of {costParams.length} entries
+                {t('costs:display.showingEntries', { filtered: filteredParams.length, total: costParams.length })}
               </p>
             </div>
 
             <div className="overflow-x-auto">
               {filteredParams.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
-                  <p>No cost entries found</p>
+                  <p>{t('costs:display.noCostEntries')}</p>
                 </div>
               ) : (
                 <table className="min-w-full">
                   <thead>
                     <tr className="border-b border-gray-200 bg-gray-50">
-                      <th className="text-left py-3 px-4 font-medium text-gray-700 text-sm">VEHICLE PART</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700 text-sm">LOCATION</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700 text-sm">SEVERITY TYPE</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700 text-sm">COST</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700 text-sm">VALIDATED</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-700 text-sm">{t('costs:fields.vehiclePart')}</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-700 text-sm">{t('costs:fields.location').toUpperCase()}</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-700 text-sm">{t('costs:fields.severityType')}</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-700 text-sm">{t('costs:fields.cost').toUpperCase()}</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-700 text-sm">{t('costs:fields.validated').toUpperCase()}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -558,7 +563,7 @@ export default function EditCostMatrixPage() {
                         <td className="py-3 px-4">
                           <div>
                             <div className="font-medium text-gray-900">{param.vehiclePart.label}</div>
-                            <div className="text-xs text-gray-500">Code: {param.vehiclePart.code}</div>
+                            <div className="text-xs text-gray-500">{t('costs:fields.code')}{param.vehiclePart.code}</div>
                           </div>
                         </td>
                         <td className="py-3 px-4">
@@ -575,7 +580,7 @@ export default function EditCostMatrixPage() {
                                 severityColors[param.severityType.level] || 'bg-gray-100 text-gray-800'
                               }`}
                             >
-                              Level {param.severityType.levelNb}
+                              {t('costs:fields.level')}{param.severityType.levelNb}
                             </span>
                           </div>
                         </td>
@@ -611,38 +616,35 @@ export default function EditCostMatrixPage() {
           {/* Save Buttons */}
           <div className="flex gap-4 justify-end sticky bottom-0 bg-white py-4 border-t border-gray-200">
             <Button variant="secondary" onClick={() => navigate('/cost-matrices')}>
-              Cancel
-            </Button>
-            <Button
-              className="flex items-center gap-2"
-              onClick={handleSave}
-            >
-              <Save size={16} />
-              Save Changes
-            </Button>
+  {t('costs:actions.cancel')}
+</Button>
+<Button className="flex items-center gap-2" onClick={handleSave}>
+  <Save size={16} />
+  {t('costs:actions.saveChanges')}
+</Button>
+
           </div>
         </div>
       </div>
 
       {/* Delete Confirmation Modal */}
-      <Modal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        title="Confirmer la suppression"
-        size="md"
-      >
+<Modal
+  isOpen={showDeleteModal}
+  onClose={() => setShowDeleteModal(false)}
+  title={t('costs:modal.deleteTitle')}
+  size="md"
+>
         <div className="space-y-4">
           <div className="flex items-start gap-3">
             <div className="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
               <AlertTriangle className="w-6 h-6 text-red-600" />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Supprimer tous les paramètres de coûts ?
-              </h3>
-              <p className="text-sm text-gray-600 mb-3">
-                Vous êtes sur le point de supprimer <span className="font-semibold">{costParams.length} paramètres de coûts</span> de la matrice "{formData.name}".
-              </p>
+             <h3 className="text-lg font-semibold text-gray-900 mb-2">
+  {t('costs:modal.deleteAllQuestion')}
+</h3>
+<p className="text-sm text-gray-600 mb-3" dangerouslySetInnerHTML={{ __html: t('costs:modal.deleteAllDescription', { count: costParams.length, name: formData.name }) }} />
+
               <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                 <p className="text-sm text-red-800">
                   <strong>Cette action est irréversible.</strong> Tous les cost entries seront supprimés, mais la matrice de coûts elle-même sera conservée. Vous pourrez réimporter des données par la suite.
@@ -652,20 +654,20 @@ export default function EditCostMatrixPage() {
           </div>
 
           <div className="flex gap-3 justify-end pt-4 border-t border-gray-200">
-            <Button
-              variant="secondary"
-              onClick={() => setShowDeleteModal(false)}
-              disabled={deleting}
-            >
-              Annuler
-            </Button>
-            <Button
-              onClick={handleDelete}
-              disabled={deleting}
-              className="!bg-red-600 hover:!bg-red-700 !text-white"
-            >
-              {deleting ? 'Suppression...' : 'Supprimer les cost entries'}
-            </Button>
+<Button
+  variant="secondary"
+  onClick={() => setShowDeleteModal(false)}
+  disabled={deleting}
+>
+  {t('costs:modal.cancelButton')}
+</Button>
+<Button
+  onClick={handleDelete}
+  disabled={deleting}
+  className="!bg-red-600 hover:!bg-red-700 !text-white"
+>
+  {deleting ? t('costs:modal.deletingButton') : t('costs:modal.deleteEntriesButton')}
+</Button>
           </div>
         </div>
       </Modal>
