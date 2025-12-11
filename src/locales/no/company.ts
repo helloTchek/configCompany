@@ -4,64 +4,84 @@ export const company = {
   create: 'Opprett nytt selskap',
   edit: 'Rediger selskap',
   duplicate: 'Dupliser selskap',
+  archive: 'Arkiver selskap',
+  unarchive: 'Gjenopprett selskap',
   fields: {
-    name: 'Firmanavn',
-    identifier: 'Firma-ID',
+    name: 'Selskapsnavn',
+    identifier: 'Identifikator',
+    companyId: 'Selskaps-ID',
+    apiToken: 'API-token',
+    currentRequests: 'Aktuelle forespørsler',
+    maxRequests: 'Maks forespørsler',
+    createdDate: 'Opprettet dato',
     contractType: 'Kontrakttype',
     businessSector: 'Bransje',
-    logoUrl: 'Logo-URL',
-    retentionPeriod: 'Oppbevaringsperiode (måneder)',
-    disableFastTrack: 'Deaktiver hurtigspor',
-    enableMileageCapture: 'Aktiver kilometermåling',
-    enableBlurDetection: 'Uskarphetsdeteksjon på skilt',
-    enableVinScanning: 'Aktiver VIN-skanning',
-    enableBrandModelDetection: 'Aktiver merke- og modellgjenkjenning',
-    iaValidation: 'IA-validering (Joelle-modell)',
-    humanValidationEnabled: 'Menneskelig validering aktivert',
-    validationPriority: 'Valideringsprioritet (0-5)',
-    maxValidationDelay: 'Maks valideringsforsinkelse (minutter)',
-    minTaskProcessingDuration: 'Min. oppgavebehandlingstid (minutter)',
-    showStartInstantInspection: 'Vis Start Umiddelbar Inspeksjon',
-    showSendInspectionLink: 'Vis Send Inspeksjonslenke',
     parentCompany: 'Morselskap',
-    childrenCount: 'Antall datterselskaper'
+    childrenCount: 'Datterselskaper',
+    chaseupRules: 'Påminnelsesregler',
+    companyStatus: 'Selskapsstatus'
   },
   contractTypes: {
-    client: 'Kunde',
-    prospect: 'Potensiell kunde',
+    client: 'Klient',
+    prospect: 'Prospekt',
     test: 'Test',
-    demo: 'Demo'
+    demo: 'Demo',
+    allTypes: 'Alle typer'
   },
-  businessSectors: {
-    insurance: 'Forsikring',
-    leasing: 'Leasing',
-    rental: 'Utleie',
-    fleetManagement: 'Flåtestyring',
-    automotive: 'Bilindustri'
-  },
-  tabs: {
-    general: 'Generelle innstillinger',
-    hierarchy: 'Hierarki',
-    journeySettings: 'Inspeksjonsreise-innstillinger',
-    savedJourneys: 'Lagrede reiser'
-  },
-  sections: {
-    generalSettings: 'Generelle innstillinger',
-    hubConfiguration: 'Hub-konfigurasjon',
-    apiConfiguration: 'API-konfigurasjon',
-    validation: 'Validering',
-    eventsWebhooks: 'Hendelser og webhooks',
-    companyHierarchy: 'Selskapsstruktur',
+  filters: {
+    contractType: 'Kontrakttype',
+    companyHierarchy: 'Selskapshierarki',
+    allCompanies: 'Alle selskaper',
+    parentCompanies: 'Morselskaper',
     childCompanies: 'Datterselskaper',
-    hierarchyActions: 'Hierarki-handlinger'
+    active: 'Aktive selskaper',
+    archived: 'Arkiverte selskaper',
+    showArchived: 'Vis arkiverte selskaper'
+  },
+  status: {
+    active: 'Aktiv',
+    archived: 'Arkivert'
+  },
+  actions: {
+    edit: 'Rediger',
+    duplicate: 'Dupliser',
+    archive: 'Arkiver',
+    unarchive: 'Gjenopprett'
+  },
+  placeholders: {
+    search: 'Søk etter navn, identifikator, selskaps-ID eller API-token...',
+    companyName: 'Skriv inn nytt selskapsnavn',
+    senderName: 'Skriv inn avsendernavn',
+    webhookUrl: 'Skriv inn webhook-URL',
+    searchCompanies: 'Søk selskaper...'
+  },
+  labels: {
+    companyManagement: 'Selskapsadministrasjon',
+    newCompanyName: 'Nytt selskapsnavn',
+    senderName: 'Avsendernavn',
+    webhookUrl: 'Webhook-URL',
+    parentCompanyOptional: 'Morselskap (Valgfritt)',
+    duplicateOptions: 'Duplikeringsalternativer',
+    duplicateJourneys: 'Dupliser reiser',
+    duplicateCostSettings: 'Dupliser kostnadsinnstillinger',
+    duplicateSortingRules: 'Dupliser sorteringsregler',
+    duplicateWebhookEvents: 'Dupliser webhook-hendelser',
+    archivedCount: '{{count}} arkivert(e)'
+  },
+  chaseupStatus: {
+    active: 'Aktiv',
+    create: 'Opprett'
   },
   messages: {
     createSuccess: 'Selskap opprettet',
     updateSuccess: 'Selskap oppdatert',
     deleteSuccess: 'Selskap slettet',
     duplicateSuccess: 'Selskap duplisert',
-    deleteConfirm: 'Er du sikker på at du vil slette {{name}}? Denne handlingen kan ikke angres.',
-    noChildCompanies: 'Dette selskapet har ingen datterselskaper.',
-    duplicateWarning: 'Husk: Du må opprette brukere for det nye selskapet etter duplisering.'
+    archiveSuccess: 'Selskap arkivert',
+    unarchiveSuccess: 'Selskap gjenopprettet',
+    noCompaniesFound: 'Ingen selskaper funnet som matcher dine kriterier.',
+    archiveDescription: 'Arkiverte selskaper kan gjenopprettes senere ved å bruke filteret "Vis arkiverte selskaper".',
+    unarchiveDescription: 'Gjenoppretting vil gjenopprette tilgangen til selskapet og dets API-token.',
+    loading: 'Laster selskaper...'
   }
 } as const;

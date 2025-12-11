@@ -1,67 +1,87 @@
 export const company = {
   title: 'Aziende',
-  subtitle: 'Gestisci le aziende, le loro impostazioni e configurazioni',
+  subtitle: 'Gestisci aziende, le loro impostazioni e configurazioni',
   create: 'Crea nuova azienda',
   edit: 'Modifica azienda',
   duplicate: 'Duplica azienda',
+  archive: 'Archivia azienda',
+  unarchive: 'Ripristina azienda',
   fields: {
     name: 'Nome azienda',
-    identifier: 'Identificativo azienda',
+    identifier: 'Identificatore',
+    companyId: 'ID azienda',
+    apiToken: 'Token API',
+    currentRequests: 'Richieste attuali',
+    maxRequests: 'Richieste max',
+    createdDate: 'Data creazione',
     contractType: 'Tipo di contratto',
     businessSector: 'Settore aziendale',
-    logoUrl: 'URL del logo',
-    retentionPeriod: 'Periodo di conservazione (mesi)',
-    disableFastTrack: 'Disabilita Fast Track',
-    enableMileageCapture: 'Abilita registrazione chilometraggio',
-    enableBlurDetection: 'Oscura targhe',
-    enableVinScanning: 'Abilita scansione VIN',
-    enableBrandModelDetection: 'Abilita rilevamento marca e modello',
-    iaValidation: 'Validazione IA (modello Joelle)',
-    humanValidationEnabled: 'Validazione umana abilitata',
-    validationPriority: 'Priorità di validazione (0-5)',
-    maxValidationDelay: 'Ritardo massimo validazione (minuti)',
-    minTaskProcessingDuration: 'Durata minima elaborazione task (minuti)',
-    showStartInstantInspection: 'Mostra avvio ispezione istantanea',
-    showSendInspectionLink: 'Mostra invio link ispezione',
     parentCompany: 'Azienda madre',
-    childrenCount: 'Numero di aziende figlie'
+    childrenCount: 'Filiali',
+    chaseupRules: 'Regole di sollecito',
+    companyStatus: 'Stato azienda'
   },
   contractTypes: {
     client: 'Cliente',
-    prospect: 'Prospect',
+    prospect: 'Potenziale cliente',
     test: 'Test',
-    demo: 'Demo'
+    demo: 'Demo',
+    allTypes: 'Tutti i tipi'
   },
-  businessSectors: {
-    insurance: 'Assicurazioni',
-    leasing: 'Leasing',
-    rental: 'Noleggio',
-    fleetManagement: 'Gestione flotte',
-    automotive: 'Automotive'
-  },
-  tabs: {
-    general: 'Impostazioni generali',
-    hierarchy: 'Gerarchia',
-    journeySettings: 'Impostazioni percorso ispezione',
-    savedJourneys: 'Percorsi salvati'
-  },
-  sections: {
-    generalSettings: 'Impostazioni generali',
-    hubConfiguration: 'Configurazione hub',
-    apiConfiguration: 'Configurazione API',
-    validation: 'Validazione',
-    eventsWebhooks: 'Eventi & Webhook',
+  filters: {
+    contractType: 'Tipo di contratto',
     companyHierarchy: 'Gerarchia aziendale',
+    allCompanies: 'Tutte le aziende',
+    parentCompanies: 'Aziende madri',
     childCompanies: 'Aziende figlie',
-    hierarchyActions: 'Azioni gerarchia'
+    active: 'Aziende attive',
+    archived: 'Aziende archiviate',
+    showArchived: 'Mostra aziende archiviate'
+  },
+  status: {
+    active: 'Attivo',
+    archived: 'Archiviato'
+  },
+  actions: {
+    edit: 'Modifica',
+    duplicate: 'Duplica',
+    archive: 'Archivia',
+    unarchive: 'Ripristina'
+  },
+  placeholders: {
+    search: 'Cerca per nome, identificatore, ID azienda o token API...',
+    companyName: 'Inserisci il nuovo nome dell\'azienda',
+    senderName: 'Inserisci nome mittente',
+    webhookUrl: 'Inserisci URL webhook',
+    searchCompanies: 'Cerca aziende...'
+  },
+  labels: {
+    companyManagement: 'Gestione aziende',
+    newCompanyName: 'Nuovo nome azienda',
+    senderName: 'Nome mittente',
+    webhookUrl: 'URL Webhook',
+    parentCompanyOptional: 'Azienda madre (Opzionale)',
+    duplicateOptions: 'Opzioni duplicazione',
+    duplicateJourneys: 'Duplica percorsi',
+    duplicateCostSettings: 'Duplica impostazioni costi',
+    duplicateSortingRules: 'Duplica regole ordinamento',
+    duplicateWebhookEvents: 'Duplica eventi webhook',
+    archivedCount: '{{count}} archiviata/e'
+  },
+  chaseupStatus: {
+    active: 'Attivo',
+    create: 'Crea'
   },
   messages: {
     createSuccess: 'Azienda creata con successo',
     updateSuccess: 'Azienda aggiornata con successo',
     deleteSuccess: 'Azienda eliminata con successo',
     duplicateSuccess: 'Azienda duplicata con successo',
-    deleteConfirm: 'Sei sicuro di voler eliminare {{name}}? Questa azione non può essere annullata.',
-    noChildCompanies: 'Questa azienda non ha aziende figlie.',
-    duplicateWarning: 'Ricorda: dovrai creare utenti per la nuova azienda dopo la duplicazione.'
+    archiveSuccess: 'Azienda archiviata con successo',
+    unarchiveSuccess: 'Azienda ripristinata con successo',
+    noCompaniesFound: 'Nessuna azienda trovata che corrisponda ai tuoi criteri.',
+    archiveDescription: 'Le aziende archiviate possono essere ripristinate successivamente utilizzando il filtro "Mostra aziende archiviate".',
+    unarchiveDescription: 'Il ripristino ripristinerà l\'accesso all\'azienda e al suo token API.',
+    loading: 'Caricamento aziende...'
   }
 } as const;

@@ -77,7 +77,10 @@ export const common = {
   filters: {
     allTypes: 'All Types',
     allCompanies: 'All Companies',
-    allPriorities: 'All Priorities'
+    allPriorities: 'All Priorities',
+    filters: 'Filters',
+    search: 'Search',
+    clearFilters: 'Clear All Filters'
   },
   fields: {
     actions: 'Actions',

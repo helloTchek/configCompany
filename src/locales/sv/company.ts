@@ -4,64 +4,84 @@ export const company = {
   create: 'Skapa nytt företag',
   edit: 'Redigera företag',
   duplicate: 'Duplicera företag',
+  archive: 'Arkivera företag',
+  unarchive: 'Återställ företag',
   fields: {
     name: 'Företagsnamn',
-    identifier: 'Företagsidentifierare',
-    contractType: 'Kontrakttyp',
-    businessSector: 'Bransch',
-    logoUrl: 'Logotyp-URL',
-    retentionPeriod: 'Bevarandeperiod (månader)',
-    disableFastTrack: 'Inaktivera snabbspår',
-    enableMileageCapture: 'Aktivera mätarställesregistrering',
-    enableBlurDetection: 'Blanda registreringsskyltar',
-    enableVinScanning: 'Aktivera VIN-skanning',
-    enableBrandModelDetection: 'Aktivera märke- och modelligenkänning',
-    iaValidation: 'AI-validering (Joelle-modell)',
-    humanValidationEnabled: 'Mänsklig validering aktiverad',
-    validationPriority: 'Valideringsprioritet (0-5)',
-    maxValidationDelay: 'Maximal valideringsfördröjning (minuter)',
-    minTaskProcessingDuration: 'Minsta uppgiftshanteringstid (minuter)',
-    showStartInstantInspection: 'Visa Starta Direktinspektion',
-    showSendInspectionLink: 'Visa Skicka Inspektionslänk',
+    identifier: 'Identifierare',
+    companyId: 'Företags-ID',
+    apiToken: 'API-token',
+    currentRequests: 'Aktuella förfrågningar',
+    maxRequests: 'Max förfrågningar',
+    createdDate: 'Skapat datum',
+    contractType: 'Kontraktstyp',
+    businessSector: 'Affärssektor',
     parentCompany: 'Moderföretag',
-    childrenCount: 'Antal dotterföretag'
+    childrenCount: 'Dotterbolag',
+    chaseupRules: 'Påminnelseregler',
+    companyStatus: 'Företagsstatus'
   },
   contractTypes: {
     client: 'Kund',
     prospect: 'Prospekt',
     test: 'Test',
-    demo: 'Demo'
+    demo: 'Demo',
+    allTypes: 'Alla typer'
   },
-  businessSectors: {
-    insurance: 'Försäkring',
-    leasing: 'Leasing',
-    rental: 'Uthyrning',
-    fleetManagement: 'Flottahantering',
-    automotive: 'Bilindustri'
-  },
-  tabs: {
-    general: 'Allmänna inställningar',
-    hierarchy: 'Hierarki',
-    journeySettings: 'Inspektionsresans inställningar',
-    savedJourneys: 'Sparade resor'
-  },
-  sections: {
-    generalSettings: 'Allmänna inställningar',
-    hubConfiguration: 'Hub-konfiguration',
-    apiConfiguration: 'API-konfiguration',
-    validation: 'Validering',
-    eventsWebhooks: 'Händelser & Webhooks',
+  filters: {
+    contractType: 'Kontraktstyp',
     companyHierarchy: 'Företagshierarki',
-    childCompanies: 'Dotterföretag',
-    hierarchyActions: 'Hierarkihantering'
+    allCompanies: 'Alla företag',
+    parentCompanies: 'Moderföretag',
+    childCompanies: 'Dotterbolag',
+    active: 'Aktiva företag',
+    archived: 'Arkiverade företag',
+    showArchived: 'Visa arkiverade företag'
+  },
+  status: {
+    active: 'Aktiv',
+    archived: 'Arkiverad'
+  },
+  actions: {
+    edit: 'Redigera',
+    duplicate: 'Duplicera',
+    archive: 'Arkivera',
+    unarchive: 'Återställ'
+  },
+  placeholders: {
+    search: 'Sök efter namn, identifierare, företags-ID eller API-token...',
+    companyName: 'Ange nytt företagsnamn',
+    senderName: 'Ange avsändarnamn',
+    webhookUrl: 'Ange webhook-URL',
+    searchCompanies: 'Sök företag...'
+  },
+  labels: {
+    companyManagement: 'Företagshantering',
+    newCompanyName: 'Nytt företagsnamn',
+    senderName: 'Avsändarnamn',
+    webhookUrl: 'Webhook-URL',
+    parentCompanyOptional: 'Moderföretag (Valfritt)',
+    duplicateOptions: 'Dupliceringsalternativ',
+    duplicateJourneys: 'Duplicera resor',
+    duplicateCostSettings: 'Duplicera kostnadsinställningar',
+    duplicateSortingRules: 'Duplicera sorteringsregler',
+    duplicateWebhookEvents: 'Duplicera webhook-händelser',
+    archivedCount: '{{count}} arkiverad(e)'
+  },
+  chaseupStatus: {
+    active: 'Aktiv',
+    create: 'Skapa'
   },
   messages: {
-    createSuccess: 'Företaget skapades framgångsrikt',
-    updateSuccess: 'Företaget uppdaterades framgångsrikt',
-    deleteSuccess: 'Företaget raderades framgångsrikt',
-    duplicateSuccess: 'Företaget duplicerades framgångsrikt',
-    deleteConfirm: 'Är du säker på att du vill ta bort {{name}}? Denna åtgärd kan inte ångras.',
-    noChildCompanies: 'Detta företag har inga dotterföretag.',
-    duplicateWarning: 'Kom ihåg: Du måste skapa användare för det nya företaget efter duplicering.'
+    createSuccess: 'Företag skapat framgångsrikt',
+    updateSuccess: 'Företag uppdaterat framgångsrikt',
+    deleteSuccess: 'Företag raderat framgångsrikt',
+    duplicateSuccess: 'Företag duplicerat framgångsrikt',
+    archiveSuccess: 'Företag arkiverat framgångsrikt',
+    unarchiveSuccess: 'Företag återställt framgångsrikt',
+    noCompaniesFound: 'Inga företag hittades som matchar dina kriterier.',
+    archiveDescription: 'Arkiverade företag kan återställas senare med filtret "Visa arkiverade företag".',
+    unarchiveDescription: 'Återställning återställer åtkomsten till företaget och dess API-token.',
+    loading: 'Laddar företag...'
   }
 } as const;

@@ -1,67 +1,87 @@
 export const company = {
   title: 'Unternehmen',
-  subtitle: 'Unternehmen, ihre Einstellungen und Konfigurationen verwalten',
+  subtitle: 'Verwalten Sie Unternehmen, deren Einstellungen und Konfigurationen',
   create: 'Neues Unternehmen erstellen',
   edit: 'Unternehmen bearbeiten',
   duplicate: 'Unternehmen duplizieren',
+  archive: 'Unternehmen archivieren',
+  unarchive: 'Unternehmen wiederherstellen',
   fields: {
     name: 'Unternehmensname',
-    identifier: 'Unternehmenskennung',
-    contractType: 'Vertragstyp',
+    identifier: 'Kennung',
+    companyId: 'Unternehmens-ID',
+    apiToken: 'API-Token',
+    currentRequests: 'Aktuelle Anfragen',
+    maxRequests: 'Max. Anfragen',
+    createdDate: 'Erstellungsdatum',
+    contractType: 'Vertragsart',
     businessSector: 'Geschäftsbereich',
-    logoUrl: 'Logo-URL',
-    retentionPeriod: 'Aufbewahrungsdauer (Monate)',
-    disableFastTrack: 'Fast Track deaktivieren',
-    enableMileageCapture: 'Kilometererfassung aktivieren',
-    enableBlurDetection: 'Kennzeichenerkennung unkenntlich machen',
-    enableVinScanning: 'VIN-Scan aktivieren',
-    enableBrandModelDetection: 'Marken- und Modellerkennung aktivieren',
-    iaValidation: 'IA-Validierung (Joelle-Modell)',
-    humanValidationEnabled: 'Manuelle Validierung aktiviert',
-    validationPriority: 'Validierungspriorität (0–5)',
-    maxValidationDelay: 'Maximale Validierungsverzögerung (Minuten)',
-    minTaskProcessingDuration: 'Mindestverarbeitungsdauer (Minuten)',
-    showStartInstantInspection: 'Start der Sofortinspektion anzeigen',
-    showSendInspectionLink: 'Inspektionslink senden anzeigen',
     parentCompany: 'Mutterunternehmen',
-    childrenCount: 'Anzahl der Tochterunternehmen'
+    childrenCount: 'Tochtergesellschaften',
+    chaseupRules: 'Nachfassregeln',
+    companyStatus: 'Unternehmensstatus'
   },
   contractTypes: {
     client: 'Kunde',
     prospect: 'Interessent',
     test: 'Test',
-    demo: 'Demo'
+    demo: 'Demo',
+    allTypes: 'Alle Typen'
   },
-  businessSectors: {
-    insurance: 'Versicherung',
-    leasing: 'Leasing',
-    rental: 'Vermietung',
-    fleetManagement: 'Fuhrparkmanagement',
-    automotive: 'Automobil'
-  },
-  tabs: {
-    general: 'Allgemeine Einstellungen',
-    hierarchy: 'Hierarchie',
-    journeySettings: 'Einstellungen für den Inspektionsablauf',
-    savedJourneys: 'Gespeicherte Abläufe'
-  },
-  sections: {
-    generalSettings: 'Allgemeine Einstellungen',
-    hubConfiguration: 'Hub-Konfiguration',
-    apiConfiguration: 'API-Konfiguration',
-    validation: 'Validierung',
-    eventsWebhooks: 'Ereignisse & Webhooks',
+  filters: {
+    contractType: 'Vertragsart',
     companyHierarchy: 'Unternehmenshierarchie',
-    childCompanies: 'Tochterunternehmen',
-    hierarchyActions: 'Hierarchieaktionen'
+    allCompanies: 'Alle Unternehmen',
+    parentCompanies: 'Mutterunternehmen',
+    childCompanies: 'Tochtergesellschaften',
+    active: 'Aktive Unternehmen',
+    archived: 'Archivierte Unternehmen',
+    showArchived: 'Archivierte Unternehmen anzeigen'
+  },
+  status: {
+    active: 'Aktiv',
+    archived: 'Archiviert'
+  },
+  actions: {
+    edit: 'Bearbeiten',
+    duplicate: 'Duplizieren',
+    archive: 'Archivieren',
+    unarchive: 'Wiederherstellen'
+  },
+  placeholders: {
+    search: 'Suche nach Name, Kennung, Unternehmens-ID oder API-Token...',
+    companyName: 'Neuen Unternehmensnamen eingeben',
+    senderName: 'Absendername eingeben',
+    webhookUrl: 'Webhook-URL eingeben',
+    searchCompanies: 'Unternehmen suchen...'
+  },
+  labels: {
+    companyManagement: 'Unternehmensverwaltung',
+    newCompanyName: 'Neuer Unternehmensname',
+    senderName: 'Absendername',
+    webhookUrl: 'Webhook-URL',
+    parentCompanyOptional: 'Mutterunternehmen (Optional)',
+    duplicateOptions: 'Duplizierungsoptionen',
+    duplicateJourneys: 'Journeys duplizieren',
+    duplicateCostSettings: 'Kosteneinstellungen duplizieren',
+    duplicateSortingRules: 'Sortierregeln duplizieren',
+    duplicateWebhookEvents: 'Webhook-Ereignisse duplizieren',
+    archivedCount: '{{count}} archiviert'
+  },
+  chaseupStatus: {
+    active: 'Aktiv',
+    create: 'Erstellen'
   },
   messages: {
     createSuccess: 'Unternehmen erfolgreich erstellt',
     updateSuccess: 'Unternehmen erfolgreich aktualisiert',
     deleteSuccess: 'Unternehmen erfolgreich gelöscht',
     duplicateSuccess: 'Unternehmen erfolgreich dupliziert',
-    deleteConfirm: 'Sind Sie sicher, dass Sie {{name}} löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.',
-    noChildCompanies: 'Dieses Unternehmen hat keine Tochterunternehmen.',
-    duplicateWarning: 'Denken Sie daran: Sie müssen nach der Duplizierung Benutzer für das neue Unternehmen erstellen.'
+    archiveSuccess: 'Unternehmen erfolgreich archiviert',
+    unarchiveSuccess: 'Unternehmen erfolgreich wiederhergestellt',
+    noCompaniesFound: 'Keine Unternehmen gefunden, die Ihren Kriterien entsprechen.',
+    archiveDescription: 'Archivierte Unternehmen können später über den Filter "Archivierte Unternehmen anzeigen" wiederhergestellt werden.',
+    unarchiveDescription: 'Die Wiederherstellung stellt den Zugriff auf das Unternehmen und sein API-Token wieder her.',
+    loading: 'Unternehmen werden geladen...'
   }
 } as const;

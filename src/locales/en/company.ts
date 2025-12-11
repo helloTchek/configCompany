@@ -4,9 +4,16 @@ export const company = {
   create: 'Create New Company',
   edit: 'Edit Company',
   duplicate: 'Duplicate Company',
+  archive: 'Archive Company',
+  unarchive: 'Unarchive Company',
   fields: {
     name: 'Company Name',
-    identifier: 'Company Identifier',
+    identifier: 'Identifier',
+    companyId: 'Company ID',
+    apiToken: 'API Token',
+    currentRequests: 'Current Requests',
+    maxRequests: 'Max Requests',
+    createdDate: 'Created Date',
     contractType: 'Contract Type',
     businessSector: 'Business Sector',
     logoUrl: 'Logo URL',
@@ -24,13 +31,16 @@ export const company = {
     showStartInstantInspection: 'Show Start Instant Inspection',
     showSendInspectionLink: 'Show Send Inspection Link',
     parentCompany: 'Parent Company',
-    childrenCount: 'Children Count'
+    childrenCount: 'Children',
+    chaseupRules: 'Chase-up Rules',
+    companyStatus: 'Company Status'
   },
   contractTypes: {
     client: 'Client',
     prospect: 'Prospect',
     test: 'Test',
-    demo: 'Demo'
+    demo: 'Demo',
+    allTypes: 'All Types'
   },
   businessSectors: {
     insurance: 'Insurance',
@@ -55,13 +65,65 @@ export const company = {
     childCompanies: 'Child Companies',
     hierarchyActions: 'Hierarchy Actions'
   },
+  filters: {
+    contractType: 'Contract Type',
+    companyHierarchy: 'Company Hierarchy',
+    allCompanies: 'All Companies',
+    parentCompanies: 'Parent Companies',
+    childCompanies: 'Child Companies',
+    active: 'Active Companies',
+    archived: 'Archived Companies',
+    showArchived: 'Show archived companies'
+  },
+  status: {
+    active: 'Active',
+    archived: 'Archived'
+  },
+  actions: {
+    edit: 'Edit',
+    duplicate: 'Duplicate',
+    archive: 'Archive',
+    unarchive: 'Unarchive'
+  },
+  placeholders: {
+    search: 'Search by name, identifier, company ID, or API token...',
+    companyName: 'Enter new company name',
+    senderName: 'Enter sender name',
+    webhookUrl: 'Enter webhook URL',
+    searchCompanies: 'Search companies...',
+    reportSettings: 'Report settings JSON configuration...',
+    configModules: 'Config modules JSON configuration...'
+  },
+  labels: {
+    companyManagement: 'Company Management',
+    newCompanyName: 'New Company Name',
+    senderName: 'Sender Name',
+    webhookUrl: 'Webhook URL',
+    parentCompanyOptional: 'Parent Company (Optional)',
+    duplicateOptions: 'Duplicate Options',
+    duplicateJourneys: 'Duplicate Journeys',
+    duplicateCostSettings: 'Duplicate Cost Settings',
+    duplicateSortingRules: 'Duplicate Sorting Rules',
+    duplicateWebhookEvents: 'Duplicate Webhook Events',
+    archivedCount: '{{count}} archived'
+  },
+  chaseupStatus: {
+    active: 'Active',
+    create: 'Create'
+  },
   messages: {
     createSuccess: 'Company created successfully',
     updateSuccess: 'Company updated successfully',
     deleteSuccess: 'Company deleted successfully',
     duplicateSuccess: 'Company duplicated successfully',
+    archiveSuccess: 'Company archived successfully',
+    unarchiveSuccess: 'Company unarchived successfully',
     deleteConfirm: 'Are you sure you want to delete {{name}}? This action cannot be undone.',
     noChildCompanies: 'This company has no child companies.',
-    duplicateWarning: 'Remember: You will need to create users for the new company after duplication.'
+    duplicateWarning: 'Remember: You will need to create users for the new company after duplication.',
+    noCompaniesFound: 'No companies found matching your criteria.',
+    archiveDescription: 'Archived companies can be restored later using the "Show archived companies" filter.',
+    unarchiveDescription: 'Unarchiving will restore access to the company and its API token.',
+    loading: 'Loading companies...'
   }
 } as const;
