@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '@/auth/AuthContext';
 import Header from '../../components/Layout/Header';
 import Table, { Column } from '../../components/UI/Table';
@@ -11,6 +11,7 @@ import { companiesService } from '../../services/companiesService';
 import { CreditCard as Edit, Trash2, Plus, Search, ListFilter as Filter, X, Mail, ChevronDown } from 'lucide-react';
 import { useModalState, useDebouncedSearch } from '@/hooks';
 import { createErrorHandler } from '@/utils';
+import { useColumnOrder } from '../../hooks/useColumnOrder';
 
 export default function UsersPage() {
   const { user } = useAuth();
@@ -189,7 +190,7 @@ export default function UsersPage() {
     return sortDirection === 'asc' ? comparison : -comparison;
   }) : users;
 
-  const columns: Column<User>[] = [
+  const defaultColumns: Column<User>[] = useMemo(() => [
     { key: 'email', label: 'Email', sortable: true },
     { key: 'role', label: 'Role', sortable: true,
       render: (value: unknown) => (
@@ -248,7 +249,12 @@ export default function UsersPage() {
         </div>
       ),
     },
-  ];
+  ], []);
+
+  const { orderedColumns, handleReorder } = useColumnOrder<User>(
+    'users-column-order',
+    defaultColumns
+  );
 
   const handleSendPasswordReset = (user: User) => {
     passwordResetModal.open(user);
@@ -593,11 +599,12 @@ export default function UsersPage() {
 
         <div className="bg-white rounded-lg border border-gray-200">
           <Table<User>
-            columns={columns}
+            columns={orderedColumns}
             data={sortedUsers}
             sortKey={sortKey}
             sortDirection={sortDirection}
             onSort={handleSort}
+            onColumnReorder={handleReorder}
           />
 
           {sortedUsers.length === 0 && !loading && (

@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/Layout/Header';
+import Table, { Column } from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
 import Modal from '../../components/UI/Modal';
 import { CostSettings } from '../../types';
 import { costSettingsService } from '../../services/costSettingsService';
-import { CreditCard as Edit, Download, Copy, Trash2, Plus, Eye, Search, X, AlertTriangle, ChevronUp, ChevronDown } from 'lucide-react';
+import { CreditCard as Edit, Download, Copy, Trash2, Plus, Eye, Search, X, AlertTriangle } from 'lucide-react';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { useModalState, useDebouncedSearch } from '@/hooks';
 import { createErrorHandler } from '@/utils';
+import { useColumnOrder } from '../../hooks/useColumnOrder';
 
 const getCurrencySymbol = (currencyCode: string): string => {
   const symbols: Record<string, string> = {
@@ -219,6 +221,103 @@ export default function CostMatricesPage() {
     return sortDirection === 'asc' ? comparison : -comparison;
   }) : costSettings;
 
+  const defaultColumns: Column<CostSettings>[] = useMemo(() => [
+    {
+      key: 'matrix',
+      label: 'Matrix',
+      sortable: true,
+      render: (_: unknown, row: CostSettings) => {
+        const displayName = row.className || row.name || 'Unnamed';
+        return (
+          <div>
+            <div className="font-medium text-gray-900">{displayName}</div>
+            <div className="text-sm text-gray-600">Cost matrix configuration</div>
+          </div>
+        );
+      }
+    },
+    {
+      key: 'company',
+      label: 'Company',
+      sortable: true,
+      render: (_: unknown, row: CostSettings) => {
+        const companyName = row.companyPtr?.className || row.companyPtr?.name || row.companyName || 'N/A';
+        return <div className="font-medium text-gray-900">{companyName}</div>;
+      }
+    },
+    {
+      key: 'currency',
+      label: 'Currency & Tax',
+      sortable: true,
+      render: (_: unknown, row: CostSettings) => {
+        return (
+          <div>
+            <div className="font-medium text-gray-900">{getCurrencySymbol(row.currency)}</div>
+            <div className="text-sm text-gray-600">Tax: {row.tax}%</div>
+          </div>
+        );
+      }
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      render: () => (
+        <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+          Active
+        </span>
+      )
+    },
+    {
+      key: 'updatedAt',
+      label: 'Last Updated',
+      sortable: true,
+      render: (value: unknown) => (
+        <div className="text-sm text-gray-900">{formatDate(value as string)}</div>
+      )
+    },
+    {
+      key: 'actions',
+      label: 'Actions',
+      render: (_: unknown, row: CostSettings) => (
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => handleView(row)}
+            className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            title="View"
+          >
+            <Eye size={16} />
+          </button>
+          <button
+            onClick={() => navigate(`/cost-matrices/${row.id}/edit`)}
+            className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+            title="Edit"
+          >
+            <Edit size={16} />
+          </button>
+          <button
+            onClick={() => handleDuplicate(row)}
+            className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
+            title="Duplicate"
+          >
+            <Copy size={16} />
+          </button>
+          <button
+            onClick={() => handleDelete(row)}
+            className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+            title="Delete"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
+      )
+    }
+  ], [navigate]);
+
+  const { orderedColumns, handleReorder } = useColumnOrder<CostSettings>(
+    'cost-matrices-column-order',
+    defaultColumns
+  );
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <Header title="Repair Costs Management" />
@@ -285,201 +384,27 @@ export default function CostMatricesPage() {
             <p className="text-sm text-gray-600">Select and manage your repair cost matrices</p>
           </div>
 
-          <div className="p-6">
-            {loading ? (
-              <div className="flex justify-center items-center py-8">
-                <LoadingSpinner />
-              </div>
-            ) : sortedCostSettings.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-600">No cost matrices found</p>
-                <p className="text-sm text-gray-500 mt-2">
-                  {searchTerm ? 'Try adjusting your search' : 'Create a new cost matrix to get started'}
-                </p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full">
-                  <thead>
-                    <tr className="border-b border-gray-200">
-                      <th
-                        className="text-left py-3 px-4 font-medium text-gray-700 text-sm cursor-pointer hover:bg-gray-100"
-                        onClick={() => handleSort('matrix')}
-                      >
-                        <div className="flex items-center gap-1">
-                          MATRIX
-                          <div className="flex flex-col">
-                            <ChevronUp
-                              size={12}
-                              className={`${
-                                sortKey === 'matrix' && sortDirection === 'asc'
-                                  ? 'text-blue-600'
-                                  : 'text-gray-400'
-                              }`}
-                            />
-                            <ChevronDown
-                              size={12}
-                              className={`${
-                                sortKey === 'matrix' && sortDirection === 'desc'
-                                  ? 'text-blue-600'
-                                  : 'text-gray-400'
-                              }`}
-                            />
-                          </div>
-                        </div>
-                      </th>
-                      <th
-                        className="text-left py-3 px-4 font-medium text-gray-700 text-sm cursor-pointer hover:bg-gray-100"
-                        onClick={() => handleSort('company')}
-                      >
-                        <div className="flex items-center gap-1">
-                          COMPANY
-                          <div className="flex flex-col">
-                            <ChevronUp
-                              size={12}
-                              className={`${
-                                sortKey === 'company' && sortDirection === 'asc'
-                                  ? 'text-blue-600'
-                                  : 'text-gray-400'
-                              }`}
-                            />
-                            <ChevronDown
-                              size={12}
-                              className={`${
-                                sortKey === 'company' && sortDirection === 'desc'
-                                  ? 'text-blue-600'
-                                  : 'text-gray-400'
-                              }`}
-                            />
-                          </div>
-                        </div>
-                      </th>
-                      <th
-                        className="text-left py-3 px-4 font-medium text-gray-700 text-sm cursor-pointer hover:bg-gray-100"
-                        onClick={() => handleSort('currency')}
-                      >
-                        <div className="flex items-center gap-1">
-                          CURRENCY & TAX
-                          <div className="flex flex-col">
-                            <ChevronUp
-                              size={12}
-                              className={`${
-                                sortKey === 'currency' && sortDirection === 'asc'
-                                  ? 'text-blue-600'
-                                  : 'text-gray-400'
-                              }`}
-                            />
-                            <ChevronDown
-                              size={12}
-                              className={`${
-                                sortKey === 'currency' && sortDirection === 'desc'
-                                  ? 'text-blue-600'
-                                  : 'text-gray-400'
-                              }`}
-                            />
-                          </div>
-                        </div>
-                      </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700 text-sm">STATUS</th>
-                      <th
-                        className="text-left py-3 px-4 font-medium text-gray-700 text-sm cursor-pointer hover:bg-gray-100"
-                        onClick={() => handleSort('updatedAt')}
-                      >
-                        <div className="flex items-center gap-1">
-                          LAST UPDATED
-                          <div className="flex flex-col">
-                            <ChevronUp
-                              size={12}
-                              className={`${
-                                sortKey === 'updatedAt' && sortDirection === 'asc'
-                                  ? 'text-blue-600'
-                                  : 'text-gray-400'
-                              }`}
-                            />
-                            <ChevronDown
-                              size={12}
-                              className={`${
-                                sortKey === 'updatedAt' && sortDirection === 'desc'
-                                  ? 'text-blue-600'
-                                  : 'text-gray-400'
-                              }`}
-                            />
-                          </div>
-                        </div>
-                      </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700 text-sm">ACTIONS</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sortedCostSettings.map((setting) => {
-                      const displayName = setting.className || setting.name || 'Unnamed';
-                      const companyName = setting.companyPtr?.className || setting.companyPtr?.name || setting.companyName || 'N/A';
-
-                      return (
-                        <tr key={setting.id} className="border-b border-gray-100 hover:bg-gray-50">
-                          <td className="py-4 px-4">
-                            <div>
-                              <div className="font-medium text-gray-900">{displayName}</div>
-                              <div className="text-sm text-gray-600">Cost matrix configuration</div>
-                            </div>
-                          </td>
-                          <td className="py-4 px-4">
-                            <div className="font-medium text-gray-900">{companyName}</div>
-                          </td>
-                        <td className="py-4 px-4">
-                          <div>
-                            <div className="font-medium text-gray-900">{getCurrencySymbol(setting.currency)}</div>
-                            <div className="text-sm text-gray-600">Tax: {setting.tax}%</div>
-                          </div>
-                        </td>
-                        <td className="py-4 px-4">
-                          <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
-                            Active
-                          </span>
-                        </td>
-                        <td className="py-4 px-4">
-                          <div className="text-sm text-gray-900">{formatDate(setting.updatedAt)}</div>
-                        </td>
-                        <td className="py-4 px-4">
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => handleView(setting)}
-                              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                              title="View"
-                            >
-                              <Eye size={16} />
-                            </button>
-                            <button
-                              onClick={() => navigate(`/cost-matrices/${setting.id}/edit`)}
-                              className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                              title="Edit"
-                            >
-                              <Edit size={16} />
-                            </button>
-                            <button
-                              onClick={() => handleDuplicate(setting)}
-                              className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
-                              title="Duplicate"
-                            >
-                              <Copy size={16} />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(setting)}
-                              className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-                              title="Delete"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
+          {loading ? (
+            <div className="flex justify-center items-center py-8">
+              <LoadingSpinner />
+            </div>
+          ) : sortedCostSettings.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-600">No cost matrices found</p>
+              <p className="text-sm text-gray-500 mt-2">
+                {searchTerm ? 'Try adjusting your search' : 'Create a new cost matrix to get started'}
+              </p>
+            </div>
+          ) : (
+            <Table<CostSettings>
+              columns={orderedColumns}
+              data={sortedCostSettings}
+              sortKey={sortKey}
+              sortDirection={sortDirection}
+              onSort={handleSort}
+              onColumnReorder={handleReorder}
+            />
+          )}
         </div>
 
         {/* Pagination */}
