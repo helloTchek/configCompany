@@ -64,6 +64,7 @@ export const workflows = {
     exportJson: 'Exporter JSON'
   },
   modals: {
+    editJourneyTitle: 'Modifier le Parcours - {{name}}',
     duplicateTitle: 'Dupliquer le Parcours',
     duplicateMessage: 'Créer une copie de',
     deleteTitle: 'Supprimer le Parcours',

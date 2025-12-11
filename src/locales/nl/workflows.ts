@@ -49,6 +49,13 @@ export const workflows = {
     importJson: 'JSON importeren',
     exportJson: 'JSON exporteren'
   },
+  modals: {
+    editJourneyTitle: 'Reis bewerken - {{name}}',
+    duplicateTitle: 'Reis dupliceren',
+    duplicateMessage: 'Een kopie maken van',
+    deleteTitle: 'Reis verwijderen',
+    deleteMessage: 'Weet u zeker dat u {{name}} wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.'
+  },
   messages: {
     createSuccess: 'Reis succesvol aangemaakt',
     updateSuccess: 'Reis succesvol bijgewerkt',

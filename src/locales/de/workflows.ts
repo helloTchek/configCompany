@@ -49,6 +49,13 @@ export const workflows = {
     importJson: 'JSON importieren',
     exportJson: 'JSON exportieren'
   },
+  modals: {
+    editJourneyTitle: 'Journey bearbeiten - {{name}}',
+    duplicateTitle: 'Journey duplizieren',
+    duplicateMessage: 'Eine Kopie erstellen von',
+    deleteTitle: 'Journey löschen',
+    deleteMessage: 'Sind Sie sicher, dass Sie {{name}} löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.'
+  },
   messages: {
     createSuccess: 'Journey erfolgreich erstellt',
     updateSuccess: 'Journey erfolgreich aktualisiert',

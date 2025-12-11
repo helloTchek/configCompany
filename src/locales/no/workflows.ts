@@ -49,6 +49,13 @@ export const workflows = {
     importJson: 'Importer JSON',
     exportJson: 'Eksporter JSON'
   },
+  modals: {
+    editJourneyTitle: 'Rediger reise - {{name}}',
+    duplicateTitle: 'Dupliser reise',
+    duplicateMessage: 'Lag en kopi av',
+    deleteTitle: 'Slett reise',
+    deleteMessage: 'Er du sikker på at du vil slette {{name}}? Denne handlingen kan ikke angres.'
+  },
   messages: {
     createSuccess: 'Reise opprettet',
     updateSuccess: 'Reise oppdatert',

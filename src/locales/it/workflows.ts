@@ -49,6 +49,13 @@ export const workflows = {
     importJson: 'Importa JSON',
     exportJson: 'Esporta JSON'
   },
+  modals: {
+    editJourneyTitle: 'Modifica Percorso - {{name}}',
+    duplicateTitle: 'Duplica Percorso',
+    duplicateMessage: 'Crea una copia di',
+    deleteTitle: 'Elimina Percorso',
+    deleteMessage: 'Sei sicuro di voler eliminare {{name}}? Questa azione non può essere annullata.'
+  },
   messages: {
     createSuccess: 'Percorso creato con successo',
     updateSuccess: 'Percorso aggiornato con successo',

@@ -49,6 +49,13 @@ export const workflows = {
     importJson: 'Importera JSON',
     exportJson: 'Exportera JSON'
   },
+  modals: {
+    editJourneyTitle: 'Redigera Resa - {{name}}',
+    duplicateTitle: 'Duplicera Resa',
+    duplicateMessage: 'Skapa en kopia av',
+    deleteTitle: 'Ta bort Resa',
+    deleteMessage: 'Är du säker på att du vill ta bort {{name}}? Denna åtgärd kan inte ångras.'
+  },
   messages: {
     createSuccess: 'Resa skapad',
     updateSuccess: 'Resa uppdaterad',

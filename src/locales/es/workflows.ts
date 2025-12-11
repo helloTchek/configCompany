@@ -49,6 +49,13 @@ export const workflows = {
     importJson: 'Importar JSON',
     exportJson: 'Exportar JSON'
   },
+  modals: {
+    editJourneyTitle: 'Editar Flujo - {{name}}',
+    duplicateTitle: 'Duplicar flujo',
+    duplicateMessage: 'Crear una copia de',
+    deleteTitle: 'Eliminar flujo',
+    deleteMessage: '¿Está seguro de que desea eliminar {{name}}? Esta acción no se puede deshacer.'
+  },
   messages: {
     createSuccess: 'Flujo creado con éxito',
     updateSuccess: 'Flujo actualizado con éxito',
