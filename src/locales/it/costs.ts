@@ -1,25 +1,68 @@
 export const costs = {
-  title: 'Matrici dei costi',
-  subtitle: 'Gestisci i costi di riparazione per tipo di componente, posizione e gravità',
-  create: 'Crea nuova matrice',
-  createTitle: 'Crea Matrice dei Costi',
-  edit: 'Modifica matrice dei costi',
+  title: 'Gestione dei Costi di Riparazione',
+  subtitle: 'Gestisci le matrici dei costi per i preventivi di riparazione dei veicoli',
+  pageTitle: 'Matrici dei Costi',
+  pageSubtitle: 'Seleziona e gestisci le tue matrici dei costi di riparazione',
+  create: 'Crea Matrice',
+  createNew: 'Crea Nuova Matrice dei Costi',
+  createCostMatrix: 'Crea Matrice dei Costi',
+  edit: 'Modifica Matrice',
+  duplicate: 'Duplica Matrice',
+  downloadTemplate: 'Scarica Modello',
+  searchPlaceholder: 'Cerca matrici dei costi...',
+  noMatricesFound: 'Nessuna matrice dei costi trovata',
+  tryAdjustSearch: 'Prova ad adattare la ricerca',
+  createToGetStarted: 'Crea una nuova matrice dei costi per iniziare',
+  backToCostMatrices: 'Torna alle Matrici dei Costi',
+  loading: 'Caricamento...',
+  loadingCostMatrix: 'Caricamento matrice dei costi...',
+  error: 'Errore',
+  costMatrixNotFound: 'Matrice dei costi non trovata',
+  failedToLoad: 'Caricamento della matrice dei costi fallito',
+
   fields: {
+    matrix: 'Matrice',
+    matrixName: 'Nome della Matrice',
     company: 'Azienda',
     currency: 'Valuta',
-    taxRate: 'Aliquota fiscale (%)',
-    partsCount: 'Numero di componenti',
-    partType: 'Tipo di componente',
+    currencyAndTax: 'Valuta & Tassa',
+    tax: 'Tassa',
+    taxRate: 'Aliquota (%)',
+    status: 'Stato',
+    lastUpdated: 'Ultimo Aggiornamento',
+    partsCount: 'Numero di Parti',
+    partType: 'Tipo di Parte',
     location: 'Posizione',
     severity: 'Gravità',
-    cost: 'Costo'
+    cost: 'Costo',
+    totalEntries: 'Totale Voci',
+    validated: 'Validato',
+    created: 'Creato',
+    description: 'Descrizione',
+    vehiclePart: 'PEZZO DEL VEICOLO',
+    severityType: 'TIPO DI GRAVITÀ',
+    code: 'Codice: ',
+    level: 'Livello ',
+    companyLabel: 'Azienda: '
   },
+
+  placeholders: {
+    matrixName: 'es. MATRICE_PREMIUM',
+    description: 'Breve descrizione di questa matrice dei costi',
+    searchCompany: 'Cerca un\'azienda...',
+    searchVehicleParts: 'Cerca pezzi del veicolo...',
+    searchLocations: 'Cerca posizioni...',
+    allSeverityTypes: 'Tutti i tipi di gravità...'
+  },
+
   severities: {
     minor: 'Minore',
+    light: 'Leggera',
     moderate: 'Moderata',
-    major: 'Maggiore',
+    major: 'Importante',
     severe: 'Grave'
   },
+
   locations: {
     front: 'Anteriore',
     rear: 'Posteriore',
@@ -28,24 +71,110 @@ export const costs = {
     roof: 'Tetto',
     interior: 'Interno'
   },
+
+  currencies: {
+    eur: 'EUR (€)',
+    usd: 'USD ($)',
+    gbp: 'GBP (£)'
+  },
+
+  status: {
+    active: 'Attivo'
+  },
+
   actions: {
-    addPart: 'Aggiungi componente',
-    removePart: 'Rimuovi componente',
+    addPart: 'Aggiungi Parte',
+    removePart: 'Rimuovi Parte',
     importCsv: 'Importa CSV',
     exportCsv: 'Esporta CSV',
-    bulkEdit: 'Modifica in blocco'
+    bulkEdit: 'Modifica in blocco',
+    view: 'Visualizza',
+    edit: 'Modifica',
+    duplicate: 'Duplica',
+    delete: 'Elimina',
+    downloadXlsx: 'Scarica XLSX',
+    importFromExcel: 'Importa da Excel',
+    importInProgress: 'Importazione in corso... {{progress}}%',
+    saveChanges: 'Salva Modifiche',
+    createMatrix: 'Crea Matrice',
+    cancel: 'Annulla',
+    deleteAllParams: 'Elimina tutti i parametri di costo',
+    deleteAllParamsTitle: 'Elimina tutti i parametri di costo'
   },
-  modals: {
-    editTitle: 'Modifica Matrice - {{name}}',
+
+  sections: {
+    matrixSettings: 'Impostazioni Matrice',
+    filters: 'Filtri',
+    costEntries: 'Voci di Costo',
+    filterByVehiclePart: 'Filtra per Pezzo del Veicolo',
+    filterByLocation: 'Filtra per Posizione',
+    filterBySeverityType: 'Filtra per Tipo di Gravità'
+  },
+
+  modal: {
+    viewTitle: 'Dettagli Matrice dei Costi',
     deleteTitle: 'Conferma Eliminazione',
-    duplicateTitle: 'Duplica Matrice dei Costi'
+    deleteQuestion: 'Sei sicuro di voler eliminare questa matrice?',
+    deleteDescription: 'Stai per eliminare la matrice dei costi',
+    forCompany: 'per',
+    deleteWarning: 'Questa azione è irreversibile.',
+    deleteWarningDetail: 'Tutti i parametri di costo associati saranno eliminati permanentemente.',
+    duplicateTitle: 'Duplica Matrice dei Costi',
+    duplicateDescription: 'Verrà creata una copia completa di questa matrice con tutti i parametri associati.',
+    newMatrixName: 'Nuovo Nome della Matrice',
+    duplicateNamePlaceholder: 'Nome della matrice duplicata',
+    cancel: 'Annulla',
+    confirm: 'Sì, elimina',
+    confirmDuplicate: 'Duplica',
+    deleting: 'Eliminazione in corso...',
+    duplicating: 'Duplicazione in corso...',
+    close: 'Chiudi',
+    editMatrix: 'Modifica Matrice',
+    costMatrixConfiguration: 'Configurazione Matrice dei Costi',
+    confirmDeleteAll: 'Conferma eliminazione',
+    deleteAllQuestion: 'Eliminare tutti i parametri di costo?',
+    deleteAllDescription: 'Stai per eliminare <strong>{{count}} parametri di costo</strong> dalla matrice "{{name}}".',
+    deleteAllWarning: '<strong>Questa azione è irreversibile.</strong> Tutte le voci di costo saranno eliminate, ma la matrice rimarrà. Puoi reimportare i dati successivamente.',
+    cancelButton: 'Annulla',
+    deletingButton: 'Eliminazione...',
+    deleteEntriesButton: 'Elimina voci di costo'
   },
+
+  template: {
+    needTemplate: 'Hai bisogno di un modello iniziale?',
+    downloadDescription: 'Scarica il nostro modello predefinito per iniziare con pezzi di veicoli comuni e costi di riparazione.'
+  },
+
+  display: {
+    showingEntries: 'Mostrando {{filtered}} di {{total}} voci',
+    noCostEntries: 'Nessuna voce di costo trovata',
+    loadingCompanies: 'Caricamento aziende...',
+    taxRateLabel: 'Aliquota',
+    currencyLabel: 'Valuta'
+  },
+
+  validation: {
+    nameRequired: 'Il nome della matrice è obbligatorio',
+    companyRequired: 'L\'azienda è obbligatoria',
+    currencyRequired: 'La valuta è obbligatoria',
+    taxRateRange: 'L\'aliquota deve essere compresa tra 0 e 100'
+  },
+
   messages: {
     createSuccess: 'Matrice dei costi creata con successo',
     updateSuccess: 'Matrice dei costi aggiornata con successo',
+    updateSuccessWithParams: 'Matrice dei costi aggiornata con successo!\n\n{{count}} parametro(i) di costo aggiornato(i).',
     deleteSuccess: 'Matrice dei costi eliminata con successo',
-    importSuccess: 'CSV importato con successo',
+    deleteParamsSuccess: '{{count}} parametri di costo eliminati con successo',
+    duplicateSuccess: 'Matrice dei costi "{{name}}" duplicata con successo',
+    deleteFailed: 'Eliminazione fallita: {{error}}',
+    deleteParamsFailed: 'Eliminazione fallita: {{error}}',
+    duplicateFailed: 'Duplicazione fallita: {{error}}',
+    importSuccess: 'Importazione riuscita: {{count}} parametri di costo importati!',
+    importSuccessWithErrors: 'Importazione riuscita: {{count}} parametri di costo importati!\n\nAttenzione: {{errors}} righe contenevano errori.',
+    importFailed: 'Importazione fallita: {{error}}',
     exportSuccess: 'CSV esportato con successo',
-    invalidCsv: 'Formato CSV non valido'
+    invalidCsv: 'Formato CSV non valido',
+    saveFailed: 'Salvataggio della matrice dei costi fallito: {{error}}'
   }
 } as const;
