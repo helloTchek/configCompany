@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import Header from '../../components/Layout/Header';
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
@@ -9,32 +10,7 @@ import { ArrowLeft, Save } from 'lucide-react';
 import { ChaseupRule, ChaseupReminder, ChaseupTemplates } from '../../types';
 import chaseUpRulesService, { CreateChaseUpRuleData } from '../../services/chaseupRulesService';
 import companiesService from '../../services/companiesService';
-
-const languages = [
-  { code: 'en', name: 'English' },
-  { code: 'fr', name: 'Français' },
-  { code: 'de', name: 'Deutsch' },
-  { code: 'it', name: 'Italiano' },
-  { code: 'es', name: 'Español' },
-  { code: 'nl', name: 'Nederlands' },
-  { code: 'sv', name: 'Svenska' },
-  { code: 'no', name: 'Norsk' }
-];
-
-const variables = [
-  { key: '{{customerName}}', name: 'Customer Name' },
-  { key: '{{customerEmail}}', name: 'Customer Email' },
-  { key: '{{customerPhone}}', name: 'Customer Phone' },
-  { key: '{{inspectionId}}', name: 'Inspection ID' },
-  { key: '{{inspectionLink}}', name: 'Inspection Link' },
-  { key: '{{vehicleMake}}', name: 'Vehicle Make' },
-  { key: '{{vehicleModel}}', name: 'Vehicle Model' },
-  { key: '{{licensePlate}}', name: 'License Plate' },
-  { key: '{{companyName}}', name: 'Company Name' },
-  { key: '{{agentName}}', name: 'Agent Name' },
-  { key: '{{inspectionDate}}', name: 'Inspection Date' },
-  { key: '{{trackingUrl}}', name: 'Tracking URL' }
-];
+import { languages, getVariables } from './chaseupRulesHelpers';
 
 const createEmptyTemplates = (): ChaseupTemplates => {
   const templates: ChaseupTemplates = {};
@@ -107,6 +83,8 @@ const normalizeReminder = (reminder: any): ChaseupReminder => {
 export default function EditChaseupRulePage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const { t } = useTranslation();
+  const variables = getVariables(t);
   // Store selected language per reminder/recipient combination
   const [selectedLanguages, setSelectedLanguages] = useState<Record<string, string>>({});
   const [focusedField, setFocusedField] = useState<string | null>(null);
@@ -314,11 +292,11 @@ export default function EditChaseupRulePage() {
     const newErrors = { company: '', activationDate: '' };
 
     if (!formData.company.trim()) {
-      newErrors.company = 'Company is required';
+      newErrors.company = t('chaseupRules:validation.companyRequired');
     }
 
     if (!formData.activationDate.trim()) {
-      newErrors.activationDate = 'Activation date is required';
+      newErrors.activationDate = t('chaseupRules:validation.activationDateRequired');
     }
 
     setErrors(newErrors);
@@ -546,7 +524,7 @@ export default function EditChaseupRulePage() {
               onChange={(e) => handleReminderChange(reminderType, `${recipientType}.enabled`, e.target.checked)}
               className="rounded border-gray-300 text-blue-600 shadow-sm"
             />
-            <span className="ml-2 text-sm text-gray-700">Enabled</span>
+            <span className="ml-2 text-sm text-gray-700">{t('chaseupRules:form.enabled')}</span>
           </label>
         </div>
 
@@ -555,14 +533,14 @@ export default function EditChaseupRulePage() {
             {(recipientType === 'emailAddress' || recipientType === 'user') && 'address' in recipient && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <Input
-                  label={recipientType === 'emailAddress' ? 'Email Address' : 'User Email Address'}
+                  label={recipientType === 'emailAddress' ? t('chaseupRules:form.emailAddress') : t('chaseupRules:form.userEmailAddress')}
                   type="email"
                   value={recipient.address}
                   onChange={(e) => handleReminderChange(reminderType, `${recipientType}.address`, e.target.value)}
                   placeholder={recipientType === 'emailAddress' ? 'recipient@example.com' : 'user@example.com'}
                 />
                 <Input
-                  label={recipientType === 'emailAddress' ? 'SMS Number' : 'User SMS Number'}
+                  label={recipientType === 'emailAddress' ? t('chaseupRules:form.smsNumber') : t('chaseupRules:form.userSmsNumber')}
                   type="tel"
                   value={recipient.smsNumber || ''}
                   onChange={(e) => handleReminderChange(reminderType, `${recipientType}.smsNumber`, e.target.value)}
@@ -579,7 +557,7 @@ export default function EditChaseupRulePage() {
                   onChange={(e) => handleReminderChange(reminderType, `${recipientType}.sms`, e.target.checked)}
                   className="rounded border-gray-300 text-blue-600 shadow-sm"
                 />
-                <span className="ml-2 text-sm text-gray-700">SMS</span>
+                <span className="ml-2 text-sm text-gray-700">{t('chaseupRules:form.sms')}</span>
               </label>
               <label className="flex items-center">
                 <input
@@ -588,14 +566,14 @@ export default function EditChaseupRulePage() {
                   onChange={(e) => handleReminderChange(reminderType, `${recipientType}.email`, e.target.checked)}
                   className="rounded border-gray-300 text-blue-600 shadow-sm"
                 />
-                <span className="ml-2 text-sm text-gray-700">Email</span>
+                <span className="ml-2 text-sm text-gray-700">{t('chaseupRules:form.email')}</span>
               </label>
             </div>
 
             {(recipient.sms || recipient.email) && (
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-gray-700">Language:</label>
+                  <label className="text-sm font-medium text-gray-700">{t('chaseupRules:form.language')}</label>
                   <select
                     value={selectedLanguage}
                     onChange={(e) => setSelectedLanguage(e.target.value)}
@@ -611,7 +589,7 @@ export default function EditChaseupRulePage() {
 
                 {recipient.email && (
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700">Email Subject</label>
+                    <label className="block text-sm font-medium text-gray-700">{t('chaseupRules:form.emailSubject')}</label>
                     <input
                       ref={(ref) => assignFieldRef(`${reminderType}-${recipientType}-email-subject-${selectedLanguage}`, ref)}
                       type="text"
@@ -621,14 +599,14 @@ export default function EditChaseupRulePage() {
                       className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                         focusedField === `${reminderType}-${recipientType}-email-subject-${selectedLanguage}` ? 'border-blue-300 bg-blue-50' : 'border-gray-300'
                       }`}
-                      placeholder="Email subject"
+                      placeholder={t('chaseupRules:form.emailSubjectPlaceholder')}
                     />
                   </div>
                 )}
 
                 {recipient.email && (
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700">Email Content</label>
+                    <label className="block text-sm font-medium text-gray-700">{t('chaseupRules:form.emailContent')}</label>
                     <textarea
                       ref={(ref) => assignFieldRef(`${reminderType}-${recipientType}-email-content-${selectedLanguage}`, ref)}
                       rows={4}
@@ -638,14 +616,14 @@ export default function EditChaseupRulePage() {
                       className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
                         focusedField === `${reminderType}-${recipientType}-email-content-${selectedLanguage}` ? 'border-blue-300 bg-blue-50' : 'border-gray-300'
                       }`}
-                      placeholder="Email content..."
+                      placeholder={t('chaseupRules:form.emailContentPlaceholder')}
                     />
                   </div>
                 )}
 
                 {recipient.sms && (
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700">SMS Content</label>
+                    <label className="block text-sm font-medium text-gray-700">{t('chaseupRules:form.smsContent')}</label>
                     <textarea
                       ref={(ref) => assignFieldRef(`${reminderType}-${recipientType}-sms-content-${selectedLanguage}`, ref)}
                       rows={3}
@@ -655,11 +633,11 @@ export default function EditChaseupRulePage() {
                       className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
                         focusedField === `${reminderType}-${recipientType}-sms-content-${selectedLanguage}` ? 'border-blue-300 bg-blue-50' : 'border-gray-300'
                       }`}
-                      placeholder="SMS content (160 characters max)..."
+                      placeholder={t('chaseupRules:form.smsContentPlaceholder')}
                       maxLength={160}
                     />
                     <p className="text-xs text-gray-500">
-                      Character count: {(recipient.templates[selectedLanguage]?.sms.content || '').length}/160
+                      {t('chaseupRules:form.characterCount', { count: (recipient.templates[selectedLanguage]?.sms.content || '').length })}
                     </p>
                   </div>
                 )}
@@ -675,7 +653,7 @@ export default function EditChaseupRulePage() {
   if (loadingRule) {
     return (
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header title="Edit Chase-up Rule" />
+        <Header title={t('chaseupRules:editRule.title')} />
         <div className="flex-1 flex items-center justify-center">
           <LoadingSpinner />
         </div>
@@ -687,13 +665,13 @@ export default function EditChaseupRulePage() {
   if (ruleNotFound) {
     return (
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header title="Edit Chase-up Rule" />
+        <Header title={t('chaseupRules:editRule.title')} />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Rule Not Found</h2>
-            <p className="text-gray-600 mb-4">The chase-up rule you're looking for doesn't exist.</p>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">{t('chaseupRules:editRule.notFound')}</h2>
+            <p className="text-gray-600 mb-4">{t('chaseupRules:editRule.notFoundMessage')}</p>
             <Button onClick={() => navigate('/chaseup-rules')}>
-              Back to Chase-up Rules
+              {t('chaseupRules:editRule.backToRules')}
             </Button>
           </div>
         </div>
@@ -703,7 +681,7 @@ export default function EditChaseupRulePage() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      <Header title="Edit Chase-up Rule" />
+      <Header title={t('chaseupRules:editRule.title')} />
 
       <div className="flex-1 overflow-y-auto p-6">
         <div className="mb-6">
@@ -713,7 +691,7 @@ export default function EditChaseupRulePage() {
             className="flex items-center gap-2 mb-4"
           >
             <ArrowLeft size={16} />
-            Back to Chase-up Rules
+            {t('chaseupRules:editRule.backToRules')}
           </Button>
         </div>
 
@@ -722,8 +700,8 @@ export default function EditChaseupRulePage() {
           {focusedField && (
             <div className="sticky top-4 z-10 bg-white rounded-lg border-2 border-blue-200 shadow-lg p-4">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-md font-semibold text-blue-900">📋 Available Variables</h3>
-                <span className="text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded">Click to insert</span>
+                <h3 className="text-md font-semibold text-blue-900">{t('chaseupRules:variables.title')}</h3>
+                <span className="text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded">{t('chaseupRules:variables.clickToInsert')}</span>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-40 overflow-y-auto">
                 {variables.map((variable) => (
@@ -743,32 +721,32 @@ export default function EditChaseupRulePage() {
 
           {/* Basic Configuration */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Configuration</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('chaseupRules:sections.basicConfig')}</h3>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <CompanySelector
                 companies={allCompaniesLight}
                 selectedCompanyId={formData.company}
                 onSelect={(companyId) => handleInputChange('company', companyId)}
-                placeholder={loadingCompanies ? 'Loading companies...' : 'Search and select a company...'}
-                label="Company"
+                placeholder={loadingCompanies ? t('chaseupRules:form.loadingCompanies') : t('chaseupRules:form.searchCompany')}
+                label={t('chaseupRules:form.company')}
                 error={errors.company}
                 disabled={loadingCompanies}
               />
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('chaseupRules:form.type')}</label>
                 <select
                   value={formData.type}
                   onChange={(e) => handleInputChange('type', e.target.value)}
                   className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="event">Event</option>
-                  <option value="anonymization">Anonymization</option>
+                  <option value="event">{t('chaseupRules:form.event')}</option>
+                  <option value="anonymization">{t('chaseupRules:form.anonymization')}</option>
                 </select>
               </div>
 
               <Input
-                label="Activation Date"
+                label={t('chaseupRules:form.activationDate')}
                 type="date"
                 value={formData.activationDate}
                 onChange={(e) => handleInputChange('activationDate', e.target.value)}
@@ -777,7 +755,7 @@ export default function EditChaseupRulePage() {
               />
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">UTC Sending Time</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('chaseupRules:form.utcSendingTime')}</label>
                 <div className="flex gap-2">
                   <select
                     value={formData.utcSendingTime.hour}
@@ -806,8 +784,8 @@ export default function EditChaseupRulePage() {
 
           {/* Affected Inspection Statuses */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Affected Inspection Statuses</h3>
-            <p className="text-sm text-gray-600 mb-4">Rules will apply only to inspections in the selected statuses</p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('chaseupRules:sections.affectedStatuses')}</h3>
+            <p className="text-sm text-gray-600 mb-4">{t('chaseupRules:sections.affectedStatusesDescription')}</p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <label className="flex items-center">
                 <input
@@ -816,7 +794,7 @@ export default function EditChaseupRulePage() {
                   onChange={(e) => handleStatusChange('inspectionCreated', e.target.checked)}
                   className="rounded border-gray-300 text-blue-600 shadow-sm"
                 />
-                <span className="ml-2 text-sm text-gray-700">Inspection Created</span>
+                <span className="ml-2 text-sm text-gray-700">{t('chaseupRules:statuses.inspectionCreated')}</span>
               </label>
               <label className="flex items-center">
                 <input
@@ -825,7 +803,7 @@ export default function EditChaseupRulePage() {
                   onChange={(e) => handleStatusChange('inspectionInProgress', e.target.checked)}
                   className="rounded border-gray-300 text-blue-600 shadow-sm"
                 />
-                <span className="ml-2 text-sm text-gray-700">Inspection In Progress</span>
+                <span className="ml-2 text-sm text-gray-700">{t('chaseupRules:statuses.inspectionInProgress')}</span>
               </label>
               <label className="flex items-center">
                 <input
@@ -834,7 +812,7 @@ export default function EditChaseupRulePage() {
                   onChange={(e) => handleStatusChange('detectionFinished', e.target.checked)}
                   className="rounded border-gray-300 text-blue-600 shadow-sm"
                 />
-                <span className="ml-2 text-sm text-gray-700">Detection Finished</span>
+                <span className="ml-2 text-sm text-gray-700">{t('chaseupRules:statuses.detectionFinished')}</span>
               </label>
               <label className="flex items-center">
                 <input
@@ -843,7 +821,7 @@ export default function EditChaseupRulePage() {
                   onChange={(e) => handleStatusChange('damageReviewOngoing', e.target.checked)}
                   className="rounded border-gray-300 text-blue-600 shadow-sm"
                 />
-                <span className="ml-2 text-sm text-gray-700">Damage Review Ongoing</span>
+                <span className="ml-2 text-sm text-gray-700">{t('chaseupRules:statuses.damageReviewOngoing')}</span>
               </label>
               <label className="flex items-center">
                 <input
@@ -852,7 +830,7 @@ export default function EditChaseupRulePage() {
                   onChange={(e) => handleStatusChange('completed', e.target.checked)}
                   className="rounded border-gray-300 text-blue-600 shadow-sm"
                 />
-                <span className="ml-2 text-sm text-gray-700">Completed</span>
+                <span className="ml-2 text-sm text-gray-700">{t('chaseupRules:statuses.completed')}</span>
               </label>
               <label className="flex items-center">
                 <input
@@ -861,38 +839,38 @@ export default function EditChaseupRulePage() {
                   onChange={(e) => handleStatusChange('chasedUpManually', e.target.checked)}
                   className="rounded border-gray-300 text-blue-600 shadow-sm"
                 />
-                <span className="ml-2 text-sm text-gray-700">Chased-up Manually</span>
+                <span className="ml-2 text-sm text-gray-700">{t('chaseupRules:statuses.chasedUpManually')}</span>
               </label>
             </div>
           </div>
 
           {/* Delay Configuration */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Delay Configuration</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('chaseupRules:sections.delayConfig')}</h3>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Input
-                label="First Delay (Days)"
+                label={t('chaseupRules:form.firstDelayDays')}
                 type="number"
                 value={formData.firstDelayDays || ''}
                 onChange={(e) => handleInputChange('firstDelayDays', e.target.value ? parseInt(e.target.value) : undefined)}
                 min="0"
               />
               <Input
-                label="First Delay (Minutes)"
+                label={t('chaseupRules:form.firstDelayMinutes')}
                 type="number"
                 value={formData.firstDelayMinutes || ''}
                 onChange={(e) => handleInputChange('firstDelayMinutes', e.target.value ? parseInt(e.target.value) : undefined)}
                 min="0"
               />
               <Input
-                label="Second Delay (Days)"
+                label={t('chaseupRules:form.secondDelayDays')}
                 type="number"
                 value={formData.secondDelayDays || ''}
                 onChange={(e) => handleInputChange('secondDelayDays', e.target.value ? parseInt(e.target.value) : undefined)}
                 min="0"
               />
               <Input
-                label="Second Delay (Minutes)"
+                label={t('chaseupRules:form.secondDelayMinutes')}
                 type="number"
                 value={formData.secondDelayMinutes || ''}
                 onChange={(e) => handleInputChange('secondDelayMinutes', e.target.value ? parseInt(e.target.value) : undefined)}
@@ -900,7 +878,7 @@ export default function EditChaseupRulePage() {
               />
             </div>
             <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Max Sendings</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('chaseupRules:form.maxSendings')}</label>
               <select
                 value={formData.maxSendings}
                 onChange={(e) => handleInputChange('maxSendings', parseInt(e.target.value) as 0 | 1 | 2)}
@@ -915,7 +893,7 @@ export default function EditChaseupRulePage() {
 
           {/* First Reminder */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">First Reminder</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('chaseupRules:sections.firstReminder')}</h3>
 
             {/* Webhook */}
             <div className="mb-6">
@@ -926,21 +904,21 @@ export default function EditChaseupRulePage() {
                   onChange={(e) => handleReminderChange('firstReminder', 'webhook.enabled', e.target.checked)}
                   className="rounded border-gray-300 text-blue-600 shadow-sm"
                 />
-                <span className="ml-2 text-sm text-gray-700">Enable Webhook</span>
+                <span className="ml-2 text-sm text-gray-700">{t('chaseupRules:form.enableWebhook')}</span>
               </label>
             </div>
 
             <div className="space-y-6">
-              {renderRecipientConfig('firstReminder', 'user', 'User')}
-              {renderRecipientConfig('firstReminder', 'customer', 'Customer')}
-              {renderRecipientConfig('firstReminder', 'emailAddress', 'Email Address')}
+              {renderRecipientConfig('firstReminder', 'user', t('chaseupRules:recipients.user'))}
+              {renderRecipientConfig('firstReminder', 'customer', t('chaseupRules:recipients.customer'))}
+              {renderRecipientConfig('firstReminder', 'emailAddress', t('chaseupRules:recipients.emailAddress'))}
             </div>
           </div>
 
           {/* Second Reminder */}
           {(formData.maxSendings === 2 || formData.secondReminder) && (
             <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Second Reminder</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('chaseupRules:sections.secondReminder')}</h3>
 
               {/* Webhook */}
               <div className="mb-6">
@@ -956,14 +934,14 @@ export default function EditChaseupRulePage() {
                     }}
                     className="rounded border-gray-300 text-blue-600 shadow-sm"
                   />
-                  <span className="ml-2 text-sm text-gray-700">Enable Webhook</span>
+                  <span className="ml-2 text-sm text-gray-700">{t('chaseupRules:form.enableWebhook')}</span>
                 </label>
               </div>
 
               <div className="space-y-6">
-                {renderRecipientConfig('secondReminder', 'user', 'User')}
-                {renderRecipientConfig('secondReminder', 'customer', 'Customer')}
-                {renderRecipientConfig('secondReminder', 'emailAddress', 'Email Address')}
+                {renderRecipientConfig('secondReminder', 'user', t('chaseupRules:recipients.user'))}
+                {renderRecipientConfig('secondReminder', 'customer', t('chaseupRules:recipients.customer'))}
+                {renderRecipientConfig('secondReminder', 'emailAddress', t('chaseupRules:recipients.emailAddress'))}
               </div>
             </div>
           )}
@@ -975,7 +953,7 @@ export default function EditChaseupRulePage() {
               onClick={() => navigate('/chaseup-rules')}
               disabled={isSaving}
             >
-              Cancel
+              {t('common:actions.cancel')}
             </Button>
             <Button
               className="flex items-center gap-2"
@@ -983,7 +961,7 @@ export default function EditChaseupRulePage() {
               disabled={isSaving || loadingCompanies}
             >
               <Save size={16} />
-              {isSaving ? 'Updating...' : 'Update Rule'}
+              {isSaving ? t('chaseupRules:editRule.updating') : t('chaseupRules:editRule.updateRule')}
             </Button>
           </div>
         </div>
