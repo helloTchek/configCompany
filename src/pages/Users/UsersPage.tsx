@@ -192,30 +192,33 @@ export default function UsersPage() {
   }) : users;
 
   const defaultColumns: Column<User>[] = useMemo(() => [
-    { key: 'email', label: 'Email', sortable: true },
-    { key: 'role', label: 'Role', sortable: true,
-      render: (value: unknown) => (
-        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-          value === 'superadmin' ? 'bg-purple-100 text-purple-800' :
-          value === 'admin' ? 'bg-blue-100 text-blue-800' :
-          'bg-gray-100 text-gray-800'
-        }`}>
-          {String(value)}
-        </span>
-      )
+    { key: 'email', label: t('users:fields.email'), sortable: true },
+    { key: 'role', label: t('users:fields.role'), sortable: true,
+      render: (value: unknown) => {
+        const roleKey = value === 'superadmin' ? 'superAdmin' : value === 'admin' ? 'admin' : 'user';
+        return (
+          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+            value === 'superadmin' ? 'bg-purple-100 text-purple-800' :
+            value === 'admin' ? 'bg-blue-100 text-blue-800' :
+            'bg-gray-100 text-gray-800'
+          }`}>
+            {t(`users:roles.${roleKey}`)}
+          </span>
+        );
+      }
     },
-    { key: 'company', label: 'Company', sortable: true },
-    { key: 'status', label: 'Status', sortable: true,
+    { key: 'company', label: t('users:fields.company'), sortable: true },
+    { key: 'status', label: t('users:fields.status'), sortable: true,
       render: (value: unknown, row: User) => (
         <div className="flex items-center gap-2">
           <span className={`px-2 py-1 text-xs font-medium rounded-full ${
             value === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
           }`}>
-            {String(value)}
+            {t(`users:status.${value === 'active' ? 'active' : 'inactive'}`)}
           </span>
           {row.isDeleted && (
             <span className="px-2 py-1 text-xs font-medium rounded-full bg-orange-100 text-orange-800">
-              {row.disabledReason || 'Disabled'}
+              {row.disabledReason || t('users:status.disabled')}
             </span>
           )}
         </div>
@@ -223,34 +226,34 @@ export default function UsersPage() {
     },
     {
       key: 'actions',
-      label: 'Actions',
+      label: t('users:fields.actions'),
       render: (_: unknown, row: User) => (
         <div className="flex items-center gap-2">
           <button
             onClick={() => handleEditUser(row)}
             className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-            title="Edit User"
+            title={t('users:tooltips.editUser')}
           >
             <Edit size={16} />
           </button>
           <button
             onClick={() => handleSendPasswordReset(row)}
             className="p-2 text-orange-600 hover:bg-orange-100 rounded-lg transition-colors"
-            title="Send Password Reset Email"
+            title={t('users:tooltips.sendPasswordReset')}
           >
             <Mail size={16} />
           </button>
           <button
             onClick={() => handleDeleteUser(row)}
             className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-            title="Delete User"
+            title={t('users:tooltips.deleteUser')}
           >
             <Trash2 size={16} />
           </button>
         </div>
       ),
     },
-  ], []);
+  ], [t]);
 
   const { orderedColumns, handleReorder } = useColumnOrder<User>(
     'users-column-order',
@@ -837,17 +840,17 @@ export default function UsersPage() {
       <Modal
         isOpen={passwordResetModal.isOpen}
         onClose={() => passwordResetModal.close()}
-        title="Send Password Reset Email"
+        title={t('users:messages.sendPasswordResetEmail')}
         size="md"
       >
         <div className="space-y-4">
           <p className="text-gray-600">
-            Are you sure you want to send a password reset email to{' '}
+            {t('users:messages.sendPasswordResetConfirm')}{' '}
             <strong>{passwordResetModal.data?.email}</strong>?
           </p>
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
             <p className="text-sm text-blue-800">
-              <strong>📧 Note:</strong> The user will receive an email with instructions to reset their password.
+              <strong>📧 Note:</strong> {t('users:messages.passwordResetNote')}
             </p>
           </div>
           <div className="flex gap-3 justify-end pt-4">
@@ -855,12 +858,12 @@ export default function UsersPage() {
               variant="secondary"
               onClick={() => passwordResetModal.close()}
             >
-              Cancel
+              {t('users:actions.cancel')}
             </Button>
             <Button
               onClick={confirmPasswordReset}
             >
-              Send Reset Email
+              {t('users:messages.sendResetEmail')}
             </Button>
           </div>
         </div>
@@ -870,7 +873,7 @@ export default function UsersPage() {
       <Modal
         isOpen={passwordResetSuccessModal.isOpen}
         onClose={() => passwordResetSuccessModal.close()}
-        title="Password Reset Email Sent"
+        title={t('users:messages.passwordResetEmailSent')}
         size="md"
       >
         <div className="space-y-4">
@@ -879,23 +882,23 @@ export default function UsersPage() {
               <Mail size={24} className="text-green-600" />
             </div>
             <div>
-              <h4 className="text-lg font-medium text-gray-900">Email Sent Successfully</h4>
+              <h4 className="text-lg font-medium text-gray-900">{t('users:messages.emailSentSuccessfully')}</h4>
               <p className="text-sm text-gray-600">
-                Password reset instructions have been sent to{' '}
+                {t('users:messages.passwordResetSentTo')}{' '}
                 <strong>{passwordResetSuccessModal.data?.email}</strong>
               </p>
             </div>
           </div>
-          
+
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <div className="flex items-start gap-2">
               <span className="text-blue-600 text-lg">📧</span>
               <div>
-                <p className="text-sm text-blue-800 font-medium mb-1">What happens next:</p>
+                <p className="text-sm text-blue-800 font-medium mb-1">{t('users:messages.whatHappensNext')}</p>
                 <ul className="text-sm text-blue-700 space-y-1">
-                  <li>• The user will receive an email with a secure reset link</li>
-                  <li>• The link will expire in 24 hours for security</li>
-                  <li>• They can create a new password using the link</li>
+                  <li>• {t('users:messages.resetStep1')}</li>
+                  <li>• {t('users:messages.resetStep2')}</li>
+                  <li>• {t('users:messages.resetStep3')}</li>
                 </ul>
               </div>
             </div>
@@ -905,7 +908,7 @@ export default function UsersPage() {
             <Button
               onClick={() => passwordResetSuccessModal.close()}
             >
-              Got it
+              {t('users:messages.gotIt')}
             </Button>
           </div>
         </div>
@@ -919,36 +922,36 @@ export default function UsersPage() {
           setEditCompanySearchTerm('');
           setShowEditCompanyDropdown(false);
         }}
-        title="Edit User"
+        title={t('users:edit')}
         size="md"
       >
         <div className="space-y-4">
-          <Input 
-            label="Email" 
-            type="email" 
+          <Input
+            label={t('users:fields.email')}
+            type="email"
             value={editFormData.email}
             onChange={(e) => handleEditFormChange('email', e.target.value)}
             error={editErrors.email}
-            placeholder="john@example.com" 
+            placeholder={t('users:placeholders.email')}
           />
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-            <select 
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('users:fields.role')}</label>
+            <select
               value={editFormData.role}
               onChange={(e) => handleEditFormChange('role', e.target.value)}
               className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                 editErrors.role ? 'border-red-500' : 'border-gray-300'
               }`}
             >
-              <option value="">Select role</option>
-              <option value="user">User</option>
-              <option value="admin">Admin</option>
-              <option value="superadmin">Super Admin</option>
+              <option value="">{t('users:placeholders.selectRole')}</option>
+              <option value="user">{t('users:roles.user')}</option>
+              <option value="admin">{t('users:roles.admin')}</option>
+              <option value="superadmin">{t('users:roles.superAdmin')}</option>
             </select>
             {editErrors.role && <p className="text-sm text-red-600 mt-1">{editErrors.role}</p>}
           </div>
           <div className="relative" ref={editCompanyDropdownRef}>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('users:fields.company')}</label>
             <div className="relative">
               <input
                 type="text"
@@ -961,7 +964,7 @@ export default function UsersPage() {
                 className={`block w-full px-3 py-2 pr-10 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                   editErrors.company ? 'border-red-500' : 'border-gray-300'
                 }`}
-                placeholder="Search company..."
+                placeholder={t('users:placeholders.searchCompany')}
               />
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
             </div>
@@ -997,20 +1000,20 @@ export default function UsersPage() {
                   return (company.name && company.name.toLowerCase().includes(searchLower)) ||
                     (company.identifier && company.identifier.toLowerCase().includes(searchLower));
                 }).length === 0 && (
-                  <div className="px-3 py-2 text-sm text-gray-500">No companies found</div>
+                  <div className="px-3 py-2 text-sm text-gray-500">{t('users:labels.noCompaniesFound')}</div>
                 )}
               </div>
             )}
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-            <select 
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('users:fields.status')}</label>
+            <select
               value={editFormData.status}
               onChange={(e) => handleEditFormChange('status', e.target.value)}
               className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
+              <option value="active">{t('users:status.active')}</option>
+              <option value="inactive">{t('users:status.inactive')}</option>
             </select>
           </div>
           <div className="flex gap-3 justify-end pt-4">
@@ -1019,10 +1022,10 @@ export default function UsersPage() {
               setEditCompanySearchTerm('');
               setShowEditCompanyDropdown(false);
             }}>
-              Cancel
+              {t('users:actions.cancel')}
             </Button>
             <Button onClick={handleSaveEdit}>
-              Save Changes
+              {t('users:actions.save')}
             </Button>
           </div>
         </div>

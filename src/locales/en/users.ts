@@ -13,7 +13,8 @@ export const users = {
     password: 'Password',
     confirmPassword: 'Confirm Password',
     lastLogin: 'Last Login',
-    createdAt: 'Created At'
+    createdAt: 'Created At',
+    actions: 'Actions'
   },
   roles: {
     superAdmin: 'Super Admin',
@@ -22,7 +23,13 @@ export const users = {
   },
   status: {
     active: 'Active',
-    inactive: 'Inactive'
+    inactive: 'Inactive',
+    disabled: 'Disabled'
+  },
+  tooltips: {
+    editUser: 'Edit User',
+    deleteUser: 'Delete User',
+    sendPasswordReset: 'Send Password Reset Email'
   },
   placeholders: {
     searchByEmail: 'Search by email or company...',
@@ -80,6 +87,18 @@ export const users = {
     passwordResetMessage: 'A password reset link has been sent to:',
     passwordResetInstructions: 'The user will receive an email with instructions to reset their password.',
     passwordResetConfirm: 'Are you sure you want to send a password reset link to {{email}}?',
-    passwordSetupInfo: 'The user will receive an email with instructions to set their password after account creation.'
+    passwordSetupInfo: 'The user will receive an email with instructions to set their password after account creation.',
+    sendPasswordResetEmail: 'Send Password Reset Email',
+    sendPasswordResetConfirm: 'Are you sure you want to send a password reset email to',
+    passwordResetNote: 'The user will receive an email with instructions to reset their password.',
+    sendResetEmail: 'Send Reset Email',
+    passwordResetEmailSent: 'Password Reset Email Sent',
+    emailSentSuccessfully: 'Email Sent Successfully',
+    passwordResetSentTo: 'Password reset instructions have been sent to',
+    whatHappensNext: 'What happens next:',
+    resetStep1: 'The user will receive an email with a secure reset link',
+    resetStep2: 'The link will expire in 24 hours for security',
+    resetStep3: 'They can create a new password using the link',
+    gotIt: 'Got it'
   }
 } as const;

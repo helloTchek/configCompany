@@ -13,7 +13,8 @@ export const users = {
     password: 'Mot de Passe',
     confirmPassword: 'Confirmer le Mot de Passe',
     lastLogin: 'Dernière Connexion',
-    createdAt: 'Créé le'
+    createdAt: 'Créé le',
+    actions: 'Actions'
   },
   roles: {
     superAdmin: 'Super Admin',
@@ -22,7 +23,13 @@ export const users = {
   },
   status: {
     active: 'Actif',
-    inactive: 'Inactif'
+    inactive: 'Inactif',
+    disabled: 'Désactivé'
+  },
+  tooltips: {
+    editUser: 'Modifier l\'Utilisateur',
+    deleteUser: 'Supprimer l\'Utilisateur',
+    sendPasswordReset: 'Envoyer un Email de Réinitialisation'
   },
   placeholders: {
     searchByEmail: 'Rechercher par email ou entreprise...',
@@ -80,6 +87,18 @@ export const users = {
     passwordResetMessage: 'Un lien de réinitialisation du mot de passe a été envoyé à :',
     passwordResetInstructions: 'L\'utilisateur recevra un email avec les instructions pour réinitialiser son mot de passe.',
     passwordResetConfirm: 'Êtes-vous sûr de vouloir envoyer un lien de réinitialisation à {{email}} ?',
-    passwordSetupInfo: 'L\'utilisateur recevra un email avec les instructions pour définir son mot de passe après la création du compte.'
+    passwordSetupInfo: 'L\'utilisateur recevra un email avec les instructions pour définir son mot de passe après la création du compte.',
+    sendPasswordResetEmail: 'Envoyer un Email de Réinitialisation',
+    sendPasswordResetConfirm: 'Êtes-vous sûr de vouloir envoyer un email de réinitialisation à',
+    passwordResetNote: 'L\'utilisateur recevra un email avec les instructions pour réinitialiser son mot de passe.',
+    sendResetEmail: 'Envoyer l\'Email de Réinitialisation',
+    passwordResetEmailSent: 'Email de Réinitialisation Envoyé',
+    emailSentSuccessfully: 'Email Envoyé avec Succès',
+    passwordResetSentTo: 'Les instructions de réinitialisation ont été envoyées à',
+    whatHappensNext: 'Que se passe-t-il ensuite :',
+    resetStep1: 'L\'utilisateur recevra un email avec un lien sécurisé',
+    resetStep2: 'Le lien expirera dans 24 heures pour des raisons de sécurité',
+    resetStep3: 'Il pourra créer un nouveau mot de passe en utilisant le lien',
+    gotIt: 'Compris'
   }
 } as const;
