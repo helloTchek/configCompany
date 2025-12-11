@@ -98,19 +98,19 @@ export default function CreateCostMatrixPage() {
     };
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Matrix name is required';
+      newErrors.name = t('costs:messages.matrixNameRequired');
     }
 
     if (!formData.companyId.trim()) {
-      newErrors.companyId = 'Company is required';
+      newErrors.companyId = t('costs:messages.companyRequired');
     }
 
     if (!formData.currency.trim()) {
-      newErrors.currency = 'Currency is required';
+      newErrors.currency = t('costs:messages.currencyRequired');
     }
 
     if (formData.tax < 0 || formData.tax > 100) {
-      newErrors.tax = 'Tax rate must be between 0 and 100';
+      newErrors.tax = t('costs:messages.taxRateInvalid');
     }
 
     setErrors(newErrors);
@@ -131,11 +131,11 @@ export default function CreateCostMatrixPage() {
         tax: formData.tax,
       });
 
-      alert('Cost matrix created successfully');
+      alert(t('costs:messages.createSuccess'));
       navigate(`/cost-matrices/${newCostSettings.id}/edit`);
     } catch (err: any) {
       console.error('Error creating cost matrix:', err);
-      alert(`Failed to create cost matrix: ${err.message}`);
+      alert(`${t('common:error')}: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -153,7 +153,7 @@ export default function CreateCostMatrixPage() {
               className="flex items-center gap-2 mb-4"
             >
               <ArrowLeft size={16} />
-              Back to Cost Matrices
+              {t('costs:labels.backToMatrices')}
             </Button>
           </div>
         </div>
@@ -163,7 +163,7 @@ export default function CreateCostMatrixPage() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      <Header title="Create Cost Matrix" />
+      <Header title={t('costs:createTitle')} />
       
       <div className="flex-1 overflow-y-auto p-6">
         <div className="mb-6">
@@ -173,7 +173,7 @@ export default function CreateCostMatrixPage() {
             className="flex items-center gap-2 mb-4"
           >
             <ArrowLeft size={16} />
-            Back to Cost Matrices
+            {t('costs:labels.backToMatrices')}
           </Button>
         </div>
 
@@ -181,15 +181,15 @@ export default function CreateCostMatrixPage() {
         <Modal
           isOpen={showModal}
           onClose={() => navigate('/cost-matrices')}
-          title="Create New Cost Matrix"
+          title={t('costs:create')}
           size="md"
         >
           <div className="space-y-6">
             {/* Matrix Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">Matrix Name</label>
+              <label className="block text-sm font-medium text-gray-900 mb-2">{t('costs:labels.matrixNameLabel')}</label>
               <Input
-                placeholder="e.g. PREMIUM_MATRIX"
+                placeholder={t('costs:placeholders.matrixName')}
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
                 error={errors.name}
@@ -198,12 +198,12 @@ export default function CreateCostMatrixPage() {
 
             {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">Description</label>
+              <label className="block text-sm font-medium text-gray-900 mb-2">{t('costs:labels.descriptionLabel')}</label>
               <textarea
                 rows={3}
                 value={formData.description}
                 onChange={(e) => handleInputChange('description', e.target.value)}
-                placeholder="Brief description of this cost matrix"
+                placeholder={t('costs:placeholders.description')}
                 className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
               />
             </div>
@@ -214,18 +214,18 @@ export default function CreateCostMatrixPage() {
                 companies={companies}
                 selectedCompanyId={formData.companyId}
                 onSelect={(companyId) => handleInputChange('companyId', companyId)}
-                placeholder="Search for a company..."
-                label="Company"
+                placeholder={t('costs:placeholders.searchCompany')}
+                label={t('costs:labels.company')}
                 error={errors.companyId}
                 disabled={loadingCompanies}
               />
-              {loadingCompanies && <p className="text-sm text-gray-500 mt-1">Loading companies...</p>}
+              {loadingCompanies && <p className="text-sm text-gray-500 mt-1">{t('costs:labels.loadingCompanies')}</p>}
             </div>
 
             {/* Currency and Tax */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">Currency</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2">{t('costs:fields.currency')}</label>
                 <select
                   value={formData.currency}
                   onChange={(e) => handleInputChange('currency', e.target.value)}
@@ -237,7 +237,7 @@ export default function CreateCostMatrixPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">Tax Rate (%)</label>
+                <label className="block text-sm font-medium text-gray-900 mb-2">{t('costs:fields.taxRate')}</label>
                 <Input
                   type="number"
                   value={formData.tax}
@@ -257,9 +257,9 @@ export default function CreateCostMatrixPage() {
                   <span className="text-blue-600">💡</span>
                 </div>
                 <div className="flex-1">
-                  <h4 className="text-sm font-medium text-blue-900 mb-1">Need a starting template?</h4>
+                  <h4 className="text-sm font-medium text-blue-900 mb-1">{t('costs:labels.templateTitle')}</h4>
                   <p className="text-sm text-blue-800 mb-3">
-                    Download our default template to get started with common vehicle parts and repair costs.
+                    {t('costs:labels.templateDescription')}
                   </p>
                   <Button
                     variant="secondary"
@@ -268,7 +268,7 @@ export default function CreateCostMatrixPage() {
                     size="sm"
                   >
                     <Download size={16} />
-                    Download Template
+                    {t('costs:labels.downloadTemplate')}
                   </Button>
                 </div>
               </div>
@@ -280,12 +280,12 @@ export default function CreateCostMatrixPage() {
                 variant="secondary"
                 onClick={() => navigate('/cost-matrices')}
               >
-                Cancel
+                {t('costs:actions.cancel')}
               </Button>
               <Button
                 onClick={handleCreateMatrix}
               >
-                Create Matrix
+                {t('costs:actions.createMatrix')}
               </Button>
             </div>
           </div>
