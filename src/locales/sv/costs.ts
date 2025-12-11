@@ -2,6 +2,7 @@ export const costs = {
   title: 'Kostnadsmatriser',
   subtitle: 'Hantera reparationskostnader efter deltyp, plats och allvarlighetsgrad',
   create: 'Skapa ny matris',
+  createTitle: 'Skapa Kostnadsmatris',
   edit: 'Redigera kostnadsmatris',
   fields: {
     company: 'Företag',
@@ -33,6 +34,11 @@ export const costs = {
     importCsv: 'Importera CSV',
     exportCsv: 'Exportera CSV',
     bulkEdit: 'Redigera i bulk'
+  },
+  modals: {
+    editTitle: 'Redigera Matris - {{name}}',
+    deleteTitle: 'Bekräfta Borttagning',
+    duplicateTitle: 'Duplicera Kostnadsmatris'
   },
   messages: {
     createSuccess: 'Kostnadsmatris skapad framgångsrikt',

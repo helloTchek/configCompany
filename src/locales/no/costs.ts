@@ -2,6 +2,7 @@ export const costs = {
   title: 'Kostnadsmatriser',
   subtitle: 'Administrer reparasjonskostnader etter deltype, plassering og alvorlighetsgrad',
   create: 'Opprett ny matrise',
+  createTitle: 'Opprett Kostnadsmatrise',
   edit: 'Rediger kostnadsmatrise',
   fields: {
     company: 'Selskap',
@@ -33,6 +34,11 @@ export const costs = {
     importCsv: 'Importer CSV',
     exportCsv: 'Eksporter CSV',
     bulkEdit: 'Bulkredigering'
+  },
+  modals: {
+    editTitle: 'Rediger matrise - {{name}}',
+    deleteTitle: 'Bekreft Sletting',
+    duplicateTitle: 'Dupliser Kostnadsmatrise'
   },
   messages: {
     createSuccess: 'Kostnadsmatrise opprettet',

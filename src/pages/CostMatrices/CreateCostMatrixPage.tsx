@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import Header from '../../components/Layout/Header';
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
@@ -11,6 +12,7 @@ import { companiesService } from '../../services/companiesService';
 import { Company } from '../../types';
 
 export default function CreateCostMatrixPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -142,7 +144,7 @@ export default function CreateCostMatrixPage() {
   if (!showModal) {
     return (
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header title="Create Cost Matrix" />
+        <Header title={t('costs:createTitle')} />
         <div className="flex-1 overflow-y-auto p-6">
           <div className="mb-6">
             <Button

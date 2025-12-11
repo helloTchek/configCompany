@@ -2,6 +2,7 @@ export const costs = {
   title: 'Matrices de Coûts',
   subtitle: 'Gérer les matrices de coûts pour les estimations de réparation automobile',
   create: 'Créer une Nouvelle Matrice',
+  createTitle: 'Créer une Matrice de Coûts',
   edit: 'Modifier la Matrice de Coûts',
   fields: {
     company: 'Entreprise',
@@ -87,6 +88,7 @@ export const costs = {
     duplicating: 'Duplication...'
   },
   modals: {
+    editTitle: 'Modifier la Matrice - {{name}}',
     deleteTitle: 'Confirmer la Suppression',
     deleteConfirm: 'Êtes-vous sûr de vouloir supprimer cette matrice ?',
     deleteMessage: 'Vous êtes sur le point de supprimer la matrice de coûts "{{name}}" pour {{company}}.',

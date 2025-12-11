@@ -2,6 +2,7 @@ export const costs = {
   title: 'Matrices de costos',
   subtitle: 'Administrar costos de reparación por tipo de pieza, ubicación y gravedad',
   create: 'Crear nueva matriz',
+  createTitle: 'Crear Matriz de Costos',
   edit: 'Editar matriz de costos',
   fields: {
     company: 'Empresa',
@@ -33,6 +34,11 @@ export const costs = {
     importCsv: 'Importar CSV',
     exportCsv: 'Exportar CSV',
     bulkEdit: 'Edición masiva'
+  },
+  modals: {
+    editTitle: 'Editar Matriz - {{name}}',
+    deleteTitle: 'Confirmar Eliminación',
+    duplicateTitle: 'Duplicar Matriz de Costos'
   },
   messages: {
     createSuccess: 'Matriz de costos creada con éxito',

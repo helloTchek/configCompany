@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import Header from '../../components/Layout/Header';
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
@@ -42,6 +43,7 @@ const getCurrencyCode = (currencySymbol: string): string => {
 };
 
 export default function EditCostMatrixPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -320,7 +322,7 @@ export default function EditCostMatrixPage() {
   if (loading) {
     return (
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header title="Loading..." />
+        <Header title={t('costs:messages.loading')} />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -334,7 +336,7 @@ export default function EditCostMatrixPage() {
   if (error || !costSettings) {
     return (
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header title="Error" />
+        <Header title={t('common:error')} />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <p className="text-red-600 mb-4">{error || 'Cost matrix not found'}</p>
@@ -351,7 +353,7 @@ export default function EditCostMatrixPage() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      <Header title={formData.name} />
+      <Header title={t('costs:modals.editTitle', { name: formData.name })} />
 
       <div className="flex-1 overflow-y-auto p-6">
         <div className="mb-6">

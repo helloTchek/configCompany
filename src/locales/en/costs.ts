@@ -2,6 +2,7 @@ export const costs = {
   title: 'Cost Matrices',
   subtitle: 'Manage cost matrices for vehicle repair estimates',
   create: 'Create New Matrix',
+  createTitle: 'Create Cost Matrix',
   edit: 'Edit Cost Matrix',
   fields: {
     company: 'Company',
@@ -87,6 +88,7 @@ export const costs = {
     duplicating: 'Duplicating...'
   },
   modals: {
+    editTitle: 'Edit Matrix - {{name}}',
     deleteTitle: 'Confirm Deletion',
     deleteConfirm: 'Are you sure you want to delete this matrix?',
     deleteMessage: 'You are about to delete the cost matrix "{{name}}" for {{company}}.',

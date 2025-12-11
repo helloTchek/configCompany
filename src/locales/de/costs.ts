@@ -2,6 +2,7 @@ export const costs = {
   title: 'Kostenmatrizen',
   subtitle: 'Reparaturkosten nach Teiltypen, Positionen und Schweregraden verwalten',
   create: 'Neue Matrix erstellen',
+  createTitle: 'Kostenmatrix erstellen',
   edit: 'Kostenmatrix bearbeiten',
   fields: {
     company: 'Unternehmen',
@@ -33,6 +34,11 @@ export const costs = {
     importCsv: 'CSV importieren',
     exportCsv: 'CSV exportieren',
     bulkEdit: 'Massenbearbeitung'
+  },
+  modals: {
+    editTitle: 'Matrix bearbeiten - {{name}}',
+    deleteTitle: 'Löschen bestätigen',
+    duplicateTitle: 'Kostenmatrix duplizieren'
   },
   messages: {
     createSuccess: 'Kostenmatrix erfolgreich erstellt',

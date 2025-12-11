@@ -2,6 +2,7 @@ export const costs = {
   title: 'Kostenmatrices',
   subtitle: 'Beheer reparatiekosten per type onderdeel, locatie en ernst',
   create: 'Nieuwe matrix aanmaken',
+  createTitle: 'Kostenmatrix Aanmaken',
   edit: 'Kostenmatrix bewerken',
   fields: {
     company: 'Bedrijf',
@@ -33,6 +34,11 @@ export const costs = {
     importCsv: 'CSV importeren',
     exportCsv: 'CSV exporteren',
     bulkEdit: 'Bulkbewerking'
+  },
+  modals: {
+    editTitle: 'Matrix bewerken - {{name}}',
+    deleteTitle: 'Verwijdering Bevestigen',
+    duplicateTitle: 'Kostenmatrix Dupliceren'
   },
   messages: {
     createSuccess: 'Kostenmatrix succesvol aangemaakt',
