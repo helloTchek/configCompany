@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/auth/AuthContext';
 import Header from '../../components/Layout/Header';
 import Button from '../../components/UI/Button';
@@ -16,17 +17,18 @@ import { companiesService } from '../../services/companiesService';
 import { toast } from 'react-hot-toast';
 import onboardingData from '../../data/onboarding.json';
 
-const blockTypes = [
-  { type: 'form', name: 'Form Block', description: 'Custom form with JSON configuration' },
-  { type: 'shootInspect', name: 'Shoot Inspection Block', description: 'Photo capture workflow' },
-  { type: 'fastTrack', name: 'Fast Track Block', description: 'Quick inspection process' },
-  { type: 'addDamage', name: 'Add Damage Block', description: 'Manual damage reporting' },
-  { type: 'static', name: 'Static Screen Block', description: 'Static content screens (onboarding/offboarding)' }
-];
-
 export default function CreateJourneyPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useTranslation();
+
+  const blockTypes = [
+    { type: 'form', name: t('workflows:blockTypes.form.name'), description: t('workflows:blockTypes.form.description') },
+    { type: 'shootInspect', name: t('workflows:blockTypes.shootInspection.name'), description: t('workflows:blockTypes.shootInspection.description') },
+    { type: 'fastTrack', name: t('workflows:blockTypes.fastTrack.name'), description: t('workflows:blockTypes.fastTrack.description') },
+    { type: 'addDamage', name: t('workflows:blockTypes.addDamage.name'), description: t('workflows:blockTypes.addDamage.description') },
+    { type: 'static', name: t('workflows:blockTypes.static.name'), description: t('workflows:blockTypes.static.description') }
+  ];
   const [journeyName, setJourneyName] = useState('');
   const [journeyDescription, setJourneyDescription] = useState('');
   const [selectedCompany, setSelectedCompany] = useState('');
@@ -57,7 +59,7 @@ export default function CreateJourneyPage() {
       setCompanies(data);
     } catch (error) {
       console.error('Error loading companies:', error);
-      toast.error('Failed to load companies');
+      toast.error(t('workflows:messages.loadCompaniesError'));
     } finally {
       setLoadingCompanies(false);
     }
@@ -65,17 +67,17 @@ export default function CreateJourneyPage() {
 
   const handleSave = async (saveAndAddAnother = false) => {
     if (!journeyName.trim()) {
-      toast.error('Please enter a journey name');
+      toast.error(t('workflows:messages.nameRequired'));
       return;
     }
 
     if (!selectedCompany) {
-      toast.error('Please select a company');
+      toast.error(t('workflows:messages.companyRequired'));
       return;
     }
 
     if (blocks.length === 0) {
-      toast.error('Please add at least one block to the journey');
+      toast.error(t('workflows:messages.blocksRequired'));
       return;
     }
 
@@ -103,7 +105,7 @@ export default function CreateJourneyPage() {
         blocks: blocksWithConfigData
       });
 
-      toast.success('Journey created successfully');
+      toast.success(t('workflows:messages.createSuccess'));
 
       if (saveAndAddAnother) {
         // Reset form for new journey
@@ -118,7 +120,7 @@ export default function CreateJourneyPage() {
       }
     } catch (error: any) {
       console.error('Error creating journey:', error);
-      toast.error(error.message || 'Failed to create journey');
+      toast.error(error.message || t('workflows:messages.createError'));
     } finally {
       setSaving(false);
     }
@@ -254,7 +256,7 @@ export default function CreateJourneyPage() {
             // If the JSON is an array, extract the first element
             if (Array.isArray(parsedJson)) {
               if (parsedJson.length === 0) {
-                toast.error(`${blockModal.type === 'form' ? 'Form' : 'Static'} configuration array is empty`);
+                toast.error(t(`workflows:messages.${blockModal.type === 'form' ? 'formConfigArrayEmpty' : 'staticConfigArrayEmpty'}`));
                 return;
               }
               parsedJson = parsedJson[0];
@@ -262,7 +264,7 @@ export default function CreateJourneyPage() {
 
             // Validate that the JSON has required fields
             if (!parsedJson.id) {
-              toast.error(`${blockModal.type === 'form' ? 'Form' : 'Static'} configuration must have an "id" field`);
+              toast.error(t(`workflows:messages.${blockModal.type === 'form' ? 'formConfigIdRequired' : 'staticConfigIdRequired'}`));
               return;
             }
 
@@ -270,7 +272,7 @@ export default function CreateJourneyPage() {
           }
         } catch (error) {
           console.error('JSON parse error:', error);
-          toast.error('Invalid JSON configuration');
+          toast.error(t('workflows:messages.invalidJsonConfiguration'));
           return;
         }
       }
@@ -316,7 +318,7 @@ export default function CreateJourneyPage() {
           });
         } catch (error) {
           console.error('JSON parse error:', error);
-          toast.error('Invalid JSON configuration');
+          toast.error(t('workflows:messages.invalidJsonConfiguration'));
           return;
         }
       }
@@ -329,7 +331,7 @@ export default function CreateJourneyPage() {
       <Modal
         isOpen={blockModal.open}
         onClose={() => setBlockModal({ open: false })}
-        title={`Configure ${blockTypeInfo?.name}`}
+        title={t('workflows:modals.configure', { blockType: blockTypeInfo?.name })}
         size="lg"
       >
         <div className="space-y-4">
@@ -337,16 +339,16 @@ export default function CreateJourneyPage() {
           {blockModal.type !== 'form' && (
             <>
               <Input
-                label="Block Name"
+                label={t('workflows:fields.blockName')}
                 value={modalBlockName}
                 onChange={(e) => setModalBlockName(e.target.value)}
-                placeholder="Enter block name"
+                placeholder={t('workflows:placeholders.enterBlockName')}
               />
               <Input
-                label="Description"
+                label={t('workflows:fields.description')}
                 value={modalBlockDesc}
                 onChange={(e) => setModalBlockDesc(e.target.value)}
-                placeholder="Enter block description"
+                placeholder={t('workflows:placeholders.enterBlockDescription')}
               />
             </>
           )}
@@ -354,16 +356,16 @@ export default function CreateJourneyPage() {
           {blockModal.type === 'form' && (
             <div>
               <div className="mb-3">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Form Configuration (Complete JSON)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('workflows:configuration.formConfiguration')}</label>
                 <p className="text-xs text-gray-600 mb-2">
-                  Enter the complete form configuration JSON including <code className="bg-gray-100 px-1 rounded">id</code>, <code className="bg-gray-100 px-1 rounded">name</code>, <code className="bg-gray-100 px-1 rounded">description</code>, and <code className="bg-gray-100 px-1 rounded">config</code> fields.
+                  {t('workflows:configuration.formConfigHelp')}
                 </p>
               </div>
 
               {/* Example */}
               <details className="mb-3 bg-blue-50 border border-blue-200 rounded-lg p-3">
                 <summary className="text-sm font-medium text-blue-900 cursor-pointer">
-                  📖 Show example structure
+                  {t('workflows:configuration.showExample')}
                 </summary>
                 <pre className="mt-2 text-xs bg-white p-2 rounded border border-blue-100 overflow-x-auto">
 {`{
@@ -397,15 +399,15 @@ export default function CreateJourneyPage() {
               </details>
 
               <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700">JSON Content</label>
+                <label className="block text-sm font-medium text-gray-700">{t('workflows:configuration.jsonContent')}</label>
                 <div className="flex gap-2">
                   <Button variant="secondary" size="sm" className="flex items-center gap-1">
                     <Download size={14} />
-                    Download
+                    {t('common:actions.download')}
                   </Button>
                   <Button variant="secondary" size="sm" className="flex items-center gap-1">
                     <Upload size={14} />
-                    Upload
+                    {t('common:actions.upload')}
                   </Button>
                 </div>
               </div>
@@ -417,14 +419,14 @@ export default function CreateJourneyPage() {
                 className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
               />
               <p className="text-xs text-gray-500 mt-1">
-                💡 Paste your complete form JSON including id, name, description, and config
+                {t('workflows:configuration.formConfigTip')}
               </p>
             </div>
           )}
 
           {blockModal.type === 'addDamage' && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Allowed Damage Types</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">{t('workflows:configuration.allowedDamageTypes')}</label>
               <div className="grid grid-cols-2 gap-2">
                 {['Car Body', 'Interior', 'Glazings', 'Dashboard', 'Declaration', 'Documents'].map((type) => (
                   <label key={type} className="flex items-center">
@@ -443,16 +445,16 @@ export default function CreateJourneyPage() {
           {blockModal.type === 'static' && (
             <div>
               <div className="mb-3">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Static Screens Configuration</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('workflows:configuration.staticScreensConfiguration')}</label>
                 <p className="text-xs text-gray-600 mb-2">
-                  Configure static screens (onboarding/offboarding). Enter the screens array configuration.
+                  {t('workflows:configuration.staticConfigHelp')}
                 </p>
               </div>
 
               {/* Example */}
               <details className="mb-3 bg-green-50 border border-green-200 rounded-lg p-3">
                 <summary className="text-sm font-medium text-green-900 cursor-pointer">
-                  📖 Show example structure
+                  {t('workflows:configuration.showExample')}
                 </summary>
                 <pre className="mt-2 text-xs bg-white p-2 rounded border border-green-100 overflow-x-auto">
 {`[
@@ -475,15 +477,15 @@ export default function CreateJourneyPage() {
               </details>
 
               <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700">JSON Content</label>
+                <label className="block text-sm font-medium text-gray-700">{t('workflows:configuration.jsonContent')}</label>
                 <div className="flex gap-2">
                   <Button variant="secondary" size="sm" className="flex items-center gap-1">
                     <Download size={14} />
-                    Download
+                    {t('common:actions.download')}
                   </Button>
                   <Button variant="secondary" size="sm" className="flex items-center gap-1">
                     <Upload size={14} />
-                    Upload
+                    {t('common:actions.upload')}
                   </Button>
                 </div>
               </div>
@@ -492,20 +494,20 @@ export default function CreateJourneyPage() {
                 value={modalConfigJson}
                 onChange={(e) => setModalConfigJson(e.target.value)}
                 className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
-                placeholder="Enter static screens JSON configuration (see example above)"
+                placeholder={t('workflows:configuration.staticConfigHelp')}
               />
               <p className="text-xs text-gray-500 mt-1">
-                💡 Screen types: onboarding, offboarding, info
+                {t('workflows:configuration.staticConfigTip')}
               </p>
             </div>
           )}
 
           <div className="flex gap-3 justify-end pt-4">
             <Button variant="secondary" onClick={() => setBlockModal({ open: false })}>
-              Cancel
+              {t('common:actions.cancel')}
             </Button>
             <Button onClick={handleAddBlockWithConfig}>
-              Add Block
+              {t('workflows:blocks.addBlock')}
             </Button>
           </div>
         </div>
@@ -515,7 +517,7 @@ export default function CreateJourneyPage() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      <Header title="Create Inspection Journey" />
+      <Header title={t('workflows:createTitle')} />
 
       <div className="flex-1 overflow-y-auto p-6">
         <div className="mb-6">
@@ -525,37 +527,37 @@ export default function CreateJourneyPage() {
             className="flex items-center gap-2 mb-4"
           >
             <ArrowLeft size={16} />
-            Back to Journeys
+            {t('workflows:actions.backToJourneys')}
           </Button>
         </div>
 
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Journey Details */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Journey Details</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('workflows:sections.journeyDetails')}</h3>
             <div className="grid grid-cols-1 gap-4">
               <CompanySelector
                 companies={companies}
                 selectedCompanyId={selectedCompany}
                 onSelect={setSelectedCompany}
-                label="Company"
-                placeholder="Search and select company..."
+                label={t('workflows:fields.company')}
+                placeholder={t('workflows:placeholders.searchCompany')}
                 disabled={user?.role !== 'superAdmin' || loadingCompanies}
               />
               <Input
-                label="Journey Name"
+                label={t('workflows:fields.journeyName')}
                 value={journeyName}
                 onChange={(e) => setJourneyName(e.target.value)}
-                placeholder="Enter journey name"
+                placeholder={t('workflows:placeholders.enterJourneyName')}
                 required
               />
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('workflows:fields.description')}</label>
                 <textarea
                   rows={3}
                   value={journeyDescription}
                   onChange={(e) => setJourneyDescription(e.target.value)}
-                  placeholder="Enter journey description"
+                  placeholder={t('workflows:placeholders.enterJourneyDescription')}
                   className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -567,7 +569,7 @@ export default function CreateJourneyPage() {
                     onChange={(e) => setIsActive(e.target.checked)}
                     className="rounded border-gray-300 text-blue-600 shadow-sm"
                   />
-                  <span className="ml-2 text-sm text-gray-700">Active</span>
+                  <span className="ml-2 text-sm text-gray-700">{t('common:status.active')}</span>
                 </label>
               </div>
             </div>
@@ -576,14 +578,14 @@ export default function CreateJourneyPage() {
           {/* Add Blocks */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Journey Blocks</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{t('workflows:blocks.title')}</h3>
               <div className="relative">
                 <Button
                   onClick={() => setBlockModal({ open: true })}
                   className="flex items-center gap-2"
                 >
                   <Plus size={16} />
-                  Add Block
+                  {t('workflows:blocks.addBlock')}
                 </Button>
               </div>
             </div>
@@ -598,7 +600,7 @@ export default function CreateJourneyPage() {
                   >
                     {blocks.length === 0 && (
                       <div className="text-center py-8 text-gray-500">
-                        <p>No blocks added yet. Click "Add Block" to start building your journey.</p>
+                        <p>{t('workflows:messages.noBlocks')}</p>
                       </div>
                     )}
                     {blocks.map((block, index) => (
@@ -639,7 +641,7 @@ export default function CreateJourneyPage() {
                                 size="sm"
                                 onClick={() => removeBlock(block.id)}
                               >
-                                Remove
+                                {t('workflows:actions.remove')}
                               </Button>
                             </div>
                           </div>
@@ -660,20 +662,20 @@ export default function CreateJourneyPage() {
               onClick={() => navigate('/journeys')}
               disabled={saving}
             >
-              Cancel
+              {t('common:actions.cancel')}
             </Button>
             <Button
               variant="secondary"
               onClick={() => handleSave(true)}
               disabled={!journeyName || !selectedCompany || blocks.length === 0 || saving}
             >
-              {saving ? 'Saving...' : 'Save and Add Another'}
+              {saving ? t('workflows:messages.saving') : t('workflows:actions.saveAndAddAnother')}
             </Button>
             <Button
               onClick={() => handleSave(false)}
               disabled={!journeyName || !selectedCompany || blocks.length === 0 || saving}
             >
-              {saving ? 'Saving...' : 'Save Journey'}
+              {saving ? t('workflows:messages.saving') : t('workflows:actions.save')}
             </Button>
           </div>
         </div>
@@ -683,7 +685,7 @@ export default function CreateJourneyPage() {
       <Modal
         isOpen={blockModal.open && !blockModal.type}
         onClose={() => setBlockModal({ open: false })}
-        title="Select Block Type"
+        title={t('workflows:modals.selectBlockType')}
         size="lg"
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -696,7 +698,7 @@ export default function CreateJourneyPage() {
                   const shootInspectCount = blocks.filter(b => b.type === 'shootInspect').length + 1;
                   const shootInspectionData: ShootInspectionData = {
                     id: `shoot-inspect-${shootInspectCount}`,
-                    name: 'Shoot Inspection Block',
+                    name: t('workflows:blockTypes.shootInspection.name'),
                     description: '',
                     config: [] // Will be populated with default steps by ShootInspectionConfig
                   };
@@ -725,7 +727,7 @@ export default function CreateJourneyPage() {
           setShowShootInspectionConfig(false);
           setCurrentShootInspectionConfigData(null);
         }}
-        title="Configure Shoot Inspection Block"
+        title={t('workflows:modals.configureShootInspection')}
         size="xl"
       >
         {currentShootInspectionConfigData && (
