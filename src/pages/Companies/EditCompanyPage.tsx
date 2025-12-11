@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import Header from '../../components/Layout/Header';
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
@@ -745,6 +746,7 @@ const HierarchyTab = ({ handleInputChange, formData, handleFieldChange, companie
 export default function EditCompanyPage() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { t } = useTranslation(['company', 'common']);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
   const [selectedLanguage, setSelectedLanguage] = useState('en');
@@ -1386,11 +1388,11 @@ export default function EditCompanyPage() {
   if (loading) {
     return (
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header title="Edit Company" />
+        <Header title={t('company:edit')} />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading company data...</p>
+            <p className="text-gray-600">{t('company:messages.loading')}</p>
           </div>
         </div>
       </div>
@@ -1399,8 +1401,8 @@ export default function EditCompanyPage() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      <Header title={`Edit Company: ${formData.companyName}`} />
-      
+      <Header title={`${t('company:edit')}: ${formData.companyName}`} />
+
       <div className="flex-1 overflow-y-auto p-6">
         <div className="mb-6">
           <Button
@@ -1409,7 +1411,7 @@ export default function EditCompanyPage() {
             className="flex items-center gap-2 mb-4"
           >
             <ArrowLeft size={16} />
-            Back to Companies
+            {t('company:labels.backToList')}
           </Button>
         </div>
 
@@ -1489,15 +1491,15 @@ export default function EditCompanyPage() {
           {/* Save Buttons */}
           <div className="flex gap-4 justify-end sticky bottom-0 bg-white py-4 border-t border-gray-200 mt-8">
             <Button variant="secondary" onClick={() => navigate('/companies')}>
-              Cancel
+              {t('common:actions.cancel')}
             </Button>
-            <Button 
-              className="flex items-center gap-2" 
+            <Button
+              className="flex items-center gap-2"
               onClick={handleSave}
               disabled={!hasUnsavedChanges}
             >
               <Save size={16} />
-              Save Changes
+              {t('company:labels.saveChanges')}
             </Button>
           </div>
         </div>
