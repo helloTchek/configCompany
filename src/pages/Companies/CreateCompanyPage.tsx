@@ -101,11 +101,11 @@ const GeneralSettingsTab = ({
       <div className="mt-6 space-y-4">
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="block text-sm font-medium text-gray-700">Styles</label>
+            <label className="block text-sm font-medium text-gray-700">{t('company:fields.styles')}</label>
             <div className="flex gap-2">
               <Button variant="secondary" size="sm" className="flex items-center gap-1">
                 <Upload size={14} />
-                Upload JSON
+                {t('company:labels.uploadJson')}
               </Button>
             </div>
           </div>
@@ -119,11 +119,11 @@ const GeneralSettingsTab = ({
 
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="block text-sm font-medium text-gray-700">Report Settings</label>
+            <label className="block text-sm font-medium text-gray-700">{t('company:fields.reportSettings')}</label>
             <div className="flex gap-2">
               <Button variant="secondary" size="sm" className="flex items-center gap-1">
                 <Upload size={14} />
-                Upload JSON
+                {t('company:labels.uploadJson')}
               </Button>
             </div>
           </div>
@@ -137,11 +137,11 @@ const GeneralSettingsTab = ({
 
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="block text-sm font-medium text-gray-700">Config Modules</label>
+            <label className="block text-sm font-medium text-gray-700">{t('company:fields.configModules')}</label>
             <div className="flex gap-2">
               <Button variant="secondary" size="sm" className="flex items-center gap-1">
                 <Upload size={14} />
-                Upload JSON
+                {t('company:labels.uploadJson')}
               </Button>
             </div>
           </div>
@@ -157,7 +157,7 @@ const GeneralSettingsTab = ({
 
     {/* API Configuration */}
     <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">API Configuration</h3>
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('company:sections.apiConfiguration')}</h3>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <label className="flex items-center">
           <input
@@ -166,7 +166,7 @@ const GeneralSettingsTab = ({
             onChange={(e) => handleCheckboxChange('mileageEnabled', e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
           />
-          <span className="ml-2 text-sm text-gray-700">Enable Mileage Capture</span>
+          <span className="ml-2 text-sm text-gray-700">{t('company:fields.enableMileageCapture')}</span>
         </label>
         <label className="flex items-center">
           <input
@@ -175,7 +175,7 @@ const GeneralSettingsTab = ({
             onChange={(e) => handleCheckboxChange('blurEnabled', e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
           />
-          <span className="ml-2 text-sm text-gray-700">Enable Blur Detection</span>
+          <span className="ml-2 text-sm text-gray-700">{t('company:fields.enableBlurDetection')}</span>
         </label>
         <label className="flex items-center">
           <input
@@ -184,7 +184,7 @@ const GeneralSettingsTab = ({
             onChange={(e) => handleCheckboxChange('vinEnabled', e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
           />
-          <span className="ml-2 text-sm text-gray-700">Enable VIN Scanning</span>
+          <span className="ml-2 text-sm text-gray-700">{t('company:fields.enableVinScanning')}</span>
         </label>
         <label className="flex items-center">
           <input
@@ -193,7 +193,7 @@ const GeneralSettingsTab = ({
             onChange={(e) => handleCheckboxChange('readCarInformationEnabled', e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
           />
-          <span className="ml-2 text-sm text-gray-700">Enable Brand & Model Detection</span>
+          <span className="ml-2 text-sm text-gray-700">{t('company:fields.enableBrandModelDetection')}</span>
         </label>
         <label className="flex items-center">
           <input
@@ -202,7 +202,7 @@ const GeneralSettingsTab = ({
             onChange={(e) => handleCheckboxChange('interiorEnabled', e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
           />
-          <span className="ml-2 text-sm text-gray-700">Enable Interior Damage Detection</span>
+          <span className="ml-2 text-sm text-gray-700">{t('company:fields.enableInteriorDamage')}</span>
         </label>
         <label className="flex items-center">
           <input
@@ -211,14 +211,14 @@ const GeneralSettingsTab = ({
             onChange={(e) => handleCheckboxChange('dashboardEnabled', e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
           />
-          <span className="ml-2 text-sm text-gray-700">Enable Dashboard Warning Lights Detection</span>
+          <span className="ml-2 text-sm text-gray-700">{t('company:fields.enableDashboardWarningLights')}</span>
         </label>
       </div>
     </div>
 
     {/* Hub Configuration */}
     <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Hub Configuration</h3>
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('company:sections.hubConfiguration')}</h3>
       <div className="space-y-4">
         <label className="flex items-center">
           <input
@@ -227,7 +227,7 @@ const GeneralSettingsTab = ({
             onChange={(e) => handleCheckboxChange('showStartInstantInspection', e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
           />
-          <span className="ml-2 text-sm text-gray-700">Show Start Instant Inspection</span>
+          <span className="ml-2 text-sm text-gray-700">{t('company:fields.showStartInstantInspection')}</span>
         </label>
         <label className="flex items-center">
           <input
@@ -236,14 +236,14 @@ const GeneralSettingsTab = ({
             onChange={(e) => handleCheckboxChange('showSendInspectionLink', e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
           />
-          <span className="ml-2 text-sm text-gray-700">Show Send Inspection Link</span>
+          <span className="ml-2 text-sm text-gray-700">{t('company:fields.showSendInspectionLink')}</span>
         </label>
       </div>
     </div>
 
     {/* Validation */}
     <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Validation</h3>
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('company:sections.validation')}</h3>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <label className="flex items-center lg:col-span-2">
           <input
@@ -252,7 +252,7 @@ const GeneralSettingsTab = ({
             onChange={(e) => handleCheckboxChange('iaValidation', e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
           />
-          <span className="ml-2 text-sm text-gray-700">IA Validation (Joelle model)</span>
+          <span className="ml-2 text-sm text-gray-700">{t('company:fields.iaValidation')}</span>
         </label>
       </div>
     </div>
@@ -270,7 +270,8 @@ const EventsWebhooksTab = ({
   variables,
   templates,
   setTemplates,
-  errors
+  errors,
+  t
 }) => {
   // State to track which field is currently focused
   const [focusedField, setFocusedField] = useState(null);
@@ -500,26 +501,26 @@ const EventsWebhooksTab = ({
   <div className="space-y-6">
     {/* Global Settings */}
     <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Global Settings</h3>
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('company:fields.globalSettings')}</h3>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Input
-          label="Sender Name (for all events)"
-          placeholder="Your Company Name"
+          label={t('company:labels.senderName')}
+          placeholder={t('company:placeholders.senderName')}
           value={formData.senderName}
           onChange={(e) => handleFieldChange('senderName', e.target.value)}
           error={errors.senderName}
           required
         />
         <Input
-          label="Sender Email (for all events)"
+          label={t('company:labels.senderEmail')}
           type="email"
-          placeholder="noreply@tchek.ai"
+          placeholder={t('company:placeholders.senderEmail')}
           value={formData.senderEmail}
           onChange={(e) => handleFieldChange('senderEmail', e.target.value)}
         />
         <Input
-          label="Webhook URL"
-          placeholder="https://your-domain.com/webhook"
+          label={t('company:labels.webhookUrl')}
+          placeholder={t('company:placeholders.webhookUrl')}
           value={formData.webhookUrl}
           onChange={(e) => handleFieldChange('webhookUrl', e.target.value)}
         />
@@ -530,8 +531,8 @@ const EventsWebhooksTab = ({
     {focusedField && (
       <div className="sticky top-4 z-10 bg-white rounded-lg border-2 border-blue-200 shadow-lg p-4">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-md font-semibold text-blue-900">📋 Available Variables</h3>
-          <span className="text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded">Click to insert</span>
+          <h3 className="text-md font-semibold text-blue-900">📋 {t('company:fields.availableVariables')}</h3>
+          <span className="text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded">{t('common:actions.clickToInsert')}</span>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-40 overflow-y-auto">
           {variables.map((variable) => (
@@ -609,7 +610,7 @@ const EventsWebhooksTab = ({
   );
 };
 
-const HierarchyTab = ({ formData, handleFieldChange, handleInputChange, companies, loadingCompanies }) => {
+const HierarchyTab = ({ formData, handleFieldChange, handleInputChange, companies, loadingCompanies, t }) => {
   const [searchTerm, setSearchTerm] = React.useState('');
 
   const filteredCompanies = (companies || []).filter(company =>
@@ -622,22 +623,22 @@ const HierarchyTab = ({ formData, handleFieldChange, handleInputChange, companie
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Company Hierarchy</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('company:sections.companyHierarchy')}</h3>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Parent Company (optional)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('company:labels.parentCompanyOptional')}</label>
 
             {loadingCompanies ? (
               <div className="flex items-center justify-center py-8 border border-gray-300 rounded-lg bg-gray-50">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <span className="ml-3 text-gray-600">Loading companies...</span>
+                <span className="ml-3 text-gray-600">{t('company:messages.loading')}</span>
               </div>
             ) : (
               <>
                 <div className="relative mb-2">
                   <input
                     type="text"
-                    placeholder="Search companies..."
+                    placeholder={t('company:placeholders.searchCompanies')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="block w-full px-3 py-2 pl-10 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
@@ -1121,7 +1122,7 @@ export default function CreateCompanyPage() {
     },
     {
       key: 'events',
-      label: 'Events & Webhooks',
+      label: t('company:sections.eventsWebhooks'),
       content: <EventsWebhooksTab
         selectedLanguage={selectedLanguage}
         setSelectedLanguage={setSelectedLanguage}
@@ -1136,17 +1137,19 @@ export default function CreateCompanyPage() {
         companyEmailEnabled={companyEmailEnabled}
         setCompanyEmailEnabled={setCompanyEmailEnabled}
         errors={errors}
+        t={t}
       />
     },
     {
       key: 'hierarchy',
-      label: 'Hierarchy',
+      label: t('company:sections.companyHierarchy'),
       content: <HierarchyTab
         formData={formData}
         handleFieldChange={handleFieldChange}
         handleInputChange={handleInputChange}
         companies={companies}
         loadingCompanies={loadingCompanies}
+        t={t}
       />
     }
   ];

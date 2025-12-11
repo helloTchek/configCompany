@@ -31,7 +31,8 @@ export const common = {
     loading: 'Chargement...',
     retry: 'Réessayer',
     select: 'Sélectionner',
-    clearFilters: 'Effacer Tous les Filtres'
+    clearFilters: 'Effacer Tous les Filtres',
+    clickToInsert: 'Cliquer pour insérer'
   },
   status: {
     active: 'Actif',
