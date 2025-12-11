@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/Layout/Header';
 import Button from '../../components/UI/Button';
@@ -7,7 +7,7 @@ import { CostSettings } from '../../types';
 import { costSettingsService } from '../../services/costSettingsService';
 import { CreditCard as Edit, Download, Copy, Trash2, Plus, Eye, Search, X, AlertTriangle, ChevronUp, ChevronDown } from 'lucide-react';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { useModalState, useDebouncedSearch } from '@/hooks';
+import { useModalState, useDebouncedSearch, useColumnOrder } from '@/hooks';
 import { createErrorHandler } from '@/utils';
 
 const getCurrencySymbol = (currencyCode: string): string => {

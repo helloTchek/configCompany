@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthContext';
 import Header from '../../components/Layout/Header';
@@ -13,7 +13,7 @@ import { CreditCard as Edit, Archive, Copy, Plus, Upload, Search, ListFilter as 
 import { mockChaseupRules } from '../../data/mockData';
 import { PERMISSIONS } from '@/types/auth';
 import { FullCompanyData, ApiTokenData } from '@/types/api';
-import { useModalState, useDebouncedSearch } from '@/hooks';
+import { useModalState, useDebouncedSearch, useColumnOrder } from '@/hooks';
 
 export default function CompaniesPage() {
   const navigate = useNavigate();
@@ -388,7 +388,7 @@ export default function CompaniesPage() {
     return mockChaseupRules.some(rule => rule.company === companyName);
   };
 
-  const columns: Column<Company>[] = [
+  const defaultColumns: Column<Company>[] = useMemo(() => [
     { key: 'name', label: 'Company Name', sortable: true,
       render: (value: unknown, row: Company) => (
         <div className="flex items-center gap-2">
@@ -521,7 +521,12 @@ export default function CompaniesPage() {
         </div>
       ),
     },
-  ];
+  ], [navigate, hasPermission]);
+
+  const { orderedColumns, handleReorder } = useColumnOrder<Company>(
+    'companies-column-order',
+    defaultColumns
+  );
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
@@ -695,11 +700,12 @@ export default function CompaniesPage() {
           ) : (
             <>
               <Table<Company>
-                columns={columns}
+                columns={orderedColumns}
                 data={sortedCompanies}
                 sortKey={sortKey}
                 sortDirection={sortDirection}
                 onSort={handleSort}
+                onColumnReorder={handleReorder}
                 getRowClassName={(row) =>
                   (row.archived || row.isArchived)
                     ? 'bg-orange-50 hover:!bg-orange-100 border-l-4 border-l-orange-400'

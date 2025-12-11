@@ -7,3 +7,4 @@ export {
   type UsePaginatedDataOptions,
   type UsePaginatedDataResult,
 } from './usePaginatedData';
+export { useColumnOrder } from './useColumnOrder';

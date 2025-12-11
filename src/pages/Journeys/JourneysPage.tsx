@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthContext';
 import Header from '../../components/Layout/Header';
-import Table from '../../components/UI/Table';
+import Table, { Column } from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
 import Modal from '../../components/UI/Modal';
 import Input from '../../components/UI/Input';
@@ -11,7 +11,7 @@ import { InspectionJourney } from '../../types';
 import { workflowsService } from '../../services/workflowsService';
 import { companiesService } from '../../services/companiesService';
 import { CreditCard as Edit, Copy, Trash2, Plus, Search, ListFilter as Filter, X } from 'lucide-react';
-import { useModalState } from '@/hooks';
+import { useModalState, useColumnOrder } from '@/hooks';
 import { toast } from 'react-hot-toast';
 
 export default function JourneysPage() {
@@ -201,7 +201,7 @@ export default function JourneysPage() {
     }
   };
 
-  const columns = [
+  const defaultColumns: Column<InspectionJourney>[] = useMemo(() => [
     { key: 'name', label: 'Journey Name', sortable: true },
     { key: 'companyId', label: 'Company', sortable: true,
       render: (value: unknown) => {
@@ -231,7 +231,7 @@ export default function JourneysPage() {
     {
       key: 'actions',
       label: 'Actions',
-      render: (_: any, row: InspectionJourney) => (
+      render: (_: unknown, row: InspectionJourney) => (
         <div className="flex items-center gap-2">
           <button
             onClick={() => navigate(`/journeys/${row.companyId}/${row.id}/edit`)}
@@ -257,7 +257,12 @@ export default function JourneysPage() {
         </div>
       ),
     },
-  ];
+  ], [companies, navigate]);
+
+  const { orderedColumns, handleReorder } = useColumnOrder<InspectionJourney>(
+    'journeys-column-order',
+    defaultColumns
+  );
 
   if (loading) {
     return (
@@ -369,7 +374,7 @@ export default function JourneysPage() {
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200">
-          <Table columns={columns} data={filteredJourneys} />
+          <Table columns={orderedColumns} data={filteredJourneys} onColumnReorder={handleReorder} />
 
           {filteredJourneys.length === 0 && (
             <div className="text-center py-8 text-gray-500">

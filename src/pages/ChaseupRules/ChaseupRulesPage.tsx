@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthContext';
 import Header from '../../components/Layout/Header';
-import Table from '../../components/UI/Table';
+import Table, { Column } from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
 import Modal from '../../components/UI/Modal';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
@@ -11,7 +11,7 @@ import { ChaseupRule } from '../../types';
 import chaseUpRulesService from '../../services/chaseupRulesService';
 import companiesService from '../../services/companiesService';
 import { CreditCard as Edit, Copy, Trash2, Plus, Search, ListFilter as Filter, X } from 'lucide-react';
-import { useModalState, useDebouncedSearch } from '@/hooks';
+import { useModalState, useDebouncedSearch, useColumnOrder } from '@/hooks';
 
 export default function ChaseupRulesPage() {
   const navigate = useNavigate();
@@ -189,38 +189,41 @@ export default function ChaseupRulesPage() {
     }
   };
 
-  const columns = [
+  const defaultColumns: Column<ChaseupRule>[] = useMemo(() => [
     { key: 'company', label: 'Company', sortable: true },
     { key: 'type', label: 'Type', sortable: true,
-      render: (value: string) => (
+      render: (value: unknown) => (
         <span className={`px-2 py-1 text-xs font-medium rounded-full ${
           value === 'event' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
         }`}>
-          {value}
+          {String(value)}
         </span>
       )
     },
     { key: 'activationDate', label: 'Activation Date', sortable: true,
-      render: (value: string) => new Date(value).toLocaleDateString()
+      render: (value: unknown) => new Date(String(value)).toLocaleDateString()
     },
     { key: 'utcSendingTime', label: 'UTC Time', sortable: true,
-      render: (value: { hour: number; minute: number }) =>
-        `${value.hour.toString().padStart(2, '0')}:${value.minute.toString().padStart(2, '0')}`
+      render: (value: unknown) => {
+        const time = value as { hour: number; minute: number };
+        return `${time.hour.toString().padStart(2, '0')}:${time.minute.toString().padStart(2, '0')}`;
+      }
     },
     { key: 'maxSendings', label: 'Max Sendings', sortable: true,
-      render: (value: number) => (
+      render: (value: unknown) => (
         <span className={`px-2 py-1 text-xs font-medium rounded-full ${
           value === 0 ? 'bg-gray-100 text-gray-800' :
           value === 1 ? 'bg-yellow-100 text-yellow-800' :
           'bg-green-100 text-green-800'
         }`}>
-          {value}
+          {String(value)}
         </span>
       )
     },
     { key: 'firstDelayDays', label: 'First Delay', sortable: true,
-      render: (value: number | undefined, row: ChaseupRule) => {
-        if (value) return `${value} days`;
+      render: (value: unknown, row: ChaseupRule) => {
+        const days = value as number | undefined;
+        if (days) return `${days} days`;
         if (row.firstDelayMinutes) return `${row.firstDelayMinutes} min`;
         return 'None';
       }
@@ -228,7 +231,7 @@ export default function ChaseupRulesPage() {
     {
       key: 'actions',
       label: 'Actions',
-      render: (_: any, row: ChaseupRule) => (
+      render: (_: unknown, row: ChaseupRule) => (
         <div className="flex items-center gap-2">
           <button
             onClick={() => navigate(`/chaseup-rules/${row.id}/edit`)}
@@ -254,7 +257,12 @@ export default function ChaseupRulesPage() {
         </div>
       ),
     },
-  ];
+  ], [navigate]);
+
+  const { orderedColumns, handleReorder } = useColumnOrder<ChaseupRule>(
+    'chaseup-rules-column-order',
+    defaultColumns
+  );
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
@@ -382,11 +390,12 @@ export default function ChaseupRulesPage() {
           ) : (
             <>
               <Table
-                columns={columns}
+                columns={orderedColumns}
                 data={sortedRules}
                 sortKey={sortKey}
                 sortDirection={sortDirection}
                 onSort={handleSort}
+                onColumnReorder={handleReorder}
               />
 
               {sortedRules.length === 0 && (

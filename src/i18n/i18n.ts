@@ -3,7 +3,7 @@ import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 
 const supportedLanguages = ['en', 'fr', 'de', 'it', 'es', 'nl', 'sv', 'no'] as const;
-const namespaces = ['common', 'company', 'apiToken', 'users', 'settings', 'events', 'costs', 'workflows', 'shootInspect'] as const;
+const namespaces = ['common', 'company', 'apiToken', 'users', 'settings', 'events', 'costs', 'workflows', 'shootInspect', 'chaseupRules', 'sortingRules'] as const;
 
 // Lazy loading function for translations
 const loadTranslation = async (language: string, namespace: string) => {

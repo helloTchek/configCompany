@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/auth/AuthContext';
 import Header from '../../components/Layout/Header';
-import Table from '../../components/UI/Table';
+import Table, { Column } from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Modal from '../../components/UI/Modal';
@@ -11,7 +11,7 @@ import CompanySelector from '../../components/UI/CompanySelector';
 import { SortingRule } from '../../types';
 import sortingRulesService from '../../services/sortingRulesService';
 import { CreditCard as Edit, Plus, Search, ListFilter as Filter, X, Trash2 } from 'lucide-react';
-import { useModalState } from '@/hooks';
+import { useModalState, useColumnOrder } from '@/hooks';
 
 export default function SortingRulesPage() {
   const navigate = useNavigate();
@@ -180,12 +180,12 @@ export default function SortingRulesPage() {
     }
   };
 
-  const columns = [
+  const defaultColumns: Column<SortingRule>[] = useMemo(() => [
     { key: 'company', label: 'Company', sortable: true },
     { key: 'type', label: 'Type', sortable: true,
-      render: (value: string) => (
+      render: (value: unknown) => (
         <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
-          {value}
+          {String(value)}
         </span>
       )
     },
@@ -196,7 +196,7 @@ export default function SortingRulesPage() {
     {
       key: 'actions',
       label: t('common:fields.actions'),
-      render: (_: any, row: SortingRule) => (
+      render: (_: unknown, row: SortingRule) => (
         <div className="flex items-center gap-2">
           <button
             onClick={() => navigate(`/sorting-rules/${row.id}/edit`)}
@@ -215,7 +215,12 @@ export default function SortingRulesPage() {
         </div>
       ),
     },
-  ];
+  ], [navigate, t]);
+
+  const { orderedColumns, handleReorder } = useColumnOrder<SortingRule>(
+    'sorting-rules-column-order',
+    defaultColumns
+  );
 
   if (loading) {
     return (
@@ -341,11 +346,12 @@ export default function SortingRulesPage() {
 
         <div className="bg-white rounded-lg border border-gray-200">
           <Table
-            columns={columns}
+            columns={orderedColumns}
             data={sortedRules}
             sortKey={sortKey}
             sortDirection={sortDirection}
             onSort={handleSort}
+            onColumnReorder={handleReorder}
           />
         </div>
 
