@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '@/auth/AuthContext';
+import { useTranslation } from 'react-i18next';
 import Header from '../../components/Layout/Header';
 import Table, { Column } from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
@@ -14,6 +15,7 @@ import { createErrorHandler } from '@/utils';
 
 export default function UsersPage() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -304,17 +306,17 @@ export default function UsersPage() {
     };
 
     if (!editFormData.email.trim()) {
-      newErrors.email = 'Email is required';
+      newErrors.email = t('users:validation.emailRequired');
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editFormData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = t('users:validation.emailInvalid');
     }
 
     if (!editFormData.role) {
-      newErrors.role = 'Role is required';
+      newErrors.role = t('users:validation.roleRequired');
     }
 
     if (!editFormData.company) {
-      newErrors.company = 'Company is required';
+      newErrors.company = t('users:validation.companyRequired');
     }
 
     setEditErrors(newErrors);
@@ -339,12 +341,12 @@ export default function UsersPage() {
       await loadUsers(); // Reload users
     } catch (error) {
       console.error('Error updating user:', error);
-      alert('Failed to update user');
+      alert(t('users:messages.updateUserFailed'));
     }
   };
 
   const handleDeleteUser = async (user: User) => {
-    if (!confirm(`Are you sure you want to delete ${user.email}?`)) {
+    if (!confirm(t('users:messages.deleteConfirm', { email: user.email }))) {
       return;
     }
 
@@ -353,7 +355,7 @@ export default function UsersPage() {
       await loadUsers(); // Reload users
     } catch (error) {
       console.error('Error deleting user:', error);
-      alert('Failed to delete user');
+      alert(t('users:messages.deleteUserFailed'));
     }
   };
 
@@ -365,17 +367,17 @@ export default function UsersPage() {
     };
 
     if (!createFormData.email.trim()) {
-      newErrors.email = 'Email is required';
+      newErrors.email = t('users:validation.emailRequired');
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(createFormData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = t('users:validation.emailInvalid');
     }
 
     if (!createFormData.role) {
-      newErrors.role = 'Role is required';
+      newErrors.role = t('users:validation.roleRequired');
     }
 
     if (!createFormData.company) {
-      newErrors.company = 'Company is required';
+      newErrors.company = t('users:validation.companyRequired');
     }
 
     setCreateErrors(newErrors);
@@ -429,13 +431,13 @@ export default function UsersPage() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      <Header title="Users" />
+      <Header title={t('users:title')} />
 
       <div className="flex-1 overflow-y-auto p-6">
         <div className="mb-6 flex justify-between items-center">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">User Management</h2>
-            <p className="text-sm text-gray-600">Manage user accounts and permissions</p>
+            <h2 className="text-lg font-semibold text-gray-900">{t('users:title')}</h2>
+            <p className="text-sm text-gray-600">{t('users:subtitle')}</p>
           </div>
           <Button
             onClick={() => {
@@ -447,7 +449,7 @@ export default function UsersPage() {
             className="flex items-center gap-2"
           >
             <Plus size={16} />
-            Create New User
+            {t('users:create')}
           </Button>
         </div>
 
@@ -459,7 +461,7 @@ export default function UsersPage() {
               <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search by email or company..."
+                placeholder={t('users:placeholders.searchByEmail')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -479,7 +481,7 @@ export default function UsersPage() {
               className={`flex items-center gap-2 ${hasActiveFilters ? 'bg-blue-50 text-blue-700 border-blue-200' : ''}`}
             >
               <Filter size={16} />
-              Filters
+              {t('users:labels.filters')}
               {hasActiveFilters && (
                 <span className="bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                   {Object.values(filters).filter(f => f !== '').length + (searchTerm ? 1 : 0)}
@@ -493,34 +495,34 @@ export default function UsersPage() {
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('users:fields.role')}</label>
                   <select
                     value={filters.role}
                     onChange={(e) => setFilters(prev => ({ ...prev, role: e.target.value }))}
                     className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="">All Roles</option>
-                    <option value="superadmin">Super Admin</option>
-                    <option value="admin">Admin</option>
-                    <option value="user">User</option>
+                    <option value="">{t('users:labels.allRoles')}</option>
+                    <option value="superadmin">{t('users:roles.superAdmin')}</option>
+                    <option value="admin">{t('users:roles.admin')}</option>
+                    <option value="user">{t('users:roles.user')}</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('users:fields.status')}</label>
                   <select
                     value={filters.status}
                     onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
                     className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="">All Status</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
+                    <option value="">{t('users:labels.allStatus')}</option>
+                    <option value="active">{t('users:status.active')}</option>
+                    <option value="inactive">{t('users:status.inactive')}</option>
                   </select>
                 </div>
 
                 <div className="relative" ref={filterCompanyDropdownRef}>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('users:fields.company')}</label>
                   <div className="relative">
                     <input
                       type="text"
@@ -531,7 +533,7 @@ export default function UsersPage() {
                       }}
                       onFocus={() => setShowFilterCompanyDropdown(true)}
                       className="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="All Companies"
+                      placeholder={t('users:placeholders.allCompanies')}
                     />
                     <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                   </div>
@@ -546,7 +548,7 @@ export default function UsersPage() {
                         }}
                         className="px-3 py-2 hover:bg-blue-50 cursor-pointer border-b border-gray-100 font-medium text-gray-700"
                       >
-                        All Companies
+                        {t('users:placeholders.allCompanies')}
                       </div>
                       {companies
                         .filter(company => {
@@ -608,10 +610,10 @@ export default function UsersPage() {
 
           {sortedUsers.length === 0 && !loading && (
             <div className="text-center py-8 text-gray-500">
-              <p>No users found matching your criteria.</p>
+              <p>{t('users:labels.noUsers')}</p>
               {hasActiveFilters && (
                 <Button variant="secondary" onClick={clearFilters} className="mt-2">
-                  Clear Filters
+                  {t('users:labels.clearFilters')}
                 </Button>
               )}
             </div>
@@ -621,7 +623,7 @@ export default function UsersPage() {
           {totalPages > 1 && (
             <div className="border-t border-gray-200 px-6 py-4 flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm text-gray-600">
-                <span>Show</span>
+                <span>{t('users:labels.show')}</span>
                 <select
                   value={pageSize}
                   onChange={(e) => {
@@ -635,9 +637,13 @@ export default function UsersPage() {
                   <option value="50">50</option>
                   <option value="100">100</option>
                 </select>
-                <span>per page</span>
+                <span>{t('users:labels.perPage')}</span>
                 <span className="ml-4">
-                  Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalUsers)} of {totalUsers} users
+                  {t('users:labels.showing', {
+                    from: ((currentPage - 1) * pageSize) + 1,
+                    to: Math.min(currentPage * pageSize, totalUsers),
+                    total: totalUsers
+                  })}
                 </span>
               </div>
 
@@ -648,7 +654,7 @@ export default function UsersPage() {
                   onClick={() => setCurrentPage(1)}
                   disabled={currentPage === 1}
                 >
-                  First
+                  {t('users:actions.first')}
                 </Button>
                 <Button
                   variant="secondary"
@@ -656,7 +662,7 @@ export default function UsersPage() {
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
                 >
-                  Previous
+                  {t('users:actions.previous')}
                 </Button>
 
                 <div className="flex items-center gap-1">
@@ -694,7 +700,7 @@ export default function UsersPage() {
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
                 >
-                  Next
+                  {t('users:actions.next')}
                 </Button>
                 <Button
                   variant="secondary"
@@ -702,7 +708,7 @@ export default function UsersPage() {
                   onClick={() => setCurrentPage(totalPages)}
                   disabled={currentPage === totalPages}
                 >
-                  Last
+                  {t('users:actions.last')}
                 </Button>
               </div>
             </div>
@@ -718,14 +724,14 @@ export default function UsersPage() {
           setCompanySearchTerm('');
           setShowCompanyDropdown(false);
         }}
-        title="Create New User"
+        title={t('users:create')}
         size="md"
       >
         <div className="space-y-4">
           <Input
-            label="Email"
+            label={t('users:fields.email')}
             type="email"
-            placeholder="john@example.com"
+            placeholder={t('users:placeholders.email')}
             value={createFormData.email}
             onChange={(e) => {
               setCreateFormData(prev => ({ ...prev, email: e.target.value }));
@@ -734,7 +740,7 @@ export default function UsersPage() {
             error={createErrors.email}
           />
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('users:fields.role')}</label>
             <select
               value={createFormData.role}
               onChange={(e) => {
@@ -745,15 +751,15 @@ export default function UsersPage() {
                 createErrors.role ? 'border-red-500' : 'border-gray-300'
               }`}
             >
-              <option value="">Select role</option>
-              <option value="user">User</option>
-              <option value="admin">Admin</option>
-              <option value="superadmin">Super Admin</option>
+              <option value="">{t('users:placeholders.selectRole')}</option>
+              <option value="user">{t('users:roles.user')}</option>
+              <option value="admin">{t('users:roles.admin')}</option>
+              <option value="superadmin">{t('users:roles.superAdmin')}</option>
             </select>
             {createErrors.role && <p className="text-sm text-red-600 mt-1">{createErrors.role}</p>}
           </div>
           <div className="relative" ref={companyDropdownRef}>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('users:fields.company')}</label>
             <div className="relative">
               <input
                 type="text"
@@ -766,7 +772,7 @@ export default function UsersPage() {
                 className={`block w-full px-3 py-2 pr-10 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                   createErrors.company ? 'border-red-500' : 'border-gray-300'
                 }`}
-                placeholder="Search company..."
+                placeholder={t('users:placeholders.searchCompany')}
               />
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
             </div>
@@ -802,14 +808,14 @@ export default function UsersPage() {
                   return (company.name && company.name.toLowerCase().includes(searchLower)) ||
                     (company.identifier && company.identifier.toLowerCase().includes(searchLower));
                 }).length === 0 && (
-                  <div className="px-3 py-2 text-sm text-gray-500">No companies found</div>
+                  <div className="px-3 py-2 text-sm text-gray-500">{t('users:labels.noCompaniesFound')}</div>
                 )}
               </div>
             )}
           </div>
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
             <p className="text-sm text-blue-800">
-              <strong>📧 Password Setup:</strong> The user will receive an email with instructions to set their password after account creation.
+              <strong>📧 {t('users:fields.password')}:</strong> {t('users:messages.passwordSetupInfo')}
             </p>
           </div>
           <div className="flex gap-3 justify-end pt-4">
@@ -818,10 +824,10 @@ export default function UsersPage() {
               setCompanySearchTerm('');
               setShowCompanyDropdown(false);
             }}>
-              Cancel
+              {t('users:actions.cancel')}
             </Button>
             <Button onClick={handleCreateUser}>
-              Create User
+              {t('users:actions.create')}
             </Button>
           </div>
         </div>
