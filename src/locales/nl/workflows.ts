@@ -2,6 +2,7 @@ export const workflows = {
   title: 'Workflows',
   subtitle: 'Maak en beheer inspectie-reisworkflows',
   create: 'Nieuwe reis aanmaken',
+  createTitle: 'Inspectiereis Aanmaken',
   edit: 'Reis bewerken',
   duplicate: 'Reis dupliceren',
   fields: {

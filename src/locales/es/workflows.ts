@@ -2,6 +2,7 @@ export const workflows = {
   title: 'Flujos de trabajo',
   subtitle: 'Crear y administrar flujos de inspección',
   create: 'Crear nuevo flujo',
+  createTitle: 'Crear Flujo de Inspección',
   edit: 'Editar flujo',
   duplicate: 'Duplicar flujo',
   fields: {

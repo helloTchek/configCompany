@@ -2,6 +2,7 @@ export const workflows = {
   title: 'Workflows',
   subtitle: 'Inspektionsabläufe erstellen und verwalten',
   create: 'Neue Journey erstellen',
+  createTitle: 'Inspektions-Journey erstellen',
   edit: 'Journey bearbeiten',
   duplicate: 'Journey duplizieren',
   fields: {

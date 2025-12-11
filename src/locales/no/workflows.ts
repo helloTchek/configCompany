@@ -2,6 +2,7 @@ export const workflows = {
   title: 'Arbeidsflyter',
   subtitle: 'Opprett og administrer inspeksjonsreise-arbeidsflyter',
   create: 'Opprett ny reise',
+  createTitle: 'Opprett Inspeksjonsreise',
   edit: 'Rediger reise',
   duplicate: 'Dupliser reise',
   fields: {

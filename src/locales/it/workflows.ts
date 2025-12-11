@@ -2,6 +2,7 @@ export const workflows = {
   title: 'Flussi di Lavoro',
   subtitle: 'Crea e gestisci i flussi dei percorsi di ispezione',
   create: 'Crea Nuovo Percorso',
+  createTitle: 'Crea Percorso di Ispezione',
   edit: 'Modifica Percorso',
   duplicate: 'Duplica Percorso',
   fields: {

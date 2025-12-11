@@ -2,6 +2,7 @@ export const workflows = {
   title: 'Arbetsflöden',
   subtitle: 'Skapa och hantera inspektionsresors arbetsflöden',
   create: 'Skapa Ny Resa',
+  createTitle: 'Skapa Inspektionsresa',
   edit: 'Redigera Resa',
   duplicate: 'Duplicera Resa',
   fields: {
