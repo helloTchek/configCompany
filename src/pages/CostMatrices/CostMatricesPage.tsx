@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import Header from '../../components/Layout/Header';
 import Button from '../../components/UI/Button';
 import Modal from '../../components/UI/Modal';
@@ -21,6 +22,7 @@ const getCurrencySymbol = (currencyCode: string): string => {
 
 export default function CostMatricesPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [costSettings, setCostSettings] = useState<CostSettings[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -99,8 +101,8 @@ export default function CostMatricesPage() {
   };
 
   const handleDuplicate = (costSetting: CostSettings) => {
-    const displayName = costSetting.className || costSetting.name || 'Unknown';
-    setDuplicateName(`${displayName} (Copie)`);
+    const displayName = costSetting.className || costSetting.name || t('costs:labels.unknown');
+    setDuplicateName(`${displayName} ${t('costs:labels.copy')}`);
     duplicateModal.open(costSetting);
   };
 
@@ -119,10 +121,10 @@ export default function CostMatricesPage() {
       // Reload data
       await loadCostSettings(currentPage);
 
-      alert(`Matrice de coûts "${result.className || result.name}" dupliquée avec succès`);
+      alert(t('costs:messages.duplicateSuccess', { name: result.className || result.name }));
     } catch (error) {
       console.error('Error duplicating cost settings:', error);
-      alert(`Échec de la duplication: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      alert(t('costs:messages.duplicateError', { error: error instanceof Error ? error.message : t('costs:labels.unknownError') }));
       setDuplicating(false);
     }
   };
@@ -156,17 +158,17 @@ export default function CostMatricesPage() {
       await costSettingsService.deleteCostSettings(deleteModal.data.id);
       deleteModal.close();
       await loadCostSettings(currentPage);
-      alert('Matrice de coûts supprimée avec succès');
+      alert(t('costs:messages.deleteSuccess'));
     } catch (error) {
       console.error('Error deleting cost settings:', error);
-      alert(`Échec de la suppression: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      alert(t('costs:messages.deleteError', { error: error instanceof Error ? error.message : t('costs:labels.unknownError') }));
     } finally {
       setDeleting(false);
     }
   };
 
   const formatDate = (dateString?: string) => {
-    if (!dateString) return 'N/A';
+    if (!dateString) return t('costs:labels.notAvailable');
     const date = new Date(dateString);
     return date.toLocaleDateString('en-GB');
   };
@@ -221,13 +223,13 @@ export default function CostMatricesPage() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      <Header title="Repair Costs Management" />
+      <Header title={t('costs:title')} />
 
       <div className="flex-1 overflow-y-auto p-6">
         <div className="mb-6 flex justify-between items-center">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">Repair Costs Management</h2>
-            <p className="text-sm text-gray-600">Manage cost matrices for vehicle repair estimates</p>
+            <h2 className="text-xl font-semibold text-gray-900">{t('costs:title')}</h2>
+            <p className="text-sm text-gray-600">{t('costs:subtitle')}</p>
           </div>
           <div className="flex gap-3">
             <Button
@@ -236,14 +238,14 @@ export default function CostMatricesPage() {
               className="flex items-center gap-2"
             >
               <Download size={16} />
-              Download Template
+              {t('costs:actions.downloadTemplate')}
             </Button>
             <Button
               onClick={() => navigate('/cost-matrices/new')}
               className="flex items-center gap-2"
             >
               <Plus size={16} />
-              Create Matrix
+              {t('costs:actions.createMatrix')}
             </Button>
           </div>
         </div>
@@ -254,7 +256,7 @@ export default function CostMatricesPage() {
             <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <input
               type="text"
-              placeholder="Search cost matrices..."
+              placeholder={t('costs:placeholders.searchMatrices')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 pr-10 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -273,7 +275,7 @@ export default function CostMatricesPage() {
         {/* Error message */}
         {error && (
           <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
-            <p className="font-medium">Error loading cost matrices</p>
+            <p className="font-medium">{t('costs:messages.loadError')}</p>
             <p className="text-sm">{error}</p>
           </div>
         )}
@@ -281,8 +283,8 @@ export default function CostMatricesPage() {
         {/* Cost Matrices Section */}
         <div className="bg-white rounded-lg border border-gray-200">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900">Cost Matrices</h3>
-            <p className="text-sm text-gray-600">Select and manage your repair cost matrices</p>
+            <h3 className="text-lg font-medium text-gray-900">{t('costs:labels.costMatrices')}</h3>
+            <p className="text-sm text-gray-600">{t('costs:labels.manageMatrices')}</p>
           </div>
 
           <div className="p-6">
@@ -292,9 +294,9 @@ export default function CostMatricesPage() {
               </div>
             ) : sortedCostSettings.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-gray-600">No cost matrices found</p>
+                <p className="text-gray-600">{t('costs:labels.noMatrices')}</p>
                 <p className="text-sm text-gray-500 mt-2">
-                  {searchTerm ? 'Try adjusting your search' : 'Create a new cost matrix to get started'}
+                  {searchTerm ? t('costs:labels.tryAdjustingSearch') : t('costs:labels.createToStart')}
                 </p>
               </div>
             ) : (
@@ -307,7 +309,7 @@ export default function CostMatricesPage() {
                         onClick={() => handleSort('matrix')}
                       >
                         <div className="flex items-center gap-1">
-                          MATRIX
+                          {t('costs:fields.matrix').toUpperCase()}
                           <div className="flex flex-col">
                             <ChevronUp
                               size={12}
@@ -333,7 +335,7 @@ export default function CostMatricesPage() {
                         onClick={() => handleSort('company')}
                       >
                         <div className="flex items-center gap-1">
-                          COMPANY
+                          {t('costs:fields.company').toUpperCase()}
                           <div className="flex flex-col">
                             <ChevronUp
                               size={12}
@@ -359,7 +361,7 @@ export default function CostMatricesPage() {
                         onClick={() => handleSort('currency')}
                       >
                         <div className="flex items-center gap-1">
-                          CURRENCY & TAX
+                          {t('costs:fields.currencyAndTax').toUpperCase()}
                           <div className="flex flex-col">
                             <ChevronUp
                               size={12}
@@ -380,13 +382,13 @@ export default function CostMatricesPage() {
                           </div>
                         </div>
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700 text-sm">STATUS</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-700 text-sm">{t('costs:fields.status').toUpperCase()}</th>
                       <th
                         className="text-left py-3 px-4 font-medium text-gray-700 text-sm cursor-pointer hover:bg-gray-100"
                         onClick={() => handleSort('updatedAt')}
                       >
                         <div className="flex items-center gap-1">
-                          LAST UPDATED
+                          {t('costs:fields.lastUpdated').toUpperCase()}
                           <div className="flex flex-col">
                             <ChevronUp
                               size={12}
@@ -407,20 +409,20 @@ export default function CostMatricesPage() {
                           </div>
                         </div>
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700 text-sm">ACTIONS</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-700 text-sm">{t('costs:fields.actions').toUpperCase()}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {sortedCostSettings.map((setting) => {
-                      const displayName = setting.className || setting.name || 'Unnamed';
-                      const companyName = setting.companyPtr?.className || setting.companyPtr?.name || setting.companyName || 'N/A';
+                      const displayName = setting.className || setting.name || t('costs:labels.unnamed');
+                      const companyName = setting.companyPtr?.className || setting.companyPtr?.name || setting.companyName || t('costs:labels.notAvailable');
 
                       return (
                         <tr key={setting.id} className="border-b border-gray-100 hover:bg-gray-50">
                           <td className="py-4 px-4">
                             <div>
                               <div className="font-medium text-gray-900">{displayName}</div>
-                              <div className="text-sm text-gray-600">Cost matrix configuration</div>
+                              <div className="text-sm text-gray-600">{t('costs:labels.matrixConfig')}</div>
                             </div>
                           </td>
                           <td className="py-4 px-4">
@@ -429,12 +431,12 @@ export default function CostMatricesPage() {
                         <td className="py-4 px-4">
                           <div>
                             <div className="font-medium text-gray-900">{getCurrencySymbol(setting.currency)}</div>
-                            <div className="text-sm text-gray-600">Tax: {setting.tax}%</div>
+                            <div className="text-sm text-gray-600">{t('costs:labels.tax')}: {setting.tax}%</div>
                           </div>
                         </td>
                         <td className="py-4 px-4">
                           <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
-                            Active
+                            {t('costs:status.active')}
                           </span>
                         </td>
                         <td className="py-4 px-4">
@@ -445,28 +447,28 @@ export default function CostMatricesPage() {
                             <button
                               onClick={() => handleView(setting)}
                               className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                              title="View"
+                              title={t('costs:tooltips.view')}
                             >
                               <Eye size={16} />
                             </button>
                             <button
                               onClick={() => navigate(`/cost-matrices/${setting.id}/edit`)}
                               className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                              title="Edit"
+                              title={t('costs:tooltips.edit')}
                             >
                               <Edit size={16} />
                             </button>
                             <button
                               onClick={() => handleDuplicate(setting)}
                               className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
-                              title="Duplicate"
+                              title={t('costs:tooltips.duplicate')}
                             >
                               <Copy size={16} />
                             </button>
                             <button
                               onClick={() => handleDelete(setting)}
                               className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-                              title="Delete"
+                              title={t('costs:tooltips.delete')}
                             >
                               <Trash2 size={16} />
                             </button>
@@ -491,24 +493,24 @@ export default function CostMatricesPage() {
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
               >
-                Previous
+                {t('costs:actions.previous')}
               </Button>
               <Button
                 variant="secondary"
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
               >
-                Next
+                {t('costs:actions.next')}
               </Button>
             </div>
             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm text-gray-700">
-                  Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> to{' '}
-                  <span className="font-medium">
-                    {Math.min(currentPage * itemsPerPage, totalItems)}
-                  </span>{' '}
-                  of <span className="font-medium">{totalItems}</span> cost matrices
+                  {t('costs:labels.showing', {
+                    from: (currentPage - 1) * itemsPerPage + 1,
+                    to: Math.min(currentPage * itemsPerPage, totalItems),
+                    total: totalItems
+                  })}
                 </p>
               </div>
               <div>
@@ -518,7 +520,7 @@ export default function CostMatricesPage() {
                     disabled={currentPage === 1}
                     className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Previous
+                    {t('costs:actions.previous')}
                   </button>
                   {[...Array(Math.min(5, totalPages))].map((_, idx) => {
                     let pageNumber;
@@ -551,7 +553,7 @@ export default function CostMatricesPage() {
                     disabled={currentPage === totalPages}
                     className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Next
+                    {t('costs:actions.next')}
                   </button>
                 </nav>
               </div>
@@ -565,7 +567,7 @@ export default function CostMatricesPage() {
         <Modal
           isOpen={deleteModal.isOpen}
           onClose={() => deleteModal.close()}
-          title="Confirmer la suppression"
+          title={t('costs:modals.deleteTitle')}
           size="md"
         >
           <div className="space-y-4">
@@ -575,21 +577,17 @@ export default function CostMatricesPage() {
               </div>
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Êtes-vous sûr de vouloir supprimer cette matrice ?
+                  {t('costs:modals.deleteConfirm')}
                 </h3>
                 <p className="text-sm text-gray-600 mb-3">
-                  Vous êtes sur le point de supprimer la matrice de coûts{' '}
-                  <span className="font-semibold">
-                    "{deleteModal.data.className || deleteModal.data.name || 'Unknown'}"
-                  </span>{' '}
-                  pour{' '}
-                  <span className="font-semibold">
-                    {deleteModal.data.companyPtr?.className || deleteModal.data.companyPtr?.name || deleteModal.data.companyName || 'cette compagnie'}
-                  </span>.
+                  {t('costs:modals.deleteMessage', {
+                    name: deleteModal.data.className || deleteModal.data.name || t('costs:labels.unknown'),
+                    company: deleteModal.data.companyPtr?.className || deleteModal.data.companyPtr?.name || deleteModal.data.companyName || t('costs:labels.thisCompany')
+                  })}
                 </p>
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                   <p className="text-sm text-red-800">
-                    <strong>Cette action est irréversible.</strong> Tous les paramètres de coûts associés seront également supprimés définitivement.
+                    {t('costs:modals.deleteWarning')}
                   </p>
                 </div>
               </div>
@@ -601,14 +599,14 @@ export default function CostMatricesPage() {
                 onClick={() => deleteModal.close()}
                 disabled={deleting}
               >
-                Annuler
+                {t('costs:actions.cancel')}
               </Button>
               <Button
                 onClick={confirmDelete}
                 disabled={deleting}
                 className="!bg-red-600 hover:!bg-red-700 !text-white"
               >
-                {deleting ? 'Suppression...' : 'Oui, supprimer'}
+                {deleting ? t('costs:actions.deleting') : t('costs:actions.confirmDelete')}
               </Button>
             </div>
           </div>
@@ -623,24 +621,24 @@ export default function CostMatricesPage() {
             viewModal.close();
             setViewStats(null);
           }}
-          title="Détails de la matrice de coûts"
+          title={t('costs:modals.viewTitle')}
           size="md"
         >
           <div className="space-y-4">
             {/* Header */}
             <div className="border-b border-gray-200 pb-4">
               <h3 className="text-xl font-bold text-gray-900">
-                {viewModal.data.className || viewModal.data.name || 'Unnamed'}
+                {viewModal.data.className || viewModal.data.name || t('costs:labels.unnamed')}
               </h3>
               <p className="text-sm text-gray-600 mt-1">
-                {viewModal.data.companyPtr?.className || viewModal.data.companyPtr?.name || viewModal.data.companyName || 'N/A'}
+                {viewModal.data.companyPtr?.className || viewModal.data.companyPtr?.name || viewModal.data.companyName || t('costs:labels.notAvailable')}
               </p>
             </div>
 
             {/* Key Information Grid */}
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-gray-50 rounded-lg p-4">
-                <div className="text-sm text-gray-600 mb-1">Currency</div>
+                <div className="text-sm text-gray-600 mb-1">{t('costs:fields.currency')}</div>
                 <div className="text-2xl font-bold text-gray-900">
                   {getCurrencySymbol(viewModal.data.currency)}
                 </div>
@@ -648,21 +646,21 @@ export default function CostMatricesPage() {
               </div>
 
               <div className="bg-gray-50 rounded-lg p-4">
-                <div className="text-sm text-gray-600 mb-1">Tax Rate</div>
+                <div className="text-sm text-gray-600 mb-1">{t('costs:fields.taxRate')}</div>
                 <div className="text-2xl font-bold text-gray-900">
                   {viewModal.data.tax}%
                 </div>
               </div>
 
               <div className="bg-blue-50 rounded-lg p-4">
-                <div className="text-sm text-blue-600 mb-1">Total Entries</div>
+                <div className="text-sm text-blue-600 mb-1">{t('costs:labels.totalEntries')}</div>
                 <div className="text-2xl font-bold text-blue-900">
                   {loadingStats ? '...' : viewStats?.total || 0}
                 </div>
               </div>
 
               <div className="bg-green-50 rounded-lg p-4">
-                <div className="text-sm text-green-600 mb-1">Validated</div>
+                <div className="text-sm text-green-600 mb-1">{t('costs:labels.validated')}</div>
                 <div className="text-2xl font-bold text-green-900">
                   {loadingStats ? '...' : viewStats?.validated || 0}
                 </div>
@@ -677,13 +675,13 @@ export default function CostMatricesPage() {
             {/* Dates */}
             <div className="border-t border-gray-200 pt-4 space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Created:</span>
+                <span className="text-gray-600">{t('costs:labels.created')}:</span>
                 <span className="text-gray-900 font-medium">
                   {formatDate(viewModal.data.createdAt)}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Last Updated:</span>
+                <span className="text-gray-600">{t('costs:labels.lastUpdated')}:</span>
                 <span className="text-gray-900 font-medium">
                   {formatDate(viewModal.data.updatedAt)}
                 </span>
@@ -699,7 +697,7 @@ export default function CostMatricesPage() {
                   setViewStats(null);
                 }}
               >
-                Close
+                {t('costs:actions.close')}
               </Button>
               <Button
                 onClick={() => {
@@ -708,7 +706,7 @@ export default function CostMatricesPage() {
                 }}
                 className="!bg-blue-600 hover:!bg-blue-700 !text-white"
               >
-                Edit Matrix
+                {t('costs:actions.editMatrix')}
               </Button>
             </div>
           </div>
@@ -723,7 +721,7 @@ export default function CostMatricesPage() {
             duplicateModal.close();
             setDuplicateName('');
           }}
-          title="Dupliquer la matrice de coûts"
+          title={t('costs:modals.duplicateTitle')}
           size="md"
         >
           <div className="space-y-4">
@@ -733,21 +731,21 @@ export default function CostMatricesPage() {
               </div>
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Dupliquer "{duplicateModal.data.className || duplicateModal.data.name || 'Unknown'}"
+                  {t('costs:modals.duplicateHeading', { name: duplicateModal.data.className || duplicateModal.data.name || t('costs:labels.unknown') })}
                 </h3>
                 <p className="text-sm text-gray-600 mb-3">
-                  Une copie complète de cette matrice de coûts sera créée avec tous ses paramètres associés.
+                  {t('costs:modals.duplicateMessage')}
                 </p>
                 <div className="mt-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nom de la nouvelle matrice
+                    {t('costs:labels.newMatrixName')}
                   </label>
                   <input
                     type="text"
                     value={duplicateName}
                     onChange={(e) => setDuplicateName(e.target.value)}
                     className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Nom de la matrice dupliquée"
+                    placeholder={t('costs:placeholders.duplicatedMatrixName')}
                     autoFocus
                   />
                 </div>
@@ -763,14 +761,14 @@ export default function CostMatricesPage() {
                 }}
                 disabled={duplicating}
               >
-                Annuler
+                {t('costs:actions.cancel')}
               </Button>
               <Button
                 onClick={confirmDuplicate}
                 disabled={duplicating || !duplicateName.trim()}
                 className="!bg-blue-600 hover:!bg-blue-700 !text-white"
               >
-                {duplicating ? 'Duplication...' : 'Dupliquer'}
+                {duplicating ? t('costs:actions.duplicating') : t('costs:actions.duplicate')}
               </Button>
             </div>
           </div>

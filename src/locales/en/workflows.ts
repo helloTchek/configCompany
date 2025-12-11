@@ -1,16 +1,56 @@
 export const workflows = {
-  title: 'Workflows',
-  subtitle: 'Create and manage inspection journey workflows',
+  title: 'Inspection Journeys',
+  subtitle: 'Journey Management',
+  description: 'Create and manage inspection journey workflows',
   create: 'Create New Journey',
   edit: 'Edit Journey',
   duplicate: 'Duplicate Journey',
   fields: {
     name: 'Journey Name',
+    journeyName: 'Journey Name',
     description: 'Description',
     company: 'Company',
     blocksCount: 'Blocks Count',
     status: 'Status',
-    isActive: 'Active'
+    isActive: 'Active',
+    actions: 'Actions',
+    newJourneyName: 'New Journey Name'
+  },
+  status: {
+    active: 'Active',
+    inactive: 'Inactive'
+  },
+  tooltips: {
+    edit: 'Edit',
+    duplicate: 'Duplicate',
+    delete: 'Delete'
+  },
+  labels: {
+    copy: '(Copy)',
+    filters: 'Filters',
+    showing: 'Showing {{count}} of {{total}} journeys',
+    showingPagination: 'Showing {{from}} to {{to}} of {{total}} workflows'
+  },
+  placeholders: {
+    searchJourneys: 'Search journeys...',
+    allStatus: 'All Status',
+    allCompanies: 'All Companies',
+    searchCompany: 'Search and select company...',
+    enterJourneyName: 'Enter new journey name'
+  },
+  actions: {
+    cancel: 'Cancel',
+    delete: 'Delete Journey',
+    duplicate: 'Duplicate Journey',
+    clearFilters: 'Clear All Filters',
+    previous: 'Previous',
+    next: 'Next'
+  },
+  modals: {
+    duplicateTitle: 'Duplicate Journey',
+    duplicateMessage: 'Create a copy of',
+    deleteTitle: 'Delete Journey',
+    deleteMessage: 'Are you sure you want to delete {{name}}? This action cannot be undone.'
   },
   blocks: {
     title: 'Journey Blocks',
@@ -49,13 +89,21 @@ export const workflows = {
     exportJson: 'Export JSON'
   },
   messages: {
+    loading: 'Loading journeys...',
+    noCompanySelected: 'No company selected',
+    loadError: 'Failed to load journeys',
     createSuccess: 'Journey created successfully',
     updateSuccess: 'Journey updated successfully',
     deleteSuccess: 'Journey deleted successfully',
+    deleteError: 'Failed to delete journey',
     duplicateSuccess: 'Journey duplicated successfully',
+    duplicateError: 'Failed to duplicate journey',
     deleteConfirm: 'Are you sure you want to delete this journey?',
     noBlocks: 'No blocks added yet. Click "Add Block" to start building your journey.',
     nameRequired: 'Please enter a journey name',
-    blocksRequired: 'Please add at least one block to the journey'
+    blocksRequired: 'Please add at least one block to the journey',
+    viewAllWorkflows: 'View all workflows from all companies',
+    workflowsPaginated: 'Workflows are paginated for better performance',
+    noJourneysFound: 'No journeys found matching your criteria.'
   }
 } as const;

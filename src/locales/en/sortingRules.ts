@@ -13,7 +13,8 @@ export const sortingRules = {
     filters: 'Filters (JSON)',
     updates: 'Updates (JSON)',
     processingPriority: 'Processing Priority',
-    priority: 'Priority'
+    priority: 'Priority',
+    actions: 'Actions'
   },
   types: {
     detectionPhase: 'Detection Phase',
@@ -29,6 +30,29 @@ export const sortingRules = {
     highLevel: 'High Priority (1-2)',
     mediumLevel: 'Medium Priority (3-4)'
   },
+  tooltips: {
+    edit: 'Edit Sorting Rule',
+    delete: 'Delete Sorting Rule'
+  },
+  labels: {
+    filters: 'Filters',
+    allTypes: 'All Types',
+    allCompanies: 'All Companies',
+    allPriorities: 'All Priorities',
+    priorityLevel: 'Priority Level'
+  },
+  placeholders: {
+    search: 'Search sorting rules...'
+  },
+  actions: {
+    cancel: 'Cancel',
+    delete: 'Delete',
+    clearFilters: 'Clear All Filters'
+  },
+  modals: {
+    deleteTitle: 'Delete Sorting Rule',
+    deleteMessage: 'Are you sure you want to delete the sorting rule {{type}} ({{from}} → {{to}})?'
+  },
   examples: {
     title: 'Configuration Examples',
     filterExamples: 'Filter Examples:',
@@ -41,6 +65,8 @@ export const sortingRules = {
     updateSuccess: 'Sorting rule updated successfully',
     deleteSuccess: 'Sorting rule deleted successfully',
     invalidJson: 'Invalid JSON format',
-    loadingRule: 'Loading sorting rule...'
+    loadingRule: 'Loading sorting rule...',
+    showingResults: 'Showing {{count}} of {{total}} sorting rules',
+    noResults: 'No sorting rules found'
   }
 } as const;

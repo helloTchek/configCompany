@@ -13,7 +13,8 @@ export const sortingRules = {
     filters: 'Filtres (JSON)',
     updates: 'Mises à jour (JSON)',
     processingPriority: 'Priorité de Traitement',
-    priority: 'Priorité'
+    priority: 'Priorité',
+    actions: 'Actions'
   },
   types: {
     detectionPhase: 'Phase de Détection',
@@ -29,6 +30,29 @@ export const sortingRules = {
     highLevel: 'Priorité Élevée (1-2)',
     mediumLevel: 'Priorité Moyenne (3-4)'
   },
+  tooltips: {
+    edit: 'Modifier la Règle de Tri',
+    delete: 'Supprimer la Règle de Tri'
+  },
+  labels: {
+    filters: 'Filtres',
+    allTypes: 'Tous les Types',
+    allCompanies: 'Toutes les Entreprises',
+    allPriorities: 'Toutes les Priorités',
+    priorityLevel: 'Niveau de Priorité'
+  },
+  placeholders: {
+    search: 'Rechercher des règles de tri...'
+  },
+  actions: {
+    cancel: 'Annuler',
+    delete: 'Supprimer',
+    clearFilters: 'Effacer Tous les Filtres'
+  },
+  modals: {
+    deleteTitle: 'Supprimer la Règle de Tri',
+    deleteMessage: 'Êtes-vous sûr de vouloir supprimer la règle de tri {{type}} ({{from}} → {{to}}) ?'
+  },
   examples: {
     title: 'Exemples de Configuration',
     filterExamples: 'Exemples de Filtres :',
@@ -41,6 +65,8 @@ export const sortingRules = {
     updateSuccess: 'Règle de tri mise à jour avec succès',
     deleteSuccess: 'Règle de tri supprimée avec succès',
     invalidJson: 'Format JSON invalide',
-    loadingRule: 'Chargement de la règle de tri...'
+    loadingRule: 'Chargement de la règle de tri...',
+    showingResults: 'Affichage de {{count}} sur {{total}} règles de tri',
+    noResults: 'Aucune règle de tri trouvée'
   }
 } as const;

@@ -181,41 +181,41 @@ export default function SortingRulesPage() {
   };
 
   const defaultColumns: Column<SortingRule>[] = useMemo(() => [
-    { key: 'company', label: 'Company', sortable: true },
-    { key: 'type', label: 'Type', sortable: true,
+    { key: 'company', label: t('sortingRules:fields.company'), sortable: true },
+    { key: 'type', label: t('sortingRules:fields.type'), sortable: true,
       render: (value: unknown) => (
         <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
           {String(value)}
         </span>
       )
     },
-    { key: 'fromCollection', label: 'From Collection', sortable: true },
-    { key: 'targetCollection', label: 'Target Collection', sortable: true },
-    { key: 'referenceKey', label: 'Reference Key', sortable: true },
-    { key: 'referencePrefix', label: 'Reference Prefix', sortable: true },
+    { key: 'fromCollection', label: t('sortingRules:fields.fromCollection'), sortable: true },
+    { key: 'targetCollection', label: t('sortingRules:fields.targetCollection'), sortable: true },
+    { key: 'referenceKey', label: t('sortingRules:fields.referenceKey'), sortable: true },
+    { key: 'referencePrefix', label: t('sortingRules:fields.referencePrefix'), sortable: true },
     {
       key: 'actions',
-      label: t('common:fields.actions'),
+      label: t('sortingRules:fields.actions'),
       render: (_: unknown, row: SortingRule) => (
         <div className="flex items-center gap-2">
           <button
             onClick={() => navigate(`/sorting-rules/${row.id}/edit`)}
             className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-            title={t('common:actions.edit')}
+            title={t('sortingRules:tooltips.edit')}
           >
             <Edit size={16} />
           </button>
           <button
             onClick={() => handleDelete(row)}
             className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-            title={t('common:actions.delete')}
+            title={t('sortingRules:tooltips.delete')}
           >
             <Trash2 size={16} />
           </button>
         </div>
       ),
     },
-  ], [navigate, t]);
+  ], [t, navigate]);
 
   const { orderedColumns, handleReorder } = useColumnOrder<SortingRule>(
     'sorting-rules-column-order',
@@ -260,7 +260,7 @@ export default function SortingRulesPage() {
               <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                placeholder={t('common:actions.search') + ' ' + t('sortingRules:title').toLowerCase() + '...'}
+                placeholder={t('sortingRules:placeholders.search')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -280,7 +280,7 @@ export default function SortingRulesPage() {
               className={`flex items-center gap-2 ${hasActiveFilters ? 'bg-blue-50 text-blue-700 border-blue-200' : ''}`}
             >
               <Filter size={16} />
-              {t('common:actions.filter')}
+              {t('sortingRules:labels.filters')}
               {hasActiveFilters && (
                 <span className="bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                   {Object.values(filters).filter(f => f !== '').length + (searchTerm ? 1 : 0)}
@@ -300,7 +300,7 @@ export default function SortingRulesPage() {
                     onChange={(e) => setFilters(prev => ({ ...prev, type: e.target.value }))}
                     className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="">{t('common:filters.allTypes')}</option>
+                    <option value="">{t('sortingRules:labels.allTypes')}</option>
                     <option value="detectionPhase">{t('sortingRules:types.detectionPhase')}</option>
                   </select>
                 </div>
@@ -311,19 +311,19 @@ export default function SortingRulesPage() {
                       companies={companiesWithRules}
                       selectedCompanyId={filters.company}
                       onSelect={(companyId: string) => setFilters(prev => ({ ...prev, company: companyId }))}
-                      placeholder={t('common:filters.allCompanies')}
+                      placeholder={t('sortingRules:labels.allCompanies')}
                     />
                   </div>
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('sortingRules:fields.priority')} {t('common:fields.level')}</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('sortingRules:labels.priorityLevel')}</label>
                   <select
                     value={filters.priority}
                     onChange={(e) => setFilters(prev => ({ ...prev, priority: e.target.value }))}
                     className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="">{t('common:filters.allPriorities')}</option>
+                    <option value="">{t('sortingRules:labels.allPriorities')}</option>
                     <option value="high">{t('sortingRules:priorities.highLevel')}</option>
                     <option value="medium">{t('sortingRules:priorities.mediumLevel')}</option>
                   </select>
@@ -333,10 +333,10 @@ export default function SortingRulesPage() {
               {hasActiveFilters && (
                 <div className="mt-4 flex justify-between items-center">
                   <span className="text-sm text-gray-600">
-                    {t('common:messages.showing')} {sortedRules.length} {t('common:messages.of')} {rules.length} {t('sortingRules:title').toLowerCase()}
+                    {t('sortingRules:messages.showingResults', { count: sortedRules.length, total: rules.length })}
                   </span>
                   <Button variant="secondary" size="sm" onClick={clearFilters}>
-                    {t('common:actions.clearFilters')}
+                    {t('sortingRules:actions.clearFilters')}
                   </Button>
                 </div>
               )}
@@ -357,10 +357,10 @@ export default function SortingRulesPage() {
 
         {sortedRules.length === 0 && (
           <div className="text-center py-8 text-gray-500">
-            <p>{t('common:messages.noResults')}</p>
+            <p>{t('sortingRules:messages.noResults')}</p>
             {hasActiveFilters && (
               <Button variant="secondary" onClick={clearFilters} className="mt-2">
-                {t('common:actions.clearFilters')}
+                {t('sortingRules:actions.clearFilters')}
               </Button>
             )}
           </div>
@@ -371,18 +371,22 @@ export default function SortingRulesPage() {
       <Modal
         isOpen={deleteModal.isOpen}
         onClose={() => deleteModal.close()}
-        title={t('common:actions.delete') + ' ' + t('sortingRules:title')}
+        title={t('sortingRules:modals.deleteTitle')}
       >
         <div className="space-y-4">
           <p className="text-gray-700">
-            {t('common:messages.confirmDelete')} {deleteModal.data?.type} ({deleteModal.data?.fromCollection} → {deleteModal.data?.targetCollection})?
+            {t('sortingRules:modals.deleteMessage', {
+              type: deleteModal.data?.type,
+              from: deleteModal.data?.fromCollection,
+              to: deleteModal.data?.targetCollection
+            })}
           </p>
           <div className="flex justify-end gap-2">
             <Button variant="secondary" onClick={() => deleteModal.close()}>
-              {t('common:actions.cancel')}
+              {t('sortingRules:actions.cancel')}
             </Button>
             <Button variant="danger" onClick={confirmDelete}>
-              {t('common:actions.delete')}
+              {t('sortingRules:actions.delete')}
             </Button>
           </div>
         </div>

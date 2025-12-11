@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthContext';
+import { useTranslation } from 'react-i18next';
 import Header from '../../components/Layout/Header';
 import Table, { Column } from '../../components/UI/Table';
 import Button from '../../components/UI/Button';
@@ -16,6 +17,7 @@ import { useModalState, useDebouncedSearch, useColumnOrder } from '@/hooks';
 export default function ChaseupRulesPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   // Check for company filter from URL params
   const urlParams = new URLSearchParams(window.location.search);
@@ -190,26 +192,29 @@ export default function ChaseupRulesPage() {
   };
 
   const defaultColumns: Column<ChaseupRule>[] = useMemo(() => [
-    { key: 'company', label: 'Company', sortable: true },
-    { key: 'type', label: 'Type', sortable: true,
-      render: (value: unknown) => (
-        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-          value === 'event' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
-        }`}>
-          {String(value)}
-        </span>
-      )
+    { key: 'company', label: t('chaseupRules:fields.company'), sortable: true },
+    { key: 'type', label: t('chaseupRules:fields.type'), sortable: true,
+      render: (value: unknown) => {
+        const typeKey = value === 'event' ? 'event' : 'anonymization';
+        return (
+          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+            value === 'event' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
+          }`}>
+            {t(`chaseupRules:types.${typeKey}`)}
+          </span>
+        );
+      }
     },
-    { key: 'activationDate', label: 'Activation Date', sortable: true,
+    { key: 'activationDate', label: t('chaseupRules:fields.activationDate'), sortable: true,
       render: (value: unknown) => new Date(String(value)).toLocaleDateString()
     },
-    { key: 'utcSendingTime', label: 'UTC Time', sortable: true,
+    { key: 'utcSendingTime', label: t('chaseupRules:fields.utcTime'), sortable: true,
       render: (value: unknown) => {
         const time = value as { hour: number; minute: number };
         return `${time.hour.toString().padStart(2, '0')}:${time.minute.toString().padStart(2, '0')}`;
       }
     },
-    { key: 'maxSendings', label: 'Max Sendings', sortable: true,
+    { key: 'maxSendings', label: t('chaseupRules:fields.maxSendings'), sortable: true,
       render: (value: unknown) => (
         <span className={`px-2 py-1 text-xs font-medium rounded-full ${
           value === 0 ? 'bg-gray-100 text-gray-800' :
@@ -220,44 +225,44 @@ export default function ChaseupRulesPage() {
         </span>
       )
     },
-    { key: 'firstDelayDays', label: 'First Delay', sortable: true,
+    { key: 'firstDelayDays', label: t('chaseupRules:fields.firstDelay'), sortable: true,
       render: (value: unknown, row: ChaseupRule) => {
         const days = value as number | undefined;
-        if (days) return `${days} days`;
-        if (row.firstDelayMinutes) return `${row.firstDelayMinutes} min`;
-        return 'None';
+        if (days) return t('chaseupRules:labels.days', { count: days });
+        if (row.firstDelayMinutes) return t('chaseupRules:labels.minutes', { count: row.firstDelayMinutes });
+        return t('chaseupRules:labels.none');
       }
     },
     {
       key: 'actions',
-      label: 'Actions',
+      label: t('chaseupRules:fields.actions'),
       render: (_: unknown, row: ChaseupRule) => (
         <div className="flex items-center gap-2">
           <button
             onClick={() => navigate(`/chaseup-rules/${row.id}/edit`)}
             className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-            title="Edit"
+            title={t('chaseupRules:tooltips.edit')}
           >
             <Edit size={16} />
           </button>
           <button
             onClick={() => handleDuplicate(row)}
             className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
-            title="Duplicate"
+            title={t('chaseupRules:tooltips.duplicate')}
           >
             <Copy size={16} />
           </button>
           <button
             onClick={() => handleDelete(row)}
             className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-            title="Delete"
+            title={t('chaseupRules:tooltips.delete')}
           >
             <Trash2 size={16} />
           </button>
         </div>
       ),
     },
-  ], [navigate]);
+  ], [t, navigate]);
 
   const { orderedColumns, handleReorder } = useColumnOrder<ChaseupRule>(
     'chaseup-rules-column-order',
@@ -266,20 +271,20 @@ export default function ChaseupRulesPage() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      <Header title="Automated Chase-up Rules" />
-      
+      <Header title={t('chaseupRules:title')} />
+
       <div className="flex-1 overflow-y-auto p-6">
         <div className="mb-6 flex justify-between items-center">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">Chase-up Rules Management</h2>
-            <p className="text-sm text-gray-600">Configure automated chase-up message rules for companies</p>
+            <h2 className="text-lg font-semibold text-gray-900">{t('chaseupRules:title')}</h2>
+            <p className="text-sm text-gray-600">{t('chaseupRules:subtitle')}</p>
           </div>
           <Button
             onClick={() => navigate('/chaseup-rules/new')}
             className="flex items-center gap-2"
           >
             <Plus size={16} />
-            Create New Rule
+            {t('chaseupRules:create')}
           </Button>
         </div>
 
@@ -291,7 +296,7 @@ export default function ChaseupRulesPage() {
               <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search chase-up rules..."
+                placeholder={t('chaseupRules:placeholders.search')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -311,7 +316,7 @@ export default function ChaseupRulesPage() {
               className={`flex items-center gap-2 ${hasActiveFilters ? 'bg-blue-50 text-blue-700 border-blue-200' : ''}`}
             >
               <Filter size={16} />
-              Filters
+              {t('chaseupRules:labels.filters')}
               {hasActiveFilters && (
                 <span className="bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                   {Object.values(filters).filter(f => f !== '').length + (searchTerm ? 1 : 0)}
@@ -325,26 +330,26 @@ export default function ChaseupRulesPage() {
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('chaseupRules:fields.type')}</label>
                   <select
                     value={filters.type}
                     onChange={(e) => setFilters(prev => ({ ...prev, type: e.target.value }))}
                     className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="">All Types</option>
-                    <option value="event">Event</option>
-                    <option value="anonymization">Anonymization</option>
+                    <option value="">{t('chaseupRules:filters.allTypes')}</option>
+                    <option value="event">{t('chaseupRules:types.event')}</option>
+                    <option value="anonymization">{t('chaseupRules:types.anonymization')}</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('chaseupRules:fields.company')}</label>
                   <select
                     value={filters.company}
                     onChange={(e) => setFilters(prev => ({ ...prev, company: e.target.value }))}
                     className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="">All Companies</option>
+                    <option value="">{t('chaseupRules:filters.allCompanies')}</option>
                     {allCompaniesLight.map(company => (
                       <option key={company.objectId || company.id} value={company.objectId || company.id}>
                         {company.name}
@@ -354,13 +359,13 @@ export default function ChaseupRulesPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Max Sendings</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('chaseupRules:fields.maxSendings')}</label>
                   <select
                     value={filters.maxSendings}
                     onChange={(e) => setFilters(prev => ({ ...prev, maxSendings: e.target.value }))}
                     className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="">All</option>
+                    <option value="">{t('chaseupRules:filters.all')}</option>
                     <option value="0">0</option>
                     <option value="1">1</option>
                     <option value="2">2</option>
@@ -371,10 +376,10 @@ export default function ChaseupRulesPage() {
               {hasActiveFilters && (
                 <div className="mt-4 flex justify-between items-center">
                   <span className="text-sm text-gray-600">
-                    Showing {sortedRules.length} of {rules.length} rules
+                    {t('chaseupRules:labels.showingRules', { shown: sortedRules.length, total: rules.length })}
                   </span>
                   <Button variant="secondary" size="sm" onClick={clearFilters}>
-                    Clear All Filters
+                    {t('chaseupRules:actions.clearFilters')}
                   </Button>
                 </div>
               )}
@@ -400,10 +405,10 @@ export default function ChaseupRulesPage() {
 
               {sortedRules.length === 0 && (
                 <div className="text-center py-8 text-gray-500">
-                  <p>No chase-up rules found matching your criteria.</p>
+                  <p>{t('chaseupRules:messages.noRulesFound')}</p>
                   {hasActiveFilters && (
                     <Button variant="secondary" onClick={clearFilters} className="mt-2">
-                      Clear Filters
+                      {t('chaseupRules:actions.clearFilters')}
                     </Button>
                   )}
                 </div>
@@ -417,12 +422,12 @@ export default function ChaseupRulesPage() {
       <Modal
         isOpen={duplicateModal.isOpen}
         onClose={() => duplicateModal.close()}
-        title="Duplicate Chase-up Rule"
+        title={t('chaseupRules:modals.duplicateTitle')}
         size="md"
       >
         <div className="space-y-4">
           <p className="text-gray-600">
-            Duplicate the chase-up rule from <strong>{duplicateModal.data?.company}</strong> to a company
+            {t('chaseupRules:modals.duplicateMessage', { company: duplicateModal.data?.company })}
           </p>
 
           <CompanySelector
@@ -430,13 +435,13 @@ export default function ChaseupRulesPage() {
             selectedCompanyId={targetCompanyId}
             onSelect={setTargetCompanyId}
             excludeCompanyIds={[]}
-            placeholder="Search and select a company..."
-            label="Target Company"
+            placeholder={t('chaseupRules:placeholders.searchCompany')}
+            label={t('chaseupRules:labels.targetCompany')}
           />
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
             <p className="text-sm text-blue-800">
-              <strong>Note:</strong> The chase-up rule will be duplicated to the selected company with all its settings, delays, and message templates. You can select the same company to create a copy.
+              <strong>{t('chaseupRules:labels.note')}:</strong> {t('chaseupRules:modals.duplicateNote')}
             </p>
           </div>
           <div className="flex gap-3 justify-end pt-4">
@@ -447,13 +452,13 @@ export default function ChaseupRulesPage() {
                 setTargetCompanyId('');
               }}
             >
-              Cancel
+              {t('chaseupRules:actions.cancel')}
             </Button>
             <Button
               onClick={confirmDuplicate}
               disabled={!targetCompanyId.trim()}
             >
-              Duplicate Rule
+              {t('chaseupRules:actions.duplicateRule')}
             </Button>
           </div>
         </div>
@@ -463,26 +468,25 @@ export default function ChaseupRulesPage() {
       <Modal
         isOpen={deleteModal.isOpen}
         onClose={() => deleteModal.close()}
-        title="Delete Chase-up Rule"
+        title={t('chaseupRules:modals.deleteTitle')}
         size="md"
       >
         <div className="space-y-4">
           <p className="text-gray-600">
-            Are you sure you want to delete the chase-up rule for <strong>{deleteModal.data?.company}</strong>?
-            This action cannot be undone.
+            {t('chaseupRules:modals.deleteMessage', { company: deleteModal.data?.company })}
           </p>
           <div className="flex gap-3 justify-end pt-4">
             <Button
               variant="secondary"
               onClick={() => deleteModal.close()}
             >
-              Cancel
+              {t('chaseupRules:actions.cancel')}
             </Button>
             <Button
               variant="danger"
               onClick={confirmDelete}
             >
-              Delete Rule
+              {t('chaseupRules:actions.deleteRule')}
             </Button>
           </div>
         </div>
