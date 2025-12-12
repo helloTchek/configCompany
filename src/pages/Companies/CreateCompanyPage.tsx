@@ -6,6 +6,7 @@ import Input from '../../components/UI/Input';
 import Tabs from '../../components/UI/Tabs';
 import { ArrowLeft, Save, Upload, Plus, Trash2 } from 'lucide-react';
 import { companiesService } from '@/services/companiesService';
+import { useTranslation } from 'react-i18next';
 
 // Move tab components outside to prevent re-creation on every render
 const GeneralSettingsTab = ({
@@ -16,49 +17,50 @@ const GeneralSettingsTab = ({
   handleFieldChange,
   handleInputChange,
   handleCheckboxChange,
-  handleTextareaChange
+  handleTextareaChange,
+  t
 }) => (
   <div className="space-y-6">
     {/* General Settings */}
     <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">General Settings</h3>
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('company:createForm.sections.generalSettings')}</h3>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Input
-          label="Company Name"
+          label={t('company:createForm.fields.companyName')}
           value={formData.companyName}
           onChange={handleCompanyNameChange}
-          placeholder="Enter company name"
+          placeholder={t('company:createForm.placeholders.companyName')}
           error={errors.companyName}
           required
         />
         <Input
-          label="Company Code"
-          placeholder="Will be auto-generated"
-          helperText="Generated from ObjectID"
+          label={t('company:createForm.fields.companyCode')}
+          placeholder={t('company:createForm.placeholders.companyCode')}
+          helperText={t('company:createForm.helperText.companyCode')}
           disabled
         />
         <Input
-          label="Logo URL"
+          label={t('company:createForm.fields.logoUrl')}
           value={formData.logoUrl}
           onChange={handleLogoUrlChange}
-          placeholder="https://example.com/logo.png"
+          placeholder={t('company:createForm.placeholders.logoUrl')}
           error={errors.logoUrl}
           required
         />
         <div className="flex items-end">
           <Button variant="secondary" className="flex items-center gap-2">
             <Upload size={16} />
-            Upload Logo
+            {t('company:createForm.buttons.uploadLogo')}
           </Button>
         </div>
         <Input
-          label="Retention Period (months)"
+          label={t('company:createForm.fields.retentionPeriod')}
           type="number"
           value={formData.retentionPeriod}
           onChange={(e) => handleFieldChange('retentionPeriod', parseInt(e.target.value) || 0)}
         />
         <Input
-          label="Max API Requests"
+          label={t('company:createForm.fields.maxApiRequests')}
           value={formData.maxApiRequests}
           onChange={(e) => handleFieldChange('maxApiRequests', parseInt(e.target.value) || 0)}
           type="number"
@@ -66,7 +68,7 @@ const GeneralSettingsTab = ({
           required
         />
         <Input
-          label="Expiration Date"
+          label={t('company:createForm.fields.expirationDate')}
           value={formData.expirationDate}
           onChange={(e) => handleFieldChange('expirationDate', e.target.value)}
           type="date"
@@ -83,14 +85,14 @@ const GeneralSettingsTab = ({
               onChange={(e) => handleCheckboxChange('isFastTrackDisabled', e.target.checked)}
               className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
             />
-            <span className="ml-2 text-sm text-gray-700">Disable Fast Track</span>
+            <span className="ml-2 text-sm text-gray-700">{t('company:createForm.checkboxes.disableFastTrack')}</span>
           </label>
           <div className="relative group">
             <div className="w-4 h-4 rounded-full bg-gray-400 text-white text-xs flex items-center justify-center cursor-help">
               ?
             </div>
             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-              Disables fast track functionality for this company
+              {t('company:createForm.helperText.fastTrackTooltip')}
             </div>
           </div>
         </div>
@@ -99,11 +101,11 @@ const GeneralSettingsTab = ({
       <div className="mt-6 space-y-4">
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="block text-sm font-medium text-gray-700">Styles</label>
+            <label className="block text-sm font-medium text-gray-700">{t('company:createForm.fields.styles')}</label>
             <div className="flex gap-2">
               <Button variant="secondary" size="sm" className="flex items-center gap-1">
                 <Upload size={14} />
-                Upload JSON
+                {t('company:createForm.buttons.uploadJson')}
               </Button>
             </div>
           </div>
@@ -117,11 +119,11 @@ const GeneralSettingsTab = ({
 
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="block text-sm font-medium text-gray-700">Report Settings</label>
+            <label className="block text-sm font-medium text-gray-700">{t('company:createForm.fields.reportSettings')}</label>
             <div className="flex gap-2">
               <Button variant="secondary" size="sm" className="flex items-center gap-1">
                 <Upload size={14} />
-                Upload JSON
+                {t('company:createForm.buttons.uploadJson')}
               </Button>
             </div>
           </div>
@@ -135,11 +137,11 @@ const GeneralSettingsTab = ({
 
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="block text-sm font-medium text-gray-700">Config Modules</label>
+            <label className="block text-sm font-medium text-gray-700">{t('company:createForm.fields.configModules')}</label>
             <div className="flex gap-2">
               <Button variant="secondary" size="sm" className="flex items-center gap-1">
                 <Upload size={14} />
-                Upload JSON
+                {t('company:createForm.buttons.uploadJson')}
               </Button>
             </div>
           </div>
@@ -155,7 +157,7 @@ const GeneralSettingsTab = ({
 
     {/* API Configuration */}
     <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">API Configuration</h3>
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('company:createForm.sections.apiConfiguration')}</h3>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <label className="flex items-center">
           <input
@@ -164,7 +166,7 @@ const GeneralSettingsTab = ({
             onChange={(e) => handleCheckboxChange('mileageEnabled', e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
           />
-          <span className="ml-2 text-sm text-gray-700">Enable Mileage Capture</span>
+          <span className="ml-2 text-sm text-gray-700">{t('company:createForm.checkboxes.enableMileageCapture')}</span>
         </label>
         <label className="flex items-center">
           <input
@@ -173,7 +175,7 @@ const GeneralSettingsTab = ({
             onChange={(e) => handleCheckboxChange('blurEnabled', e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
           />
-          <span className="ml-2 text-sm text-gray-700">Enable Blur Detection</span>
+          <span className="ml-2 text-sm text-gray-700">{t('company:createForm.checkboxes.enableBlurDetection')}</span>
         </label>
         <label className="flex items-center">
           <input
@@ -182,7 +184,7 @@ const GeneralSettingsTab = ({
             onChange={(e) => handleCheckboxChange('vinEnabled', e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
           />
-          <span className="ml-2 text-sm text-gray-700">Enable VIN Scanning</span>
+          <span className="ml-2 text-sm text-gray-700">{t('company:createForm.checkboxes.enableVinScanning')}</span>
         </label>
         <label className="flex items-center">
           <input
@@ -191,7 +193,7 @@ const GeneralSettingsTab = ({
             onChange={(e) => handleCheckboxChange('readCarInformationEnabled', e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
           />
-          <span className="ml-2 text-sm text-gray-700">Enable Brand & Model Detection</span>
+          <span className="ml-2 text-sm text-gray-700">{t('company:createForm.checkboxes.enableBrandModelDetection')}</span>
         </label>
         <label className="flex items-center">
           <input
@@ -200,7 +202,7 @@ const GeneralSettingsTab = ({
             onChange={(e) => handleCheckboxChange('interiorEnabled', e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
           />
-          <span className="ml-2 text-sm text-gray-700">Enable Interior Damage Detection</span>
+          <span className="ml-2 text-sm text-gray-700">{t('company:createForm.checkboxes.enableInteriorDamageDetection')}</span>
         </label>
         <label className="flex items-center">
           <input
@@ -209,14 +211,14 @@ const GeneralSettingsTab = ({
             onChange={(e) => handleCheckboxChange('dashboardEnabled', e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
           />
-          <span className="ml-2 text-sm text-gray-700">Enable Dashboard Warning Lights Detection</span>
+          <span className="ml-2 text-sm text-gray-700">{t('company:createForm.checkboxes.enableDashboardWarningLights')}</span>
         </label>
       </div>
     </div>
 
     {/* Hub Configuration */}
     <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Hub Configuration</h3>
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('company:createForm.sections.hubConfiguration')}</h3>
       <div className="space-y-4">
         <label className="flex items-center">
           <input
@@ -225,7 +227,7 @@ const GeneralSettingsTab = ({
             onChange={(e) => handleCheckboxChange('showStartInstantInspection', e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
           />
-          <span className="ml-2 text-sm text-gray-700">Show Start Instant Inspection</span>
+          <span className="ml-2 text-sm text-gray-700">{t('company:createForm.checkboxes.showStartInstantInspection')}</span>
         </label>
         <label className="flex items-center">
           <input
@@ -234,14 +236,14 @@ const GeneralSettingsTab = ({
             onChange={(e) => handleCheckboxChange('showSendInspectionLink', e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
           />
-          <span className="ml-2 text-sm text-gray-700">Show Send Inspection Link</span>
+          <span className="ml-2 text-sm text-gray-700">{t('company:createForm.checkboxes.showSendInspectionLink')}</span>
         </label>
       </div>
     </div>
 
     {/* Validation */}
     <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Validation</h3>
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('company:createForm.sections.validation')}</h3>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <label className="flex items-center lg:col-span-2">
           <input
@@ -250,7 +252,7 @@ const GeneralSettingsTab = ({
             onChange={(e) => handleCheckboxChange('iaValidation', e.target.checked)}
             className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
           />
-          <span className="ml-2 text-sm text-gray-700">IA Validation (Joelle model)</span>
+          <span className="ml-2 text-sm text-gray-700">{t('company:createForm.checkboxes.iaValidation')}</span>
         </label>
       </div>
     </div>
@@ -268,7 +270,8 @@ const EventsWebhooksTab = ({
   variables,
   templates,
   setTemplates,
-  errors
+  errors,
+  t
 }) => {
   // State to track which field is currently focused
   const [focusedField, setFocusedField] = useState(null);
@@ -370,7 +373,7 @@ const EventsWebhooksTab = ({
               onChange={(e) => updateAddresseeConfig(eventKey, addressee, 'enabled', e.target.checked)}
               className="rounded border-gray-300 text-blue-600 shadow-sm"
             />
-            <span className="ml-2 text-sm text-gray-700">Enabled</span>
+            <span className="ml-2 text-sm text-gray-700">{t('company:createForm.checkboxes.enabled')}</span>
           </label>
         </div>
 
@@ -379,18 +382,18 @@ const EventsWebhooksTab = ({
             {(addressee === 'emailAddress' || addressee === 'agent') && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <Input
-                  label={addressee === 'emailAddress' ? 'Email Address' : 'Agent Email Address'}
+                  label={addressee === 'emailAddress' ? t('company:createForm.fields.emailAddress') : t('company:createForm.fields.agentEmailAddress')}
                   type="email"
                   value={config.address}
                   onChange={(e) => updateAddresseeConfig(eventKey, addressee, 'address', e.target.value)}
-                  placeholder={addressee === 'emailAddress' ? 'recipient@example.com' : 'agent@example.com'}
+                  placeholder={addressee === 'emailAddress' ? t('company:createForm.placeholders.emailAddress') : t('company:createForm.placeholders.agentEmailAddress')}
                 />
                 <Input
-                  label={addressee === 'emailAddress' ? 'SMS Number' : 'Agent SMS Number'}
+                  label={addressee === 'emailAddress' ? t('company:createForm.fields.smsNumber') : t('company:createForm.fields.agentSmsNumber')}
                   type="tel"
                   value={config.smsNumber || ''}
                   onChange={(e) => updateAddresseeConfig(eventKey, addressee, 'smsNumber', e.target.value)}
-                  placeholder="+33612345678"
+                  placeholder={t('company:createForm.placeholders.smsNumber')}
                 />
               </div>
             )}
@@ -403,7 +406,7 @@ const EventsWebhooksTab = ({
                   onChange={(e) => updateAddresseeConfig(eventKey, addressee, 'sms', e.target.checked)}
                   className="rounded border-gray-300 text-blue-600 shadow-sm"
                 />
-                <span className="ml-2 text-sm text-gray-700">SMS</span>
+                <span className="ml-2 text-sm text-gray-700">{t('company:createForm.checkboxes.sms')}</span>
               </label>
               <label className="flex items-center">
                 <input
@@ -412,14 +415,14 @@ const EventsWebhooksTab = ({
                   onChange={(e) => updateAddresseeConfig(eventKey, addressee, 'email', e.target.checked)}
                   className="rounded border-gray-300 text-blue-600 shadow-sm"
                 />
-                <span className="ml-2 text-sm text-gray-700">Email</span>
+                <span className="ml-2 text-sm text-gray-700">{t('company:createForm.checkboxes.email')}</span>
               </label>
             </div>
 
             {(config.sms || config.email) && (
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-gray-700">Language:</label>
+                  <label className="text-sm font-medium text-gray-700">{t('company:createForm.fields.language')}</label>
                   <select
                     value={selectedLanguage}
                     onChange={(e) => setSelectedLanguage(e.target.value)}
@@ -435,7 +438,7 @@ const EventsWebhooksTab = ({
 
                 {config.email && (
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700">Email Subject</label>
+                    <label className="block text-sm font-medium text-gray-700">{t('company:createForm.fields.emailSubject')}</label>
                     <input
                       ref={(ref) => assignFieldRef(`${eventKey}-${addressee}-email-subject-${selectedLanguage}`, ref)}
                       type="text"
@@ -445,14 +448,14 @@ const EventsWebhooksTab = ({
                       className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                         focusedField === `${eventKey}-${addressee}-email-subject-${selectedLanguage}` ? 'border-blue-300 bg-blue-50' : 'border-gray-300'
                       }`}
-                      placeholder="Email subject"
+                      placeholder={t('company:createForm.placeholders.emailSubject')}
                     />
                   </div>
                 )}
 
                 {config.email && (
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700">Email Content</label>
+                    <label className="block text-sm font-medium text-gray-700">{t('company:createForm.fields.emailContent')}</label>
                     <textarea
                       ref={(ref) => assignFieldRef(`${eventKey}-${addressee}-email-content-${selectedLanguage}`, ref)}
                       rows={4}
@@ -462,14 +465,14 @@ const EventsWebhooksTab = ({
                       className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
                         focusedField === `${eventKey}-${addressee}-email-content-${selectedLanguage}` ? 'border-blue-300 bg-blue-50' : 'border-gray-300'
                       }`}
-                      placeholder="Email content..."
+                      placeholder={t('company:createForm.placeholders.emailContent')}
                     />
                   </div>
                 )}
 
                 {config.sms && (
                   <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700">SMS Content</label>
+                    <label className="block text-sm font-medium text-gray-700">{t('company:createForm.fields.smsContent')}</label>
                     <textarea
                       ref={(ref) => assignFieldRef(`${eventKey}-${addressee}-sms-content-${selectedLanguage}`, ref)}
                       rows={3}
@@ -479,11 +482,11 @@ const EventsWebhooksTab = ({
                       className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
                         focusedField === `${eventKey}-${addressee}-sms-content-${selectedLanguage}` ? 'border-blue-300 bg-blue-50' : 'border-gray-300'
                       }`}
-                      placeholder="SMS content (160 characters max)..."
+                      placeholder={t('company:createForm.placeholders.smsContent')}
                       maxLength={160}
                     />
                     <p className="text-xs text-gray-500">
-                      Character count: {(config.templates[selectedLanguage]?.sms.content || '').length}/160
+                      {t('company:createForm.helperText.characterCount', { count: (config.templates[selectedLanguage]?.sms.content || '').length })}
                     </p>
                   </div>
                 )}
@@ -498,26 +501,26 @@ const EventsWebhooksTab = ({
   <div className="space-y-6">
     {/* Global Settings */}
     <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Global Settings</h3>
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('company:createForm.sections.globalSettings')}</h3>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Input
-          label="Sender Name (for all events)"
-          placeholder="Your Company Name"
+          label={t('company:createForm.fields.senderName')}
+          placeholder={t('company:createForm.placeholders.senderName')}
           value={formData.senderName}
           onChange={(e) => handleFieldChange('senderName', e.target.value)}
           error={errors.senderName}
           required
         />
         <Input
-          label="Sender Email (for all events)"
+          label={t('company:createForm.fields.senderEmail')}
           type="email"
-          placeholder="noreply@tchek.ai"
+          placeholder={t('company:createForm.placeholders.senderEmail')}
           value={formData.senderEmail}
           onChange={(e) => handleFieldChange('senderEmail', e.target.value)}
         />
         <Input
-          label="Webhook URL"
-          placeholder="https://your-domain.com/webhook"
+          label={t('company:createForm.fields.webhookUrl')}
+          placeholder={t('company:createForm.placeholders.webhookUrl')}
           value={formData.webhookUrl}
           onChange={(e) => handleFieldChange('webhookUrl', e.target.value)}
         />
@@ -528,8 +531,8 @@ const EventsWebhooksTab = ({
     {focusedField && (
       <div className="sticky top-4 z-10 bg-white rounded-lg border-2 border-blue-200 shadow-lg p-4">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-md font-semibold text-blue-900">📋 Available Variables</h3>
-          <span className="text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded">Click to insert</span>
+          <h3 className="text-md font-semibold text-blue-900">{t('company:createForm.sections.availableVariablesSticky')}</h3>
+          <span className="text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded">{t('company:createForm.buttons.clickToInsert')}</span>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-40 overflow-y-auto">
           {variables.map((variable) => (
@@ -550,14 +553,14 @@ const EventsWebhooksTab = ({
     {/* Events Configuration */}
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-900">Events Configuration</h3>
+        <h3 className="text-lg font-semibold text-gray-900">{t('company:createForm.sections.eventsConfiguration')}</h3>
       </div>
 
       <div className="space-y-8">
         {events.map((event) => (
           <div key={event.key} className="border border-gray-200 rounded-lg p-6">
             <h4 className="text-md font-semibold text-gray-900 mb-4">{event.name}</h4>
-            
+
             {/* Webhook */}
             <div className="mb-6">
               <label className="flex items-center">
@@ -567,16 +570,16 @@ const EventsWebhooksTab = ({
                   onChange={(e) => updateAddresseeConfig(event.key, 'webhook', 'enabled', e.target.checked)}
                   className="rounded border-gray-300 text-blue-600 shadow-sm"
                 />
-                <span className="ml-2 text-sm text-gray-700">Enable Webhook</span>
+                <span className="ml-2 text-sm text-gray-700">{t('company:createForm.checkboxes.enableWebhook')}</span>
               </label>
             </div>
 
             {/* Addressees */}
             <div className="space-y-6">
-              {renderAddresseeConfig(event.key, 'user', 'User')}
-              {renderAddresseeConfig(event.key, 'customer', 'Customer')}
-              {renderAddresseeConfig(event.key, 'emailAddress', 'Email Address')}
-              {renderAddresseeConfig(event.key, 'agent', 'Agent')}
+              {renderAddresseeConfig(event.key, 'user', t('company:createForm.addressees.user'))}
+              {renderAddresseeConfig(event.key, 'customer', t('company:createForm.addressees.customer'))}
+              {renderAddresseeConfig(event.key, 'emailAddress', t('company:createForm.addressees.emailAddress'))}
+              {renderAddresseeConfig(event.key, 'agent', t('company:createForm.addressees.agent'))}
             </div>
           </div>
         ))}
@@ -586,8 +589,8 @@ const EventsWebhooksTab = ({
     {/* Available Variables - Show when no field is focused */}
     {!focusedField && (
       <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Available Variables</h3>
-        <p className="text-sm text-gray-600 mb-4">Focus on a template field above to see variables for easy insertion</p>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('company:createForm.sections.availableVariables')}</h3>
+        <p className="text-sm text-gray-600 mb-4">{t('company:createForm.helperText.availableVariables')}</p>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
           {variables.map((variable) => (
             <button
@@ -607,7 +610,7 @@ const EventsWebhooksTab = ({
   );
 };
 
-const HierarchyTab = ({ formData, handleFieldChange, handleInputChange, companies, loadingCompanies }) => {
+const HierarchyTab = ({ formData, handleFieldChange, handleInputChange, companies, loadingCompanies, t }) => {
   const [searchTerm, setSearchTerm] = React.useState('');
 
   const filteredCompanies = (companies || []).filter(company =>
@@ -620,22 +623,22 @@ const HierarchyTab = ({ formData, handleFieldChange, handleInputChange, companie
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Company Hierarchy</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('company:createForm.sections.companyHierarchy')}</h3>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Parent Company (optional)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('company:createForm.fields.parentCompany')}</label>
 
             {loadingCompanies ? (
               <div className="flex items-center justify-center py-8 border border-gray-300 rounded-lg bg-gray-50">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <span className="ml-3 text-gray-600">Loading companies...</span>
+                <span className="ml-3 text-gray-600">{t('company:createForm.loading.companies')}</span>
               </div>
             ) : (
               <>
                 <div className="relative mb-2">
                   <input
                     type="text"
-                    placeholder="Search companies..."
+                    placeholder={t('company:createForm.placeholders.searchCompanies')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="block w-full px-3 py-2 pl-10 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
@@ -658,9 +661,9 @@ const HierarchyTab = ({ formData, handleFieldChange, handleInputChange, companie
                     handleInputChange();
                   }}
                 >
-                  <option value="">None - This will be a root company</option>
+                  <option value="">{t('company:createForm.placeholders.noneRootCompany')}</option>
                   {filteredCompanies.length === 0 ? (
-                    <option disabled>No companies found</option>
+                    <option disabled>{t('company:createForm.messages.noCompaniesFound')}</option>
                   ) : (
                     filteredCompanies.map((company) => (
                       <option key={company.objectId || company.id} value={company.objectId || company.id}>
@@ -673,18 +676,18 @@ const HierarchyTab = ({ formData, handleFieldChange, handleInputChange, companie
                 {selectedCompany && (
                   <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <p className="text-sm text-blue-800">
-                      <span className="font-semibold">Selected parent:</span> {selectedCompany.name}
+                      {t('company:createForm.helperText.selectedParent', { name: selectedCompany.name })}
                     </p>
                   </div>
                 )}
 
                 <p className="text-sm text-gray-500 mt-2">
-                  {companies.length} companies available · {filteredCompanies.length} shown
+                  {t('company:createForm.helperText.companiesAvailable', { total: companies.length, shown: filteredCompanies.length })}
                 </p>
               </>
             )}
 
-            <p className="text-sm text-gray-500 mt-1">Select a parent company to create a hierarchical structure</p>
+            <p className="text-sm text-gray-500 mt-1">{t('company:createForm.helperText.parentCompany')}</p>
           </div>
         </div>
       </div>
@@ -693,6 +696,7 @@ const HierarchyTab = ({ formData, handleFieldChange, handleInputChange, companie
 };
 
 export default function CreateCompanyPage() {
+  const { t } = useTranslation(['company', 'common']);
   const navigate = useNavigate();
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
@@ -703,22 +707,22 @@ export default function CreateCompanyPage() {
 
   // State for events and webhooks templates - must be in parent to persist across tab changes
   const events = [
-    { key: 'selfInspectionCreation', name: 'Self Inspection Creation' },
-    { key: 'manualChaseUp', name: 'Manual Chase-up Message' },
-    { key: 'inspectionFinished', name: 'Inspection Finished Message' },
-    { key: 'damageReviewFinished', name: 'Damage Review Finished Message' },
-    { key: 'shareUpdatedReport', name: 'Share Updated Report Message' }
+    { key: 'selfInspectionCreation', name: t('company:createForm.events.selfInspectionCreation') },
+    { key: 'manualChaseUp', name: t('company:createForm.events.manualChaseUp') },
+    { key: 'inspectionFinished', name: t('company:createForm.events.inspectionFinished') },
+    { key: 'damageReviewFinished', name: t('company:createForm.events.damageReviewFinished') },
+    { key: 'shareUpdatedReport', name: t('company:createForm.events.shareUpdatedReport') }
   ];
 
   const languages = [
-    { code: 'en', name: 'English' },
-    { code: 'fr', name: 'Français' },
-    { code: 'de', name: 'Deutsch' },
-    { code: 'it', name: 'Italiano' },
-    { code: 'es', name: 'Español' },
-    { code: 'nl', name: 'Nederlands' },
-    { code: 'sv', name: 'Svenska' },
-    { code: 'no', name: 'Norsk' }
+    { code: 'en', name: t('company:createForm.languages.en') },
+    { code: 'fr', name: t('company:createForm.languages.fr') },
+    { code: 'de', name: t('company:createForm.languages.de') },
+    { code: 'it', name: t('company:createForm.languages.it') },
+    { code: 'es', name: t('company:createForm.languages.es') },
+    { code: 'nl', name: t('company:createForm.languages.nl') },
+    { code: 'sv', name: t('company:createForm.languages.sv') },
+    { code: 'no', name: t('company:createForm.languages.no') }
   ];
 
   const [templates, setTemplates] = useState(() => {
@@ -976,21 +980,21 @@ export default function CreateCompanyPage() {
     };
 
     if (!formData.companyName.trim()) {
-      newErrors.companyName = 'Company name is required';
+      newErrors.companyName = t('company:createForm.validation.companyNameRequired');
     }
 
     if (!formData.logoUrl.trim()) {
-      newErrors.logoUrl = 'Logo URL is required';
+      newErrors.logoUrl = t('company:createForm.validation.logoUrlRequired');
     } else if (!/^https?:\/\/.+/.test(formData.logoUrl)) {
-      newErrors.logoUrl = 'Please enter a valid URL';
+      newErrors.logoUrl = t('company:createForm.validation.validUrlRequired');
     }
 
     if (!formData.maxApiRequests || formData.maxApiRequests <= 0) {
-      newErrors.maxApiRequests = 'Max API requests must be greater than 0';
+      newErrors.maxApiRequests = t('company:createForm.validation.maxApiRequestsRequired');
     }
 
     if (!formData.senderName.trim()) {
-      newErrors.senderName = 'Sender name is required';
+      newErrors.senderName = t('company:createForm.validation.senderNameRequired');
     }
 
     setErrors(newErrors);
@@ -1013,7 +1017,7 @@ export default function CreateCompanyPage() {
         parsedReportSettings = JSON.parse(formData.reportSettings);
         parsedConfigModules = JSON.parse(formData.configModules);
       } catch (e) {
-        alert('Invalid JSON in styles, report settings, or config modules');
+        alert(t('company:createForm.messages.invalidJson'));
         return;
       }
 
@@ -1066,7 +1070,7 @@ export default function CreateCompanyPage() {
       navigate('/companies');
     } catch (error) {
       console.error('Error creating company:', error);
-      alert(`Failed to create company: ${error.message || 'Please try again.'}`);
+      alert(t('company:createForm.messages.createFailed', { error: error.message || 'Please try again.' }));
     }
   };
 
@@ -1103,7 +1107,7 @@ export default function CreateCompanyPage() {
   const tabs = [
     {
       key: 'general',
-      label: 'General Settings',
+      label: t('company:createForm.tabs.general'),
       content: <GeneralSettingsTab
         formData={formData}
         errors={errors}
@@ -1113,11 +1117,12 @@ export default function CreateCompanyPage() {
         handleInputChange={handleInputChange}
         handleCheckboxChange={handleCheckboxChange}
         handleTextareaChange={handleTextareaChange}
+        t={t}
       />
     },
     {
       key: 'events',
-      label: 'Events & Webhooks',
+      label: t('company:createForm.tabs.eventsWebhooks'),
       content: <EventsWebhooksTab
         selectedLanguage={selectedLanguage}
         setSelectedLanguage={setSelectedLanguage}
@@ -1132,25 +1137,27 @@ export default function CreateCompanyPage() {
         companyEmailEnabled={companyEmailEnabled}
         setCompanyEmailEnabled={setCompanyEmailEnabled}
         errors={errors}
+        t={t}
       />
     },
     {
       key: 'hierarchy',
-      label: 'Hierarchy',
+      label: t('company:createForm.tabs.hierarchy'),
       content: <HierarchyTab
         formData={formData}
         handleFieldChange={handleFieldChange}
         handleInputChange={handleInputChange}
         companies={companies}
         loadingCompanies={loadingCompanies}
+        t={t}
       />
     }
   ];
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      <Header title="Create New Company" />
-      
+      <Header title={t('company:createForm.pageTitle')} />
+
       <div className="flex-1 overflow-y-auto p-6">
         <div className="mb-6">
           <Button
@@ -1159,7 +1166,7 @@ export default function CreateCompanyPage() {
             className="flex items-center gap-2 mb-4"
           >
             <ArrowLeft size={16} />
-            Back to Companies
+            {t('company:createForm.backToCompanies')}
           </Button>
         </div>
 
@@ -1173,15 +1180,15 @@ export default function CreateCompanyPage() {
           {/* Save Buttons */}
           <div className="flex gap-4 justify-end sticky bottom-0 bg-white py-4 border-t border-gray-200 mt-8">
             <Button variant="secondary" onClick={() => navigate('/companies')}>
-              Cancel
+              {t('company:createForm.cancel')}
             </Button>
-            <Button 
-              className="flex items-center gap-2" 
+            <Button
+              className="flex items-center gap-2"
               onClick={handleSave}
               disabled={!hasUnsavedChanges}
             >
               <Save size={16} />
-              Create Company
+              {t('company:createForm.createButton')}
             </Button>
           </div>
         </div>

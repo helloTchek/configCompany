@@ -177,7 +177,7 @@ export default function Table<T extends object>({
         </thead>
         <tbody className="divide-y divide-gray-200">
           {data.map((row, rowIndex) => {
-            const rowClassName = getRowClassName ? getRowClassName(row) : '';
+            const rowClassName = getRowClassName? getRowClassName(row) : '';
             return (
               <tr key={rowIndex} className={`hover:bg-gray-50 ${rowClassName}`}>
                 {columns.map((column) => {

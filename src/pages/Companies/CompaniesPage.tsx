@@ -180,7 +180,7 @@ export default function CompaniesPage() {
       const fullCompanyData = await companiesService.getCompanyById(companyId);
 
       if (!fullCompanyData) {
-        alert('Failed to load company data');
+        alert(t('company:messages.failedToLoadCompanyData'));
         return;
       }
 
@@ -228,7 +228,7 @@ export default function CompaniesPage() {
       duplicateModal.open(enrichedCompanyData as Company);
     } catch (error) {
       console.error('Error loading company for duplication:', error);
-      alert('Failed to load company data');
+      alert(t('company:messages.failedToLoadCompanyData'));
     } finally {
       setLoading(false);
     }
@@ -242,16 +242,16 @@ export default function CompaniesPage() {
     };
 
     if (!duplicateForm.companyName.trim()) {
-      errors.companyName = 'Company name is required';
+      errors.companyName = t('company:validation.companyNameRequired');
     }
 
     if (!duplicateForm.senderName.trim()) {
-      errors.senderName = 'Sender name is required';
+      errors.senderName = t('company:validation.senderNameRequired');
     }
 
     // webhookUrl est optionnel, mais si fourni, doit être valide
     if (duplicateForm.webhookUrl.trim() && !/^https?:\/\/.+/.test(duplicateForm.webhookUrl)) {
-      errors.webhookUrl = 'Please enter a valid URL';
+      errors.webhookUrl = t('company:validation.validUrlRequired');
     }
 
     setDuplicateForm(prev => ({ ...prev, errors }));
@@ -392,28 +392,28 @@ export default function CompaniesPage() {
   };
 
   const defaultColumns: Column<Company>[] = useMemo(() => [
-    { key: 'name', label: 'Company Name', sortable: true,
+    { key: 'name', label: t('company:fields.name'), sortable: true,
       render: (value: unknown, row: Company) => (
         <div className="flex items-center gap-2">
           <span className={(row.archived || row.isArchived) ? 'font-semibold text-orange-900' : 'font-medium'}>{String(value)}</span>
           {(row.archived || row.isArchived) && (
             <span className="px-2 py-1 bg-orange-200 text-orange-800 text-xs font-bold rounded-full">
-              📦 ARCHIVED
+              📦 {t('company:archived')}
             </span>
           )}
         </div>
       )
     },
-    { key: 'identifier', label: 'Identifier', sortable: true },
+    { key: 'identifier', label: t('company:fields.identifier'), sortable: true },
     {
       key: 'objectId',
-      label: 'Company ID',
+      label: t('company:fields.companyId'),
       sortable: true,
       render: (value: unknown) => String(value || 'N/A')
     },
     {
       key: 'apiToken',
-      label: 'API Token',
+      label: t('company:fields.apiToken'),
       render: (value: unknown) => {
         const tokenValue = value as string | ApiTokenData | undefined;
         const token = typeof tokenValue === 'string' ? tokenValue : (tokenValue as ApiTokenData)?.token;
@@ -426,7 +426,7 @@ export default function CompaniesPage() {
     },
     {
       key: 'currentApiRequests',
-      label: 'Current Requests',
+      label: t('company:fields.currentRequests'),
       sortable: true,
       render: (_: unknown, row: Company) => {
         const apiToken = row.apiToken;
@@ -438,7 +438,7 @@ export default function CompaniesPage() {
     },
     {
       key: 'maxApiRequests',
-      label: 'Max Requests',
+      label: t('company:fields.maxRequests'),
       sortable: true,
       render: (_: unknown, row: Company) => {
         const apiToken = row.apiToken;
@@ -450,24 +450,24 @@ export default function CompaniesPage() {
     },
     {
       key: 'createdAt',
-      label: 'Created Date',
+      label: t('company:fields.createdDate'),
       sortable: true,
       render: (value: unknown) => value ? new Date(String(value)).toLocaleDateString() : 'N/A'
     },
     {
       key: 'parentCompany',
-      label: 'Parent Company',
-      render: (_: unknown, row: Company) => row.parentCompanyId ?? 'None'
+      label: t('company:fields.parentCompany'),
+      render: (_: unknown, row: Company) => row.parentCompanyId ?? t('company:hierarchy.none')
     },
     {
       key: 'childrenCount',
-      label: 'Children',
+      label: t('company:fields.children'),
       sortable: true,
       render: (_: unknown, row: Company) => row.childCompanyIds?.length ?? 0
     },
     {
       key: 'chaseupRules',
-      label: 'Chase-up Rules',
+      label: t('company:fields.chaseupRules'),
       render: (_: unknown, row: Company) => {
         const hasRules = hasChaseupRules(row.name);
         return (
@@ -477,14 +477,14 @@ export default function CompaniesPage() {
                 onClick={() => navigate(`/chaseup-rules?company=${encodeURIComponent(row.name)}`)}
                 className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full hover:bg-green-200 transition-colors"
               >
-                ✓ Active
+                {t('company:chaseup.active')}
               </button>
             ) : (
               <button
                 onClick={() => navigate('/chaseup-rules/new')}
                 className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full hover:bg-gray-200 transition-colors"
               >
-                + Create
+                {t('company:chaseup.create')}
               </button>
             )}
           </div>
@@ -493,7 +493,7 @@ export default function CompaniesPage() {
     },
     {
       key: 'actions',
-      label: 'Actions',
+      label: t('company:fields.actions'),
       render: (_: unknown, row: Company) => (
         <div className="flex items-center gap-2">
           <button
@@ -517,14 +517,14 @@ export default function CompaniesPage() {
                 ? 'text-green-600 hover:bg-green-100'
                 : 'text-orange-600 hover:bg-orange-100'
             }`}
-            title={(row.archived || row.isArchived) ? "Unarchive company" : "Archive company"}
+            title={(row.archived || row.isArchived) ? t('company:actions.unarchiveTitle') : t('company:actions.archiveTitle')}
           >
             <Archive size={16} />
           </button>
         </div>
       ),
     },
-  ], [navigate, hasPermission]);
+  ], [navigate, hasPermission, t]);
 
   const { orderedColumns, handleReorder } = useColumnOrder<Company>(
     'companies-column-order',
@@ -533,20 +533,20 @@ export default function CompaniesPage() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      <Header title="Companies" />
-      
+      <Header title={t('company:title')} />
+
       <div className="flex-1 overflow-y-auto p-6">
         <div className="mb-6 flex justify-between items-center">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">Company Management</h2>
-            <p className="text-sm text-gray-600">Manage companies, their settings, and configurations</p>
+            <h2 className="text-lg font-semibold text-gray-900">{t('company:pageTitle')}</h2>
+            <p className="text-sm text-gray-600">{t('company:subtitle')}</p>
           </div>
           <Button
             onClick={() => navigate('/companies/new')}
             className="flex items-center gap-2"
           >
             <Plus size={16} />
-            Create New Company
+            {t('company:create')}
           </Button>
         </div>
 
@@ -558,7 +558,7 @@ export default function CompaniesPage() {
               <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search by name, identifier, company ID, or API token..."
+                placeholder={t('company:placeholders.search')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -578,7 +578,7 @@ export default function CompaniesPage() {
               className={`flex items-center gap-2 ${hasActiveFilters ? 'bg-blue-50 text-blue-700 border-blue-200' : ''}`}
             >
               <Filter size={16} />
-              Filters
+              {t('company:filters.filters')}
               {hasActiveFilters && (
                 <span className="bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                   {Object.values(filters).filter(f => f !== '').length + (searchTerm ? 1 : 0)}
@@ -592,39 +592,39 @@ export default function CompaniesPage() {
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Contract Type</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('company:fields.contractType')}</label>
                   <select
                     value={filters.contractType}
                     onChange={(e) => setFilters(prev => ({ ...prev, contractType: e.target.value }))}
                     className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="">All Types</option>
-                    <option value="Client">Client</option>
-                    <option value="Prospect">Prospect</option>
-                    <option value="Test">Test</option>
-                    <option value="Demo">Demo</option>
+                    <option value="">{t('company:contractTypes.allTypes')}</option>
+                    <option value="Client">{t('company:contractTypes.client')}</option>
+                    <option value="Prospect">{t('company:contractTypes.prospect')}</option>
+                    <option value="Test">{t('company:contractTypes.test')}</option>
+                    <option value="Demo">{t('company:contractTypes.demo')}</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Company Hierarchy</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('company:fields.companyHierarchy')}</label>
                   <select
                     value={filters.companyHierarchy}
                     onChange={(e) => setFilters(prev => ({ ...prev, companyHierarchy: e.target.value }))}
                     className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="">All Companies</option>
-                    <option value="root">Parent Companies</option>
-                    <option value="child">Child Companies</option>
+                    <option value="">{t('company:hierarchy.allCompanies')}</option>
+                    <option value="root">{t('company:hierarchy.parentCompanies')}</option>
+                    <option value="child">{t('company:hierarchy.childCompanies')}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Company Status
+                    {t('company:fields.companyStatus')}
                     {companies.filter(c => c.archived || c.isArchived).length > 0 && (
                       <span className="ml-2 px-2 py-0.5 bg-orange-100 text-orange-800 text-xs font-bold rounded-full">
-                        {companies.filter(c => c.archived || c.isArchived).length} archived
+                        {t('company:status.archivedCount', { count: companies.filter(c => c.archived || c.isArchived).length })}
                       </span>
                     )}
                   </label>
@@ -633,9 +633,9 @@ export default function CompaniesPage() {
                     onChange={(e) => setFilters(prev => ({ ...prev, archived: e.target.value }))}
                     className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="active">Active Companies</option>
-                    <option value="archived">Archived Companies</option>
-                    <option value="all">All Companies</option>
+                    <option value="active">{t('company:status.activeCompanies')}</option>
+                    <option value="archived">{t('company:status.archivedCompanies')}</option>
+                    <option value="all">{t('company:status.allCompanies')}</option>
                   </select>
                 </div>
               </div>
@@ -643,10 +643,10 @@ export default function CompaniesPage() {
               {hasActiveFilters && (
                 <div className="mt-4 flex justify-between items-center">
                   <span className="text-sm text-gray-600">
-                    Showing {sortedCompanies.length} of {companies.length} companies
+                    {t('company:filters.showingCompanies', { filtered: sortedCompanies.length, total: companies.length })}
                   </span>
                   <Button variant="secondary" size="sm" onClick={clearFilters}>
-                    Clear All Filters
+                    {t('company:filters.clearAllFilters')}
                   </Button>
                 </div>
               )}
@@ -662,10 +662,9 @@ export default function CompaniesPage() {
                 <span className="text-orange-600">📦</span>
               </div>
               <div className="flex-1">
-                <h4 className="text-sm font-medium text-orange-900 mb-1">Viewing Archived Companies</h4>
+                <h4 className="text-sm font-medium text-orange-900 mb-1">{t('company:banners.viewingArchived')}</h4>
                 <p className="text-sm text-orange-800">
-                  You are currently viewing archived companies. These companies have their API tokens disabled.
-                  Click the archive button to unarchive and restore access.
+                  {t('company:banners.archivedDescription')}
                 </p>
               </div>
             </div>
@@ -679,9 +678,9 @@ export default function CompaniesPage() {
               <span className="text-blue-600">💡</span>
             </div>
             <div className="flex-1">
-              <h4 className="text-sm font-medium text-blue-900 mb-1">Automated Chase-up Rules</h4>
+              <h4 className="text-sm font-medium text-blue-900 mb-1">{t('company:banners.chaseupRulesTitle')}</h4>
               <p className="text-sm text-blue-800 mb-3">
-                Don't forget to configure automated chase-up rules for your companies to ensure timely follow-ups on pending inspections.
+                {t('company:banners.chaseupRulesDescription')}
               </p>
               <Button
                 variant="secondary"
@@ -689,7 +688,7 @@ export default function CompaniesPage() {
                 className="flex items-center gap-2"
                 size="sm"
               >
-                Manage Chase-up Rules
+                {t('company:banners.manageChaseupRules')}
               </Button>
             </div>
           </div>
@@ -718,10 +717,10 @@ export default function CompaniesPage() {
               
               {sortedCompanies.length === 0 && (
                 <div className="text-center py-8 text-gray-500">
-                  <p>No companies found matching your criteria.</p>
+                  <p>{t('company:messages.noCompaniesFound')}</p>
                   {hasActiveFilters && (
                     <Button variant="secondary" onClick={clearFilters} className="mt-2">
-                      Clear Filters
+                      {t('company:filters.clearAllFilters')}
                     </Button>
                   )}
                 </div>
@@ -740,24 +739,24 @@ export default function CompaniesPage() {
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
               >
-                Previous
+                {t('company:pagination.previous')}
               </Button>
               <Button
                 variant="secondary"
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
               >
-                Next
+                {t('company:pagination.next')}
               </Button>
             </div>
             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm text-gray-700">
-                  Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> to{' '}
+                  {t('company:pagination.showing')} <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> {t('company:pagination.to')}{' '}
                   <span className="font-medium">
                     {Math.min(currentPage * itemsPerPage, totalCompanies)}
                   </span>{' '}
-                  of <span className="font-medium">{totalCompanies}</span> companies
+                  {t('company:pagination.of')} <span className="font-medium">{totalCompanies}</span> {t('company:pagination.companies')}
                 </p>
               </div>
               <div>
@@ -767,7 +766,7 @@ export default function CompaniesPage() {
                     disabled={currentPage === 1}
                     className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Previous
+                    {t('company:pagination.previous')}
                   </button>
                   {[...Array(Math.min(5, totalPages))].map((_, idx) => {
                     let pageNumber;
@@ -800,7 +799,7 @@ export default function CompaniesPage() {
                     disabled={currentPage === totalPages}
                     className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Next
+                    {t('company:pagination.next')}
                   </button>
                 </nav>
               </div>
@@ -812,43 +811,35 @@ export default function CompaniesPage() {
       <Modal
         isOpen={archiveModal.isOpen}
         onClose={() => archiveModal.close()}
-        title={archiveModal.data?.archived || archiveModal.data?.isArchived ? "Unarchive Company" : "Archive Company"}
+        title={archiveModal.data?.archived || archiveModal.data?.isArchived ? t('company:modals.archive.unarchiveTitle') : t('company:modals.archive.title')}
         size="sm"
       >
         <div className="space-y-4">
-          <p className="text-gray-600">
-            {archiveModal.data?.archived || archiveModal.data?.isArchived ? (
-              <>
-                Are you sure you want to unarchive <strong>{archiveModal.data?.name}</strong>?
-                This will re-enable the API token and make the company active again.
-              </>
-            ) : (
-              <>
-                Are you sure you want to archive <strong>{archiveModal.data?.name}</strong>?
-                This will disable the API token and all users from this company.
-              </>
-            )}
-          </p>
+          <p className="text-gray-600" dangerouslySetInnerHTML={{
+            __html: archiveModal.data?.archived || archiveModal.data?.isArchived
+              ? t('company:modals.archive.unarchiveQuestion', { name: archiveModal.data?.name }) + ' ' + t('company:modals.archive.unarchiveDescription')
+              : t('company:modals.archive.archiveQuestion', { name: archiveModal.data?.name }) + ' ' + t('company:modals.archive.archiveDescription')
+          }} />
           <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-            <p className="text-sm text-orange-800">
-              <strong>Note:</strong> {archiveModal.data?.archived || archiveModal.data?.isArchived ?
-                "Unarchiving will restore access to the company and its API token." :
-                "Archived companies can be restored later using the \"Show archived companies\" filter."}
-            </p>
+            <p className="text-sm text-orange-800" dangerouslySetInnerHTML={{
+              __html: archiveModal.data?.archived || archiveModal.data?.isArchived
+                ? t('company:modals.archive.noteUnarchive')
+                : t('company:modals.archive.noteArchive')
+            }} />
           </div>
           <div className="flex gap-3 justify-end">
             <Button
               variant="secondary"
               onClick={() => archiveModal.close()}
             >
-              Cancel
+              {t('company:modals.cancel')}
             </Button>
             <Button
               variant="secondary"
               onClick={confirmArchive}
               className="bg-orange-600 text-white hover:bg-orange-700"
             >
-              {archiveModal.data?.archived || archiveModal.data?.isArchived ? "Unarchive Company" : "Archive Company"}
+              {archiveModal.data?.archived || archiveModal.data?.isArchived ? t('company:modals.archive.confirmUnarchive') : t('company:modals.archive.confirmArchive')}
             </Button>
           </div>
         </div>
@@ -857,13 +848,13 @@ export default function CompaniesPage() {
       <Modal
         isOpen={duplicateModal.isOpen}
         onClose={() => duplicateModal.close()}
-        title="Duplicate Company"
+        title={t('company:modals.duplicate.title')}
         size="xl"
       >
         <div className="space-y-6 max-h-96 overflow-y-auto">
           {/* New Company Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">New Company Name</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t('company:fields.newCompanyName')}</label>
             <input
               type="text"
               value={duplicateForm.companyName}
@@ -871,7 +862,7 @@ export default function CompaniesPage() {
               className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                 duplicateForm.errors.companyName ? 'border-red-500' : 'border-gray-300'
               }`}
-              placeholder="Enter new company name"
+              placeholder={t('company:placeholders.enterNewCompanyName')}
             />
             {duplicateForm.errors.companyName && (
               <p className="text-sm text-red-600 mt-1">{duplicateForm.errors.companyName}</p>
@@ -880,13 +871,13 @@ export default function CompaniesPage() {
 
           {/* Report Settings */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Report Settings</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t('company:fields.reportSettings')}</label>
             <div className="relative">
               <textarea
                 rows={4}
                 defaultValue={duplicateModal.data?.reportSettings || ''}
                 className="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
-                placeholder="Report settings JSON configuration..."
+                placeholder={t('company:placeholders.reportSettingsJson')}
               />
               <button className="absolute top-2 right-2 p-1 text-gray-400 hover:text-gray-600">
                 <Upload size={16} />
@@ -896,13 +887,13 @@ export default function CompaniesPage() {
 
           {/* Config Modules Settings */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Config Modules Settings</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t('company:fields.configModules')}</label>
             <div className="relative">
               <textarea
                 rows={4}
                 defaultValue={duplicateModal.data?.configModules || ''}
                 className="block w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
-                placeholder="Config modules JSON configuration..."
+                placeholder={t('company:placeholders.configModulesJson')}
               />
               <button className="absolute top-2 right-2 p-1 text-gray-400 hover:text-gray-600">
                 <Upload size={16} />
@@ -913,19 +904,19 @@ export default function CompaniesPage() {
           {/* Hierarchy */}
           <div>
             <button className="flex items-center justify-between w-full text-left text-sm font-medium text-gray-700 mb-3">
-              <span>Hierarchy</span>
+              <span>{t('company:fields.hierarchy')}</span>
               <span className="text-gray-400">▼</span>
             </button>
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Parent Company (optional)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('company:hierarchy.parentCompanyOptional')}</label>
 
                 {/* Search Input */}
                 <div className="relative mb-2">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
                   <input
                     type="text"
-                    placeholder="Search companies..."
+                    placeholder={t('company:placeholders.searchCompanies')}
                     value={parentCompanySearch}
                     onChange={(e) => setParentCompanySearch(e.target.value)}
                     className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -938,7 +929,7 @@ export default function CompaniesPage() {
                   onChange={(e) => setDuplicateForm({ ...duplicateForm, parentCompanyId: e.target.value })}
                   className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="">None</option>
+                  <option value="">{t('company:hierarchy.none')}</option>
                   {allCompaniesLight
                     .filter(c => {
                       // Filter out the current company
@@ -963,20 +954,22 @@ export default function CompaniesPage() {
 
                 {/* Show count of filtered results */}
                 <p className="mt-1 text-xs text-gray-500">
-                  {allCompaniesLight.filter(c => {
-                    if ((c.objectId || c.id) === (duplicateModal.data?.objectId || duplicateModal.data?.id)) {
-                      return false;
-                    }
-                    if (parentCompanySearch) {
-                      const searchLower = parentCompanySearch.toLowerCase();
-                      return (
-                        c.name?.toLowerCase().includes(searchLower) ||
-                        c.identifier?.toLowerCase().includes(searchLower) ||
-                        (c.objectId || c.id)?.toLowerCase().includes(searchLower)
-                      );
-                    }
-                    return true;
-                  }).length} companies available · {parentCompanySearch ? 'filtered' : 'showing all'}
+                  {t('company:modals.duplicate.companiesAvailable', {
+                    count: allCompaniesLight.filter(c => {
+                      if ((c.objectId || c.id) === (duplicateModal.data?.objectId || duplicateModal.data?.id)) {
+                        return false;
+                      }
+                      if (parentCompanySearch) {
+                        const searchLower = parentCompanySearch.toLowerCase();
+                        return (
+                          c.name?.toLowerCase().includes(searchLower) ||
+                          c.identifier?.toLowerCase().includes(searchLower) ||
+                          (c.objectId || c.id)?.toLowerCase().includes(searchLower)
+                        );
+                      }
+                      return true;
+                    }).length
+                  })} · {parentCompanySearch ? t('company:modals.duplicate.filtered') : t('company:modals.duplicate.showingAll')}
                 </p>
               </div>
             </div>
@@ -985,11 +978,11 @@ export default function CompaniesPage() {
           {/* Inheritance Options */}
           <div>
             <button className="flex items-center justify-between w-full text-left text-sm font-medium text-gray-700 mb-3">
-              <span>Inheritance Options</span>
+              <span>{t('company:fields.inheritanceOptions')}</span>
               <span className="text-gray-400">▼</span>
             </button>
             <div className="space-y-3">
-              <p className="text-sm text-gray-600">Choose what should be copied from the source company:</p>
+              <p className="text-sm text-gray-600">{t('company:modals.duplicate.chooseOptions')}</p>
               <div className="space-y-2">
                 <label className="flex items-center cursor-pointer">
                   <input
@@ -998,7 +991,7 @@ export default function CompaniesPage() {
                     onChange={(e) => setDuplicateForm(prev => ({ ...prev, duplicateJourneys: e.target.checked }))}
                     className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 cursor-pointer"
                   />
-                  <span className="ml-2 text-sm text-gray-700">Duplicate Inspection Journeys</span>
+                  <span className="ml-2 text-sm text-gray-700">{t('company:modals.duplicate.duplicateJourneys')}</span>
                 </label>
                 <label className="flex items-center cursor-pointer">
                   <input
@@ -1007,7 +1000,7 @@ export default function CompaniesPage() {
                     onChange={(e) => setDuplicateForm(prev => ({ ...prev, duplicateCostSettings: e.target.checked }))}
                     className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 cursor-pointer"
                   />
-                  <span className="ml-2 text-sm text-gray-700">Duplicate Cost Settings</span>
+                  <span className="ml-2 text-sm text-gray-700">{t('company:modals.duplicate.duplicateCostSettings')}</span>
                 </label>
                 <label className="flex items-center cursor-pointer">
                   <input
@@ -1016,7 +1009,7 @@ export default function CompaniesPage() {
                     onChange={(e) => setDuplicateForm(prev => ({ ...prev, duplicateSortingRules: e.target.checked }))}
                     className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 cursor-pointer"
                   />
-                  <span className="ml-2 text-sm text-gray-700">Duplicate Sorting Rules</span>
+                  <span className="ml-2 text-sm text-gray-700">{t('company:modals.duplicate.duplicateSortingRules')}</span>
                 </label>
                 <label className="flex items-center cursor-pointer">
                   <input
@@ -1025,17 +1018,17 @@ export default function CompaniesPage() {
                     onChange={(e) => setDuplicateForm(prev => ({ ...prev, duplicateWebhookEvents: e.target.checked }))}
                     className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 cursor-pointer"
                   />
-                  <span className="ml-2 text-sm text-gray-700">Duplicate Webhook & Events Configuration</span>
+                  <span className="ml-2 text-sm text-gray-700">{t('company:modals.duplicate.duplicateWebhookEvents')}</span>
                 </label>
               </div>
-              
+
               {/* Edit Fields */}
               <div className="mt-4">
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Edit Fields</h4>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">{t('company:modals.duplicate.editFields')}</h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">
-                      Sender Name (for all events) <span className="text-red-500">*</span>
+                      {t('company:fields.senderName')} <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -1044,7 +1037,7 @@ export default function CompaniesPage() {
                       className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
                         duplicateForm.errors.senderName ? 'border-red-500' : 'border-gray-300'
                       }`}
-                      placeholder="Enter sender name"
+                      placeholder={t('company:placeholders.enterSenderName')}
                       required
                     />
                     {duplicateForm.errors.senderName && (
@@ -1053,7 +1046,7 @@ export default function CompaniesPage() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">
-                      Webhook URL <span className="text-gray-400 text-xs">(optional)</span>
+                      {t('company:fields.webhookUrl')} <span className="text-gray-400 text-xs">({t('company:modals.duplicate.webhookOptional')})</span>
                     </label>
                     <input
                       type="url"
@@ -1062,7 +1055,7 @@ export default function CompaniesPage() {
                       className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
                         duplicateForm.errors.webhookUrl ? 'border-red-500' : 'border-gray-300'
                       }`}
-                      placeholder="https://example.com/webhook"
+                      placeholder={t('company:placeholders.webhookUrlPlaceholder')}
                     />
                     {duplicateForm.errors.webhookUrl && (
                       <p className="text-xs text-red-600 mt-1">{duplicateForm.errors.webhookUrl}</p>
@@ -1079,7 +1072,7 @@ export default function CompaniesPage() {
                   </div>
                   <div className="ml-2">
                     <p className="text-sm text-yellow-800">
-                      <strong>Remember:</strong> You will need to create users for the new company after duplication.
+                      <strong>{t('company:modals.duplicate.warningTitle')}</strong> {t('company:modals.duplicate.warningMessage')}
                     </p>
                   </div>
                 </div>
@@ -1089,7 +1082,7 @@ export default function CompaniesPage() {
 
           {/* Detection, API & Validation Settings */}
           <div className="border border-gray-200 rounded-lg">
-            <button 
+            <button
               className="flex items-center justify-between w-full text-left text-sm font-medium text-gray-700 p-3 hover:bg-gray-50 rounded-lg"
               onClick={(e) => {
                 e.preventDefault();
@@ -1102,7 +1095,7 @@ export default function CompaniesPage() {
                 }
               }}
             >
-              <span>Detection, API & Validation Settings</span>
+              <span>{t('company:modals.duplicate.detectionSettings')}</span>
               <span className="text-gray-400 expand-icon">▶</span>
             </button>
             <div style={{ display: 'none' }} className="p-3 border-t border-gray-200 bg-gray-50">
@@ -1113,7 +1106,7 @@ export default function CompaniesPage() {
                     defaultChecked={true}
                     className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
                   />
-                  <span className="ml-2 text-sm text-gray-700">Duplicate Detection Model Configuration</span>
+                  <span className="ml-2 text-sm text-gray-700">{t('company:modals.duplicate.duplicateDetection')}</span>
                 </label>
                 <label className="flex items-center">
                   <input
@@ -1121,7 +1114,7 @@ export default function CompaniesPage() {
                     defaultChecked={true}
                     className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
                   />
-                  <span className="ml-2 text-sm text-gray-700">Duplicate API Settings</span>
+                  <span className="ml-2 text-sm text-gray-700">{t('company:modals.duplicate.duplicateApi')}</span>
                 </label>
                 <label className="flex items-center">
                   <input
@@ -1129,7 +1122,7 @@ export default function CompaniesPage() {
                     defaultChecked={true}
                     className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200"
                   />
-                  <span className="ml-2 text-sm text-gray-700">Duplicate Validation Settings</span>
+                  <span className="ml-2 text-sm text-gray-700">{t('company:modals.duplicate.duplicateValidation')}</span>
                 </label>
               </div>
             </div>
@@ -1159,12 +1152,12 @@ export default function CompaniesPage() {
               });
             }}
           >
-            Cancel
+            {t('company:modals.cancel')}
           </Button>
           <Button
             onClick={confirmDuplicate}
           >
-            Create Company
+            {t('company:modals.duplicate.createCompany')}
           </Button>
         </div>
       </Modal>
@@ -1172,6 +1165,3 @@ export default function CompaniesPage() {
   );
 }
 
-// generate code company company id prendre premiere 6 caractere de l'objectid de la company en gros quand tu créé la company je veux que tu prennes les 6 premiers caracteres et ca ca va te creer dcp ca : Company Code Will be auto-generated Generated from ObjectID
-// barre de recherche pour company hierarchie dans creation et update ici meme Company Hierarchy Parent Company (optional) None - This will be a root company Select a parent company to create a hierarchical structure et je veux au cas ou les company mette du temps à charger un loader ou fait ca dynamiquement ameliore de sorte a ce quil ny ai pas trop d'attente
-// enlever duplicate children de duplicate company c'est à dire lors de la duplication enleve la possiblité de faire ca Duplicate Children Companies et d'ailleurs par rapport a ca je veux que tu fasses la fonctionnalité ducplicate company en fonction du front que tu le rendes fonctionnel merci 
