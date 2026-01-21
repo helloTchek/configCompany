@@ -7,6 +7,7 @@ import Tabs from '../../components/UI/Tabs';
 import { ArrowLeft, Save, Upload, Plus, Trash2 } from 'lucide-react';
 import { companiesService } from '@/services/companiesService';
 import { useTranslation } from 'react-i18next';
+import { useLogoUpload } from '@/hooks/useLogoUpload';
 
 // Move tab components outside to prevent re-creation on every render
 const GeneralSettingsTab = ({
@@ -18,6 +19,7 @@ const GeneralSettingsTab = ({
   handleInputChange,
   handleCheckboxChange,
   handleTextareaChange,
+  logoUpload,
   t
 }) => (
   <div className="space-y-6">
@@ -44,13 +46,24 @@ const GeneralSettingsTab = ({
           value={formData.logoUrl}
           onChange={handleLogoUrlChange}
           placeholder={t('company:createForm.placeholders.logoUrl')}
-          error={errors.logoUrl}
+          error={errors.logoUrl || logoUpload.error}
           required
         />
         <div className="flex items-end">
-          <Button variant="secondary" className="flex items-center gap-2">
+          <input
+            type="file"
+            ref={logoUpload.fileInputRef}
+            accept="image/*"
+            style={{ display: 'none' }}
+          />
+          <Button
+            variant="secondary"
+            className="flex items-center gap-2"
+            onClick={logoUpload.triggerUpload}
+            disabled={logoUpload.uploading}
+          >
             <Upload size={16} />
-            {t('company:createForm.buttons.uploadLogo')}
+            {logoUpload.uploading ? t('common:uploading') : t('company:createForm.buttons.uploadLogo')}
           </Button>
         </div>
         <Input
@@ -705,6 +718,9 @@ export default function CreateCompanyPage() {
   const [companies, setCompanies] = useState<any[]>([]);
   const [loadingCompanies, setLoadingCompanies] = useState(true);
 
+  // Logo upload hook
+  const logoUpload = useLogoUpload();
+
   // State for events and webhooks templates - must be in parent to persist across tab changes
   const events = [
     { key: 'selfInspectionCreation', name: t('company:createForm.events.selfInspectionCreation') },
@@ -823,6 +839,14 @@ export default function CreateCompanyPage() {
     };
     loadCompanies();
   }, []);
+
+  // Update logoUrl when file upload completes
+  useEffect(() => {
+    if (logoUpload.uploadedUrl) {
+      setFormData(prev => ({ ...prev, logoUrl: logoUpload.uploadedUrl }));
+      setHasUnsavedChanges(true);
+    }
+  }, [logoUpload.uploadedUrl]);
 
   const handleInputChange = () => {
     setHasUnsavedChanges(true);
@@ -1117,6 +1141,7 @@ export default function CreateCompanyPage() {
         handleInputChange={handleInputChange}
         handleCheckboxChange={handleCheckboxChange}
         handleTextareaChange={handleTextareaChange}
+        logoUpload={logoUpload}
         t={t}
       />
     },

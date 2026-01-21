@@ -37,6 +37,17 @@ const stepTypeOptions = [
   { value: 'additional', label: 'Additional' }
 ];
 
+// Vehicle Categories - English version
+const vehicleCategories = [
+  { value: 'compact', label: 'Compact', desc: 'Small to medium-sized vehicles designed for urban driving. Ex: Toyota Corolla, Honda Civic, Volkswagen Golf' },
+  { value: 'sedan', label: 'Sedan', desc: "Passenger car with three-box configuration and separate trunk. Ex: Toyota Camry, Honda Accord, Ford Fusion" },
+  { value: 'suv', label: 'SUV', desc: "Robust vehicle, often all-terrain, with high ground clearance. Ex: Jeep Wrangler, Toyota RAV4, Ford Explorer" },
+  { value: 'pickup', label: 'Pickup', desc: "Vehicle with separate cabin and rear cargo bed. Ex: Ford F-150, Chevrolet Silverado, Toyota Tacoma" },
+  { value: 'light_utility', label: 'Light Utility', desc: 'Light utility vehicle (< 2 meters in height).' },
+  { value: 'utility', label: 'Utility', desc: 'Larger utility vehicle (> 2 meters in height).' },
+  { value: 'truck', label: 'Truck', desc: 'Cargo transport truck.' }
+];
+
 export default function ShootInspectionConfig({ onSave, onCancel, initialData }: ShootInspectionConfigProps) {
   // Default steps data from the provided JSON
   const defaultSteps: ShootStep[] = [
@@ -86,16 +97,6 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
             "locale": "en",
             "title": null,
             "content": "Take a shot of the front of your car"
-          },
-          {
-            "locale": "de",
-            "title": null,
-            "content": "Fotografieren Sie die Vorderseite Ihres Autos."
-          },
-          {
-            "locale": "it",
-            "title": null,
-            "content": "Fotografa il muso dell'auto"
           },
           {
             "locale": "nl",
@@ -175,7 +176,7 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
           {
             "locale": "nl",
             "title": null,
-            "content": "Neem een foto van uw hele wagen vanaf de linker voorzijde  "
+            "content": "Neem een foto van uw hele wagen vanaf de linker voorzijde"
           },
           {
             "locale": "es",
@@ -1533,10 +1534,12 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
     config: (initialData?.config && initialData.config.length > 0) ? initialData.config : defaultSteps
   });
 
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [editingStep, setEditingStep] = useState<{ step: ShootStep; index: number } | null>(null);
   const [showStepModal, setShowStepModal] = useState(false);
   const [showTemplateSelector, setShowTemplateSelector] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
+  const [stepFormData, setStepFormData] = useState<ShootStep | null>(null);
 
   const handleDragEnd = (result: any) => {
     if (!result.destination) return;
@@ -1568,12 +1571,14 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
       }
     };
     setEditingStep({ step: newStep, index: -1 });
+    setStepFormData(newStep);
     setShowStepModal(true);
     setActiveTab('general');
   };
 
   const editStep = (step: ShootStep, index: number) => {
-    setEditingStep({ step: { ...step }, index });
+    setEditingStep({ step, index });
+    setStepFormData({ ...step });
     setShowStepModal(true);
     setActiveTab('general');
   };
@@ -1590,6 +1595,7 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
     }
     setShowStepModal(false);
     setEditingStep(null);
+    setStepFormData(null);
   };
 
   const deleteStep = (index: number) => {
@@ -1678,9 +1684,10 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
   };
 
   const StepEditModal = () => {
-    if (!editingStep) return null;
+    if (!editingStep || !stepFormData) return null;
 
-    const [step, setStep] = useState<ShootStep>(editingStep.step);
+    const step = stepFormData;
+    const setStep = (newStep: ShootStep) => setStepFormData(newStep);
 
     const updateStep = (updates: Partial<ShootStep>) => {
       setStep({ ...step, ...updates });
@@ -1745,7 +1752,10 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
     return (
       <Modal
         isOpen={showStepModal}
-        onClose={() => setShowStepModal(false)}
+        onClose={() => {
+          setShowStepModal(false);
+          setStepFormData(null);
+        }}
         title={editingStep.index === -1 ? "Create New Step" : "Edit Step"}
         size="xl"
       >
@@ -1833,22 +1843,22 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
                       setStep({
                         ...rest,
                         typeImage: 0,
-                        typeExterior: step.typeExterior || 0
-                      });
+                        typeExterior: (rest as any).typeExterior || 0
+                      } as ShootStep);
                     } else if (value === 'interior') {
                       const { typeExterior, typeAdditional, ...rest } = step;
                       setStep({
                         ...rest,
                         typeImage: 3,
-                        typeInterior: step.typeInterior || 0
-                      });
+                        typeInterior: (rest as any).typeInterior || 0
+                      } as ShootStep);
                     } else {
                       const { typeExterior, typeInterior, ...rest } = step;
                       setStep({
                         ...rest,
                         typeImage: 1,
-                        typeAdditional: step.typeAdditional || 0
-                      });
+                        typeAdditional: (rest as any).typeAdditional || 0
+                      } as ShootStep);
                     }
                   }}
                   className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -2219,7 +2229,10 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
 
           {/* Modal Actions */}
           <div className="flex gap-3 justify-end pt-4 border-t border-gray-200">
-            <Button variant="secondary" onClick={() => setShowStepModal(false)}>
+            <Button variant="secondary" onClick={() => {
+              setShowStepModal(false);
+              setStepFormData(null);
+            }}>
               Cancel
             </Button>
             <Button onClick={() => saveStep(step)}>
@@ -2252,6 +2265,34 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
               placeholder="Enter shoot inspection description"
               className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
+          </div>
+
+          {/* Vehicle Categories Selector - Example */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-3">Vehicle Categories (Example)</label>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {vehicleCategories.map((category) => (
+                <div
+                  key={category.value}
+                  onClick={() => setSelectedCategory(category.value)}
+                  className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                    selectedCategory === category.value
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 bg-white hover:border-gray-300'
+                  }`}
+                >
+                  <h4 className="font-semibold text-gray-900 mb-1">{category.label}</h4>
+                  <p className="text-sm text-gray-600">{category.desc}</p>
+                </div>
+              ))}
+            </div>
+            {selectedCategory && (
+              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  <span className="font-semibold">Selected:</span> {vehicleCategories.find(c => c.value === selectedCategory)?.label}
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -2354,7 +2395,7 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
                               </div>
                             </div>
                             <div className="flex items-center gap-4 text-sm text-gray-500">
-                              {step.angle && <span>Angle: {step.angle}</span>}
+                              {step.angle !== undefined && <span>Angle: {step.angle}</span>}
                               <span>Retry: {step.retry}</span>
                               <span>Type: {
                                 step.typeImage === 0 ? 'Standard' :

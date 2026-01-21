@@ -7,6 +7,7 @@ import Input from '../../components/UI/Input';
 import Tabs from '../../components/UI/Tabs';
 import { ArrowLeft, Save, Upload, Plus, Trash2 } from 'lucide-react';
 import { companiesService } from '@/services/companiesService';
+import { useLogoUpload } from '@/hooks/useLogoUpload';
 
 // Import chase-up rules data to check if rules exist
 import { mockChaseupRules } from '../../data/mockData';
@@ -21,6 +22,7 @@ const GeneralSettingsTab = ({
   handleInputChange,
   handleCheckboxChange,
   handleTextareaChange,
+  logoUpload,
   t
 }) => (
   <div className="space-y-6">
@@ -41,13 +43,24 @@ const GeneralSettingsTab = ({
           value={formData.logoUrl}
           onChange={handleLogoUrlChange}
           placeholder={t('company:createForm.placeholders.logoUrl')}
-          error={errors.logoUrl}
+          error={errors.logoUrl || logoUpload.error}
           required
         />
         <div className="flex items-end">
-          <Button variant="secondary" className="flex items-center gap-2">
+          <input
+            type="file"
+            ref={logoUpload.fileInputRef}
+            accept="image/*"
+            style={{ display: 'none' }}
+          />
+          <Button
+            variant="secondary"
+            className="flex items-center gap-2"
+            onClick={logoUpload.triggerUpload}
+            disabled={logoUpload.uploading}
+          >
             <Upload size={16} />
-            {t('company:createForm.buttons.uploadLogo')}
+            {logoUpload.uploading ? t('common:uploading') : t('company:createForm.buttons.uploadLogo')}
           </Button>
         </div>
         <Input
@@ -300,6 +313,7 @@ const EventsWebhooksTab = ({
         }
       }
     }));
+    setHasEventManagerChanges(true); // Mark EventManager as modified
     handleInputChange();
   };
 
@@ -314,6 +328,7 @@ const EventsWebhooksTab = ({
         }
       }
     }));
+    setHasEventManagerChanges(true); // Mark EventManager as modified
     handleInputChange();
   };
 
@@ -547,7 +562,7 @@ const EventsWebhooksTab = ({
           label={t('company:createForm.fields.senderName')}
           placeholder={t('company:createForm.placeholders.senderName')}
           value={formData.senderName}
-          onChange={(e) => handleFieldChange('senderName', e.target.value)}
+          onChange={(e) => handleEventManagerFieldChange('senderName', e.target.value)}
           error={errors.senderName}
           required
         />
@@ -556,13 +571,13 @@ const EventsWebhooksTab = ({
           type="email"
           placeholder={t('company:createForm.placeholders.senderEmail')}
           value={formData.senderEmail}
-          onChange={(e) => handleFieldChange('senderEmail', e.target.value)}
+          onChange={(e) => handleEventManagerFieldChange('senderEmail', e.target.value)}
         />
         <Input
           label={t('company:createForm.fields.webhookUrl')}
           placeholder={t('company:createForm.placeholders.webhookUrl')}
           value={formData.webhookUrl}
-          onChange={(e) => handleFieldChange('webhookUrl', e.target.value)}
+          onChange={(e) => handleEventManagerFieldChange('webhookUrl', e.target.value)}
         />
       </div>
     </div>
@@ -757,6 +772,9 @@ export default function EditCompanyPage() {
   const [companies, setCompanies] = useState<any[]>([]);
   const [loadingCompanies, setLoadingCompanies] = useState(true);
 
+  // Logo upload hook
+  const logoUpload = useLogoUpload();
+
   // Define events and languages before using them
   const events = [
     { key: 'selfInspectionCreation', name: t('company:createForm.events.selfInspectionCreation') },
@@ -856,6 +874,9 @@ export default function EditCompanyPage() {
     archived: false
   });
 
+  // Track if EventManager was modified by user to avoid sending unchanged data
+  const [hasEventManagerChanges, setHasEventManagerChanges] = useState(false);
+
   // Load event templates from backend EventManager and transform to frontend format
   const loadEventTemplatesFromBackend = (eventManager: any) => {
 
@@ -935,10 +956,8 @@ export default function EditCompanyPage() {
           if (channel === 'Email') {
             const emailData = templatesData[templateKey];
             if (emailData && typeof emailData === 'object') {
-              // Auto-enable flags if template exists
-              newTemplates[frontendEventKey][addressee].enabled = true;
-              newTemplates[frontendEventKey][addressee].email = true;
-
+              // Load template content WITHOUT modifying flags
+              // Flags come ONLY from config (lines 923-934) to respect database values
               newTemplates[frontendEventKey][addressee].templates[frontendLang].email = {
                 subject: emailData.subject || '',
                 content: emailData.text || emailData.html || ''
@@ -947,10 +966,8 @@ export default function EditCompanyPage() {
           } else if (channel === 'SMS') {
             const smsData = templatesData[templateKey];
             if (typeof smsData === 'string') {
-              // Auto-enable flags if template exists
-              newTemplates[frontendEventKey][addressee].enabled = true;
-              newTemplates[frontendEventKey][addressee].sms = true;
-
+              // Load template content WITHOUT modifying flags
+              // Flags come ONLY from config (lines 923-934) to respect database values
               newTemplates[frontendEventKey][addressee].templates[frontendLang].sms = {
                 content: smsData
               };
@@ -1052,6 +1069,14 @@ export default function EditCompanyPage() {
     loadCompanies();
   }, []);
 
+  // Update logoUrl when file upload completes
+  useEffect(() => {
+    if (logoUpload.uploadedUrl) {
+      setFormData(prev => ({ ...prev, logoUrl: logoUpload.uploadedUrl }));
+      setHasUnsavedChanges(true);
+    }
+  }, [logoUpload.uploadedUrl]);
+
   // Check if company has chase-up rules (moved after formData initialization)
   const hasChaseupRules = mockChaseupRules.some(rule => rule.company === formData.companyName);
   const chaseupRulesCount = mockChaseupRules.filter(rule => rule.company === formData.companyName).length;
@@ -1071,6 +1096,13 @@ export default function EditCompanyPage() {
     setFormData(prev => ({ ...prev, [field]: value }));
     setErrors(prev => ({ ...prev, [field]: '' }));
     setHasUnsavedChanges(true);
+  };
+
+  const handleEventManagerFieldChange = (field: string, value: string | number | boolean) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    setErrors(prev => ({ ...prev, [field]: '' }));
+    setHasUnsavedChanges(true);
+    setHasEventManagerChanges(true); // Mark EventManager as modified
   };
 
   const handleLogoUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1126,16 +1158,8 @@ export default function EditCompanyPage() {
         return;
       }
 
-      // Build templates object first to check which flags should be enabled
+      // Build templates object
       const templatesObj: any = {};
-      const detectedFlags: any = {
-        companyEmail: false,
-        companySMS: false,
-        agentEmail: false,
-        agentSMS: false,
-        customerEmail: false,
-        customerSMS: false,
-      };
 
       // Process each addressee (user, customer, emailAddress, agent)
       ['user', 'customer', 'emailAddress', 'agent'].forEach(addressee => {
@@ -1164,10 +1188,6 @@ export default function EditCompanyPage() {
                 text: langTemplates.email.content || '',
                 html: langTemplates.email.content || ''
               };
-              // Auto-enable flag if template has content
-              if (fieldPrefix === 'company') detectedFlags.companyEmail = true;
-              else if (fieldPrefix === 'agent') detectedFlags.agentEmail = true;
-              else if (fieldPrefix === 'customer') detectedFlags.customerEmail = true;
             }
           }
 
@@ -1176,28 +1196,24 @@ export default function EditCompanyPage() {
             const smsContent = langTemplates.sms.content;
             if (smsContent && smsContent.trim() !== '') {
               templatesObj[`${fieldPrefix}SMS_${backendLangCode}`] = smsContent;
-              // Auto-enable flag if template has content
-              if (fieldPrefix === 'company') detectedFlags.companySMS = true;
-              else if (fieldPrefix === 'agent') detectedFlags.agentSMS = true;
-              else if (fieldPrefix === 'customer') detectedFlags.customerSMS = true;
             }
           }
         });
       });
 
-      // Build config object with auto-detected flags
+      // Build config object using ONLY the real values from state (no auto-detection)
       const config: any = {
         webhook: eventData.webhook?.enabled || false,
-        companyEmail: detectedFlags.companyEmail || eventData.emailAddress?.email || false,
+        companyEmail: eventData.emailAddress?.email || false,
         companyEmailAddress: eventData.emailAddress?.address || '',
-        companySMS: detectedFlags.companySMS || eventData.emailAddress?.sms || false,
+        companySMS: eventData.emailAddress?.sms || false,
         companySMSNumber: eventData.emailAddress?.smsNumber || '',
-        agentSMS: detectedFlags.agentSMS || eventData.agent?.sms || false,
-        agentEmail: detectedFlags.agentEmail || eventData.agent?.email || false,
+        agentSMS: eventData.agent?.sms || false,
+        agentEmail: eventData.agent?.email || false,
         agentEmailAddress: eventData.agent?.address || '',
         agentSMSNumber: eventData.agent?.smsNumber || '',
-        customerEmail: detectedFlags.customerEmail || eventData.customer?.email || false,
-        customerSMS: detectedFlags.customerSMS || eventData.customer?.sms || false,
+        customerEmail: eventData.customer?.email || false,
+        customerSMS: eventData.customer?.sms || false,
         senderEmail: formData.senderEmail || '',
         senderName: formData.senderName || ''
       };
@@ -1257,9 +1273,6 @@ export default function EditCompanyPage() {
         return;
       }
 
-      // Transform event templates to backend format
-      const eventsConfig = transformTemplatesToBackendFormat();
-
       // Prepare update data
       const updateData: any = {
         name: formData.companyName,
@@ -1289,14 +1302,17 @@ export default function EditCompanyPage() {
         showStartInstantInspection: formData.showStartInstantInspection,
         showSendInspectionLink: formData.showSendInspectionLink,
 
-        // EventManager
-        webhookUrl: formData.webhookUrl,
-        senderName: formData.senderName,
-        eventsConfig: eventsConfig, // Event configurations and templates (includes senderEmail per event)
-
         // Hierarchy
         parentCompanyId: formData.parentCompanyId || undefined,
       };
+
+      // IMPORTANT: Only send EventManager data if actually modified by user
+      // This prevents overwriting database values with incorrect data
+      if (hasEventManagerChanges) {
+        updateData.webhookUrl = formData.webhookUrl;
+        updateData.senderName = formData.senderName;
+        updateData.eventsConfig = transformTemplatesToBackendFormat();
+      }
 
       const updatedCompany = await companiesService.updateCompany(id, updateData);
 
@@ -1352,6 +1368,7 @@ export default function EditCompanyPage() {
         handleInputChange={handleInputChange}
         handleCheckboxChange={handleCheckboxChange}
         handleTextareaChange={handleTextareaChange}
+        logoUpload={logoUpload}
         t={t}
       />
     },
