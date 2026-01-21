@@ -522,7 +522,6 @@ const EventsWebhooksTab = ({
           value={formData.senderName}
           onChange={(e) => handleFieldChange('senderName', e.target.value)}
           error={errors.senderName}
-          required
         />
         <Input
           label={t('company:createForm.fields.senderEmail')}
@@ -1017,12 +1016,10 @@ export default function CreateCompanyPage() {
       newErrors.maxApiRequests = t('company:createForm.validation.maxApiRequestsRequired');
     }
 
-    if (!formData.senderName.trim()) {
-      newErrors.senderName = t('company:createForm.validation.senderNameRequired');
-    }
+    // senderName is now optional
 
     setErrors(newErrors);
-    return !newErrors.companyName && !newErrors.logoUrl && !newErrors.maxApiRequests && !newErrors.senderName;
+    return !newErrors.companyName && !newErrors.logoUrl && !newErrors.maxApiRequests;
   };
   
   const handleSave = async () => {

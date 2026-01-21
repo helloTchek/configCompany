@@ -42,6 +42,7 @@ export default function CompaniesPage() {
   const [duplicateForm, setDuplicateForm] = useState({
     companyName: '',
     senderName: '',
+    senderEmail: 'noreply@tchek.ai',
     webhookUrl: '',
     parentCompanyId: '',
     duplicateJourneys: true,
@@ -51,6 +52,7 @@ export default function CompaniesPage() {
     errors: {
       companyName: '',
       senderName: '',
+      senderEmail: '',
       webhookUrl: ''
     }
   });
@@ -212,6 +214,7 @@ export default function CompaniesPage() {
       setDuplicateForm({
         companyName: `${company.name} (Copy)`,
         senderName,
+        senderEmail: 'noreply@tchek.ai',
         webhookUrl,
         parentCompanyId: parentCompanyId || '',
         duplicateJourneys: true,
@@ -221,6 +224,7 @@ export default function CompaniesPage() {
         errors: {
           companyName: '',
           senderName: '',
+          senderEmail: '',
           webhookUrl: ''
         }
       });
@@ -238,6 +242,7 @@ export default function CompaniesPage() {
     const errors = {
       companyName: '',
       senderName: '',
+      senderEmail: '',
       webhookUrl: ''
     };
 
@@ -245,8 +250,12 @@ export default function CompaniesPage() {
       errors.companyName = t('company:validation.companyNameRequired');
     }
 
-    if (!duplicateForm.senderName.trim()) {
-      errors.senderName = t('company:validation.senderNameRequired');
+    // senderName est optionnel
+    // senderEmail est OBLIGATOIRE et doit être un email valide
+    if (!duplicateForm.senderEmail.trim()) {
+      errors.senderEmail = t('company:validation.senderEmailRequired');
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(duplicateForm.senderEmail)) {
+      errors.senderEmail = t('company:validation.validEmailRequired');
     }
 
     // webhookUrl est optionnel, mais si fourni, doit être valide
@@ -255,7 +264,7 @@ export default function CompaniesPage() {
     }
 
     setDuplicateForm(prev => ({ ...prev, errors }));
-    return !errors.companyName && !errors.senderName && !errors.webhookUrl;
+    return !errors.companyName && !errors.senderEmail && !errors.webhookUrl;
   };
 
   const handleDuplicateFormChange = (field: string, value: string) => {
@@ -283,6 +292,7 @@ export default function CompaniesPage() {
         companyId,
         duplicateForm.companyName,
         duplicateForm.senderName,
+        duplicateForm.senderEmail,
         duplicateForm.webhookUrl,
         duplicateForm.parentCompanyId || undefined,
         {
@@ -298,6 +308,7 @@ export default function CompaniesPage() {
         setDuplicateForm({
           companyName: '',
           senderName: '',
+          senderEmail: 'noreply@tchek.ai',
           webhookUrl: '',
           parentCompanyId: '',
           duplicateJourneys: true,
@@ -307,6 +318,7 @@ export default function CompaniesPage() {
           errors: {
             companyName: '',
             senderName: '',
+            senderEmail: '',
             webhookUrl: ''
           }
         });
@@ -1028,7 +1040,7 @@ export default function CompaniesPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">
-                      {t('company:fields.senderName')} <span className="text-red-500">*</span>
+                      {t('company:fields.senderName')} <span className="text-gray-400 text-xs">(Optional)</span>
                     </label>
                     <input
                       type="text"
@@ -1038,7 +1050,6 @@ export default function CompaniesPage() {
                         duplicateForm.errors.senderName ? 'border-red-500' : 'border-gray-300'
                       }`}
                       placeholder={t('company:placeholders.enterSenderName')}
-                      required
                     />
                     {duplicateForm.errors.senderName && (
                       <p className="text-xs text-red-600 mt-1">{duplicateForm.errors.senderName}</p>
@@ -1046,21 +1057,40 @@ export default function CompaniesPage() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">
-                      {t('company:fields.webhookUrl')} <span className="text-gray-400 text-xs">({t('company:modals.duplicate.webhookOptional')})</span>
+                      {t('company:fields.senderEmail')} <span className="text-red-500">*</span>
                     </label>
                     <input
-                      type="url"
-                      value={duplicateForm.webhookUrl}
-                      onChange={(e) => handleDuplicateFormChange('webhookUrl', e.target.value)}
+                      type="email"
+                      value={duplicateForm.senderEmail}
+                      onChange={(e) => handleDuplicateFormChange('senderEmail', e.target.value)}
                       className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
-                        duplicateForm.errors.webhookUrl ? 'border-red-500' : 'border-gray-300'
+                        duplicateForm.errors.senderEmail ? 'border-red-500' : 'border-gray-300'
                       }`}
-                      placeholder={t('company:placeholders.webhookUrlPlaceholder')}
+                      placeholder="noreply@tchek.ai"
+                      required
                     />
-                    {duplicateForm.errors.webhookUrl && (
-                      <p className="text-xs text-red-600 mt-1">{duplicateForm.errors.webhookUrl}</p>
+                    {duplicateForm.errors.senderEmail && (
+                      <p className="text-xs text-red-600 mt-1">{duplicateForm.errors.senderEmail}</p>
                     )}
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    {t('company:fields.webhookUrl')} <span className="text-gray-400 text-xs">({t('company:modals.duplicate.webhookOptional')})</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={duplicateForm.webhookUrl}
+                    onChange={(e) => handleDuplicateFormChange('webhookUrl', e.target.value)}
+                    className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
+                      duplicateForm.errors.webhookUrl ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder={t('company:placeholders.webhookUrlPlaceholder')}
+                  />
+                  {duplicateForm.errors.webhookUrl && (
+                    <p className="text-xs text-red-600 mt-1">{duplicateForm.errors.webhookUrl}</p>
+                  )}
                 </div>
               </div>
 
@@ -1138,6 +1168,7 @@ export default function CompaniesPage() {
               setDuplicateForm({
                 companyName: '',
                 senderName: '',
+                senderEmail: 'noreply@tchek.ai',
                 webhookUrl: '',
                 parentCompanyId: '',
                 duplicateJourneys: true,
@@ -1147,6 +1178,7 @@ export default function CompaniesPage() {
                 errors: {
                   companyName: '',
                   senderName: '',
+                  senderEmail: '',
                   webhookUrl: ''
                 }
               });

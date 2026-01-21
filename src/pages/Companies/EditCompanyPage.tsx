@@ -19,6 +19,7 @@ const GeneralSettingsTab = ({
   handleCompanyNameChange,
   handleLogoUrlChange,
   handleFieldChange,
+  handleEventManagerFieldChange,
   handleInputChange,
   handleCheckboxChange,
   handleTextareaChange,
@@ -274,6 +275,7 @@ const EventsWebhooksTab = ({
   selectedLanguage,
   setSelectedLanguage,
   handleInputChange,
+  handleEventManagerFieldChange,
   languages,
   events,
   variables,
@@ -564,7 +566,6 @@ const EventsWebhooksTab = ({
           value={formData.senderName}
           onChange={(e) => handleEventManagerFieldChange('senderName', e.target.value)}
           error={errors.senderName}
-          required
         />
         <Input
           label={t('company:createForm.fields.senderEmail')}
@@ -1248,12 +1249,10 @@ export default function EditCompanyPage() {
       newErrors.maxApiRequests = t('company:createForm.validation.maxApiRequestsRequired');
     }
 
-    if (!formData.senderName.trim()) {
-      newErrors.senderName = t('company:createForm.validation.senderNameRequired');
-    }
+    // senderName is now optional
 
     setErrors(newErrors);
-    return !newErrors.companyName && !newErrors.logoUrl && !newErrors.maxApiRequests && !newErrors.senderName;
+    return !newErrors.companyName && !newErrors.logoUrl && !newErrors.maxApiRequests;
   };
   
   const handleSave = async () => {
@@ -1365,6 +1364,7 @@ export default function EditCompanyPage() {
         handleCompanyNameChange={handleCompanyNameChange}
         handleLogoUrlChange={handleLogoUrlChange}
         handleFieldChange={handleFieldChange}
+        handleEventManagerFieldChange={handleEventManagerFieldChange}
         handleInputChange={handleInputChange}
         handleCheckboxChange={handleCheckboxChange}
         handleTextareaChange={handleTextareaChange}
@@ -1379,6 +1379,7 @@ export default function EditCompanyPage() {
         selectedLanguage={selectedLanguage}
         setSelectedLanguage={setSelectedLanguage}
         handleInputChange={handleInputChange}
+        handleEventManagerFieldChange={handleEventManagerFieldChange}
         languages={languages}
         events={events}
         variables={variables}

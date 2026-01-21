@@ -209,6 +209,7 @@ class CompaniesService {
     id: string,
     newName: string,
     senderName?: string,
+    senderEmail?: string,
     webhookUrl?: string,
     parentCompanyId?: string,
     options?: {
@@ -239,6 +240,7 @@ class CompaniesService {
     return apiClient.post<Company>(`${API_ENDPOINTS.companies.detail(id)}/duplicate`, {
       newName,
       senderName,
+      senderEmail,
       webhookUrl,
       parentCompanyId,
       ...options
