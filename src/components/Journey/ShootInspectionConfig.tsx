@@ -2235,7 +2235,9 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
     };
 
     setEditingStep({ step: newStep, index: -1 });
+    setStepFormData(newStep);
     setShowStepModal(true);
+    setShowTemplateSelector(false);
     setActiveTab('general');
   };
 
