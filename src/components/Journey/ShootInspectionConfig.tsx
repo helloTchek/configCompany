@@ -48,6 +48,590 @@ const vehicleCategories = [
   { value: 'truck', label: 'Truck', desc: 'Cargo transport truck.' }
 ];
 
+// Extracted StepEditModal as separate component to fix focus bug
+interface StepEditModalProps {
+  editingStep: { step: ShootStep; index: number } | null;
+  stepFormData: ShootStep | null;
+  setStepFormData: (step: ShootStep | null) => void;
+  showStepModal: boolean;
+  setShowStepModal: (show: boolean) => void;
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+  saveStep: (step: ShootStep) => void;
+}
+
+const StepEditModal = React.memo(({
+  editingStep,
+  stepFormData,
+  setStepFormData,
+  showStepModal,
+  setShowStepModal,
+  activeTab,
+  setActiveTab,
+  saveStep
+}: StepEditModalProps) => {
+  if (!editingStep || !stepFormData) return null;
+
+  const step = stepFormData;
+  const setStep = (newStep: ShootStep) => setStepFormData(newStep);
+
+  const updateStep = (updates: Partial<ShootStep>) => {
+    setStep({ ...step, ...updates });
+  };
+
+  const addLocalization = (type: 'title' | 'help', locale: string) => {
+    if (type === 'title') {
+      const newLocalizations = [...step.title.localization];
+      if (!newLocalizations.find(l => l.locale === locale)) {
+        newLocalizations.push({ locale, title: '' });
+        updateStep({
+          title: { ...step.title, localization: newLocalizations }
+        });
+      }
+    } else {
+      const newLocalizations = [...step.help.localization];
+      if (!newLocalizations.find(l => l.locale === locale)) {
+        newLocalizations.push({ locale, title: null, content: '' });
+        updateStep({
+          help: { ...step.help, localization: newLocalizations }
+        });
+      }
+    }
+  };
+
+  const updateLocalization = (type: 'title' | 'help', locale: string, field: string, value: string) => {
+    if (type === 'title') {
+      const newLocalizations = step.title.localization.map(l =>
+        l.locale === locale ? { ...l, [field]: value } : l
+      );
+      updateStep({
+        title: { ...step.title, localization: newLocalizations }
+      });
+    } else {
+      const newLocalizations = step.help.localization.map(l =>
+        l.locale === locale ? { ...l, [field]: value || null } : l
+      );
+      updateStep({
+        help: { ...step.help, localization: newLocalizations }
+      });
+    }
+  };
+
+  const removeLocalization = (type: 'title' | 'help', locale: string) => {
+    if (type === 'title') {
+      const newLocalizations = step.title.localization.filter(l => l.locale !== locale);
+      if (newLocalizations.length > 0) {
+        updateStep({
+          title: { ...step.title, localization: newLocalizations }
+        });
+      }
+    } else {
+      const newLocalizations = step.help.localization.filter(l => l.locale !== locale);
+      if (newLocalizations.length > 0) {
+        updateStep({
+          help: { ...step.help, localization: newLocalizations }
+        });
+      }
+    }
+  };
+
+  return (
+    <Modal
+      isOpen={showStepModal}
+      onClose={() => {
+        setShowStepModal(false);
+        setStepFormData(null);
+      }}
+      title={editingStep.index === -1 ? "Create New Step" : "Edit Step"}
+      size="xl"
+    >
+      <div className="space-y-6">
+        {/* Tabs */}
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8">
+            {[
+              { key: 'general', label: 'General Settings' },
+              { key: 'localization', label: 'Localization' },
+              { key: 'overlay', label: 'Overlay & Constraints' }
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === tab.key
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        {/* General Settings Tab */}
+        {activeTab === 'general' && (
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Step Name"
+              value={step.title.name}
+              onChange={(e) => updateStep({
+                title: { ...step.title, name: e.target.value }
+              })}
+              placeholder="Enter step name"
+            />
+            <Input
+              label="Angle"
+              type="number"
+              value={step.angle?.toString() || ''}
+              onChange={(e) => {
+                const value = e.target.value ? parseInt(e.target.value) : 0;
+                updateStep({ angle: value });
+              }}
+              placeholder="Enter angle"
+            />
+            <Input
+              label="Thumbnail URL"
+              value={step.urlThumb}
+              onChange={(e) => updateStep({ urlThumb: e.target.value })}
+              placeholder="Enter thumbnail URL"
+            />
+            <Input
+              label="Retry Count"
+              type="number"
+              value={step.retry.toString()}
+              onChange={(e) => updateStep({ retry: parseInt(e.target.value) || 0 })}
+              placeholder="0"
+            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Type Image</label>
+              <select
+                value={step.typeImage}
+                onChange={(e) => updateStep({ typeImage: parseInt(e.target.value) })}
+                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                {typeImageOptions.map(option => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Step Type</label>
+              <select
+                value={
+                  step.typeImage === 0 ? 'exterior' :
+                  step.typeImage === 3 ? 'interior' : 'additional'
+                }
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === 'exterior') {
+                    const { typeInterior, typeAdditional, ...rest } = step;
+                    setStep({
+                      ...rest,
+                      typeImage: 0,
+                      typeExterior: (rest as any).typeExterior || 0
+                    } as ShootStep);
+                  } else if (value === 'interior') {
+                    const { typeExterior, typeAdditional, ...rest } = step;
+                    setStep({
+                      ...rest,
+                      typeImage: 3,
+                      typeInterior: (rest as any).typeInterior || 0
+                    } as ShootStep);
+                  } else {
+                    const { typeExterior, typeInterior, ...rest } = step;
+                    setStep({
+                      ...rest,
+                      typeImage: 1,
+                      typeAdditional: (rest as any).typeAdditional || 0
+                    } as ShootStep);
+                  }
+                }}
+                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                {stepTypeOptions.map(option => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </div>
+            <div className="col-span-2 space-y-2">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={step.optional}
+                  onChange={(e) => updateStep({ optional: e.target.checked })}
+                  className="rounded border-gray-300 text-blue-600 shadow-sm"
+                />
+                <span className="ml-2 text-sm text-gray-700">Optional</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={step.quality}
+                  onChange={(e) => updateStep({ quality: e.target.checked })}
+                  className="rounded border-gray-300 text-blue-600 shadow-sm"
+                />
+                <span className="ml-2 text-sm text-gray-700">Activate Quality</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={step.showHelp}
+                  onChange={(e) => updateStep({ showHelp: e.target.checked })}
+                  className="rounded border-gray-300 text-blue-600 shadow-sm"
+                />
+                <span className="ml-2 text-sm text-gray-700">Show Help</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={step.runDetection || false}
+                  onChange={(e) => updateStep({ runDetection: e.target.checked })}
+                  className="rounded border-gray-300 text-blue-600 shadow-sm"
+                />
+                <span className="ml-2 text-sm text-gray-700">Run Detection</span>
+              </label>
+            </div>
+          </div>
+        )}
+
+        {/* Localization Tab */}
+        {activeTab === 'localization' && (
+          <div className="space-y-6">
+            {/* Title Localizations */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-sm font-medium text-gray-900">Title Localizations</h4>
+                <div className="flex items-center gap-2">
+                  <select
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        addLocalization('title', e.target.value);
+                        e.target.value = '';
+                      }
+                    }}
+                    className="text-sm border border-gray-300 rounded px-2 py-1"
+                  >
+                    <option value="">Add Language</option>
+                    {languages.map(lang => (
+                      <option key={lang.code} value={lang.code}>{lang.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="space-y-3">
+                {step.title.localization.map((loc, index) => (
+                  <div key={index} className="flex items-center gap-3">
+                    <select
+                      value={loc.locale}
+                      onChange={(e) => {
+                        const newLocalizations = [...step.title.localization];
+                        newLocalizations[index] = { ...loc, locale: e.target.value };
+                        updateStep({
+                          title: { ...step.title, localization: newLocalizations }
+                        });
+                      }}
+                      className="w-32 text-sm border border-gray-300 rounded px-2 py-1"
+                    >
+                      {languages.map(lang => (
+                        <option key={lang.code} value={lang.code}>{lang.name}</option>
+                      ))}
+                    </select>
+                    <input
+                      type="text"
+                      value={loc.title}
+                      onChange={(e) => updateLocalization('title', loc.locale, 'title', e.target.value)}
+                      placeholder="Enter title"
+                      className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    {step.title.localization.length > 1 && (
+                      <button
+                        onClick={() => removeLocalization('title', loc.locale)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        <X size={16} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Help Localizations */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-sm font-medium text-gray-900">Help Localizations</h4>
+                <div className="flex items-center gap-2">
+                  <select
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        addLocalization('help', e.target.value);
+                        e.target.value = '';
+                      }
+                    }}
+                    className="text-sm border border-gray-300 rounded px-2 py-1"
+                  >
+                    <option value="">Add Language</option>
+                    {languages.map(lang => (
+                      <option key={lang.code} value={lang.code}>{lang.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="space-y-4">
+                {step.help.localization.map((loc, index) => (
+                  <div key={index} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <select
+                        value={loc.locale}
+                        onChange={(e) => {
+                          const newLocalizations = [...step.help.localization];
+                          newLocalizations[index] = { ...loc, locale: e.target.value };
+                          updateStep({
+                            help: { ...step.help, localization: newLocalizations }
+                          });
+                        }}
+                        className="w-32 text-sm border border-gray-300 rounded px-2 py-1"
+                      >
+                        {languages.map(lang => (
+                          <option key={lang.code} value={lang.code}>{lang.name}</option>
+                        ))}
+                      </select>
+                      <input
+                        type="text"
+                        value={loc.title || ''}
+                        onChange={(e) => updateLocalization('help', loc.locale, 'title', e.target.value)}
+                        placeholder="Enter help title"
+                        className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      {step.help.localization.length > 1 && (
+                        <button
+                          onClick={() => removeLocalization('help', loc.locale)}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          <X size={16} />
+                        </button>
+                      )}
+                    </div>
+                    <textarea
+                      rows={3}
+                      value={loc.content || ''}
+                      onChange={(e) => updateLocalization('help', loc.locale, 'content', e.target.value)}
+                      placeholder="Enter help content"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Overlay & Constraints Tab */}
+        {activeTab === 'overlay' && (
+          <div className="space-y-4">
+            <Input
+              label="Overlay URL"
+              value={step.overlay?.url || ''}
+              onChange={(e) => updateStep({
+                overlay: {
+                  url: e.target.value,
+                  constraints: step.overlay?.constraints || {
+                    portrait: { position: 0, scaleType: 0, marginStart: true, marginEnd: true },
+                    landscape: { position: 0, scaleType: 0, marginStart: true, marginEnd: true }
+                  }
+                }
+              })}
+              placeholder="Enter overlay URL"
+            />
+
+            {step.overlay?.url && (
+              <div className="grid grid-cols-2 gap-6">
+                {/* Portrait Constraints */}
+                <div>
+                  <h5 className="text-sm font-medium text-gray-900 mb-3">Portrait Constraints</h5>
+                  <div className="space-y-3">
+                    <Input
+                      label="Position"
+                      type="number"
+                      value={step.overlay?.constraints.portrait.position.toString() || '0'}
+                      onChange={(e) => updateStep({
+                        overlay: {
+                          ...step.overlay!,
+                          constraints: {
+                            ...step.overlay!.constraints,
+                            portrait: {
+                              ...step.overlay!.constraints.portrait,
+                              position: parseInt(e.target.value) || 0
+                            }
+                          }
+                        }
+                      })}
+                    />
+                    <Input
+                      label="Scale Type"
+                      type="number"
+                      value={step.overlay?.constraints.portrait.scaleType.toString() || '0'}
+                      onChange={(e) => updateStep({
+                        overlay: {
+                          ...step.overlay!,
+                          constraints: {
+                            ...step.overlay!.constraints,
+                            portrait: {
+                              ...step.overlay!.constraints.portrait,
+                              scaleType: parseInt(e.target.value) || 0
+                            }
+                          }
+                        }
+                      })}
+                    />
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={step.overlay?.constraints.portrait.marginStart || false}
+                        onChange={(e) => updateStep({
+                          overlay: {
+                            ...step.overlay!,
+                            constraints: {
+                              ...step.overlay!.constraints,
+                              portrait: {
+                                ...step.overlay!.constraints.portrait,
+                                marginStart: e.target.checked
+                              }
+                            }
+                          }
+                        })}
+                        className="rounded border-gray-300 text-blue-600 shadow-sm"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">Margin Start</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={step.overlay?.constraints.portrait.marginEnd || false}
+                        onChange={(e) => updateStep({
+                          overlay: {
+                            ...step.overlay!,
+                            constraints: {
+                              ...step.overlay!.constraints,
+                              portrait: {
+                                ...step.overlay!.constraints.portrait,
+                                marginEnd: e.target.checked
+                              }
+                            }
+                          }
+                        })}
+                        className="rounded border-gray-300 text-blue-600 shadow-sm"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">Margin End</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Landscape Constraints */}
+                <div>
+                  <h5 className="text-sm font-medium text-gray-900 mb-3">Landscape Constraints</h5>
+                  <div className="space-y-3">
+                    <Input
+                      label="Position"
+                      type="number"
+                      value={step.overlay?.constraints.landscape.position.toString() || '0'}
+                      onChange={(e) => updateStep({
+                        overlay: {
+                          ...step.overlay!,
+                          constraints: {
+                            ...step.overlay!.constraints,
+                            landscape: {
+                              ...step.overlay!.constraints.landscape,
+                              position: parseInt(e.target.value) || 0
+                            }
+                          }
+                        }
+                      })}
+                    />
+                    <Input
+                      label="Scale Type"
+                      type="number"
+                      value={step.overlay?.constraints.landscape.scaleType.toString() || '0'}
+                      onChange={(e) => updateStep({
+                        overlay: {
+                          ...step.overlay!,
+                          constraints: {
+                            ...step.overlay!.constraints,
+                            landscape: {
+                              ...step.overlay!.constraints.landscape,
+                              scaleType: parseInt(e.target.value) || 0
+                            }
+                          }
+                        }
+                      })}
+                    />
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={step.overlay?.constraints.landscape.marginStart || false}
+                        onChange={(e) => updateStep({
+                          overlay: {
+                            ...step.overlay!,
+                            constraints: {
+                              ...step.overlay!.constraints,
+                              landscape: {
+                                ...step.overlay!.constraints.landscape,
+                                marginStart: e.target.checked
+                              }
+                            }
+                          }
+                        })}
+                        className="rounded border-gray-300 text-blue-600 shadow-sm"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">Margin Start</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={step.overlay?.constraints.landscape.marginEnd || false}
+                        onChange={(e) => updateStep({
+                          overlay: {
+                            ...step.overlay!,
+                            constraints: {
+                              ...step.overlay!.constraints,
+                              landscape: {
+                                ...step.overlay!.constraints.landscape,
+                                marginEnd: e.target.checked
+                              }
+                            }
+                          }
+                        })}
+                        className="rounded border-gray-300 text-blue-600 shadow-sm"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">Margin End</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Modal Actions */}
+        <div className="flex gap-3 justify-end pt-4 border-t border-gray-200">
+          <Button variant="secondary" onClick={() => {
+            setShowStepModal(false);
+            setStepFormData(null);
+          }}>
+            Cancel
+          </Button>
+          <Button onClick={() => saveStep(step)}>
+            Save Step
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  );
+});
+
+StepEditModal.displayName = 'StepEditModal';
+
 export default function ShootInspectionConfig({ onSave, onCancel, initialData }: ShootInspectionConfigProps) {
   // Default steps data from the provided JSON
   const defaultSteps: ShootStep[] = [
@@ -1683,567 +2267,6 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
     event.target.value = '';
   };
 
-  const StepEditModal = () => {
-    if (!editingStep || !stepFormData) return null;
-
-    const step = stepFormData;
-    const setStep = (newStep: ShootStep) => setStepFormData(newStep);
-
-    const updateStep = (updates: Partial<ShootStep>) => {
-      setStep({ ...step, ...updates });
-    };
-
-    const addLocalization = (type: 'title' | 'help', locale: string) => {
-      if (type === 'title') {
-        const newLocalizations = [...step.title.localization];
-        if (!newLocalizations.find(l => l.locale === locale)) {
-          newLocalizations.push({ locale, title: '' });
-          updateStep({
-            title: { ...step.title, localization: newLocalizations }
-          });
-        }
-      } else {
-        const newLocalizations = [...step.help.localization];
-        if (!newLocalizations.find(l => l.locale === locale)) {
-          newLocalizations.push({ locale, title: null, content: '' });
-          updateStep({
-            help: { ...step.help, localization: newLocalizations }
-          });
-        }
-      }
-    };
-
-    const updateLocalization = (type: 'title' | 'help', locale: string, field: string, value: string) => {
-      if (type === 'title') {
-        const newLocalizations = step.title.localization.map(l =>
-          l.locale === locale ? { ...l, [field]: value } : l
-        );
-        updateStep({
-          title: { ...step.title, localization: newLocalizations }
-        });
-      } else {
-        const newLocalizations = step.help.localization.map(l =>
-          l.locale === locale ? { ...l, [field]: value || null } : l
-        );
-        updateStep({
-          help: { ...step.help, localization: newLocalizations }
-        });
-      }
-    };
-
-    const removeLocalization = (type: 'title' | 'help', locale: string) => {
-      if (type === 'title') {
-        const newLocalizations = step.title.localization.filter(l => l.locale !== locale);
-        if (newLocalizations.length > 0) {
-          updateStep({
-            title: { ...step.title, localization: newLocalizations }
-          });
-        }
-      } else {
-        const newLocalizations = step.help.localization.filter(l => l.locale !== locale);
-        if (newLocalizations.length > 0) {
-          updateStep({
-            help: { ...step.help, localization: newLocalizations }
-          });
-        }
-      }
-    };
-
-    return (
-      <Modal
-        isOpen={showStepModal}
-        onClose={() => {
-          setShowStepModal(false);
-          setStepFormData(null);
-        }}
-        title={editingStep.index === -1 ? "Create New Step" : "Edit Step"}
-        size="xl"
-      >
-        <div className="space-y-6">
-          {/* Tabs */}
-          <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8">
-              {[
-                { key: 'general', label: 'General Settings' },
-                { key: 'localization', label: 'Localization' },
-                { key: 'overlay', label: 'Overlay & Constraints' }
-              ].map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === tab.key
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </nav>
-          </div>
-
-          {/* General Settings Tab */}
-          {activeTab === 'general' && (
-            <div className="grid grid-cols-2 gap-4">
-              <Input
-                label="Step Name"
-                value={step.title.name}
-                onChange={(e) => updateStep({
-                  title: { ...step.title, name: e.target.value }
-                })}
-                placeholder="Enter step name"
-              />
-              <Input
-                label="Angle"
-                type="number"
-                value={step.angle?.toString() || ''}
-                onChange={(e) => {
-                  const value = e.target.value ? parseInt(e.target.value) : 0;
-                  updateStep({ angle: value });
-                }}
-                placeholder="Enter angle"
-              />
-              <Input
-                label="Thumbnail URL"
-                value={step.urlThumb}
-                onChange={(e) => updateStep({ urlThumb: e.target.value })}
-                placeholder="Enter thumbnail URL"
-              />
-              <Input
-                label="Retry Count"
-                type="number"
-                value={step.retry.toString()}
-                onChange={(e) => updateStep({ retry: parseInt(e.target.value) || 0 })}
-                placeholder="0"
-              />
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Type Image</label>
-                <select
-                  value={step.typeImage}
-                  onChange={(e) => updateStep({ typeImage: parseInt(e.target.value) })}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  {typeImageOptions.map(option => (
-                    <option key={option.value} value={option.value}>{option.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Step Type</label>
-                <select
-                  value={
-                    step.typeImage === 0 ? 'exterior' :
-                    step.typeImage === 3 ? 'interior' : 'additional'
-                  }
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    if (value === 'exterior') {
-                      const { typeInterior, typeAdditional, ...rest } = step;
-                      setStep({
-                        ...rest,
-                        typeImage: 0,
-                        typeExterior: (rest as any).typeExterior || 0
-                      } as ShootStep);
-                    } else if (value === 'interior') {
-                      const { typeExterior, typeAdditional, ...rest } = step;
-                      setStep({
-                        ...rest,
-                        typeImage: 3,
-                        typeInterior: (rest as any).typeInterior || 0
-                      } as ShootStep);
-                    } else {
-                      const { typeExterior, typeInterior, ...rest } = step;
-                      setStep({
-                        ...rest,
-                        typeImage: 1,
-                        typeAdditional: (rest as any).typeAdditional || 0
-                      } as ShootStep);
-                    }
-                  }}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  {stepTypeOptions.map(option => (
-                    <option key={option.value} value={option.value}>{option.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="col-span-2 space-y-2">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={step.optional}
-                    onChange={(e) => updateStep({ optional: e.target.checked })}
-                    className="rounded border-gray-300 text-blue-600 shadow-sm"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Optional</span>
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={step.quality}
-                    onChange={(e) => updateStep({ quality: e.target.checked })}
-                    className="rounded border-gray-300 text-blue-600 shadow-sm"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Activate Quality</span>
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={step.showHelp}
-                    onChange={(e) => updateStep({ showHelp: e.target.checked })}
-                    className="rounded border-gray-300 text-blue-600 shadow-sm"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Show Help</span>
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={step.runDetection || false}
-                    onChange={(e) => updateStep({ runDetection: e.target.checked })}
-                    className="rounded border-gray-300 text-blue-600 shadow-sm"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Run Detection</span>
-                </label>
-              </div>
-            </div>
-          )}
-
-          {/* Localization Tab */}
-          {activeTab === 'localization' && (
-            <div className="space-y-6">
-              {/* Title Localizations */}
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-sm font-medium text-gray-900">Title Localizations</h4>
-                  <div className="flex items-center gap-2">
-                    <select
-                      onChange={(e) => {
-                        if (e.target.value) {
-                          addLocalization('title', e.target.value);
-                          e.target.value = '';
-                        }
-                      }}
-                      className="text-sm border border-gray-300 rounded px-2 py-1"
-                    >
-                      <option value="">Add Language</option>
-                      {languages.map(lang => (
-                        <option key={lang.code} value={lang.code}>{lang.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  {step.title.localization.map((loc, index) => (
-                    <div key={index} className="flex items-center gap-3">
-                      <select
-                        value={loc.locale}
-                        onChange={(e) => {
-                          const newLocalizations = [...step.title.localization];
-                          newLocalizations[index] = { ...loc, locale: e.target.value };
-                          updateStep({
-                            title: { ...step.title, localization: newLocalizations }
-                          });
-                        }}
-                        className="w-32 text-sm border border-gray-300 rounded px-2 py-1"
-                      >
-                        {languages.map(lang => (
-                          <option key={lang.code} value={lang.code}>{lang.name}</option>
-                        ))}
-                      </select>
-                      <input
-                        type="text"
-                        value={loc.title}
-                        onChange={(e) => updateLocalization('title', loc.locale, 'title', e.target.value)}
-                        placeholder="Enter title"
-                        className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                      {step.title.localization.length > 1 && (
-                        <button
-                          onClick={() => removeLocalization('title', loc.locale)}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          <X size={16} />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Help Localizations */}
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-sm font-medium text-gray-900">Help Localizations</h4>
-                  <div className="flex items-center gap-2">
-                    <select
-                      onChange={(e) => {
-                        if (e.target.value) {
-                          addLocalization('help', e.target.value);
-                          e.target.value = '';
-                        }
-                      }}
-                      className="text-sm border border-gray-300 rounded px-2 py-1"
-                    >
-                      <option value="">Add Language</option>
-                      {languages.map(lang => (
-                        <option key={lang.code} value={lang.code}>{lang.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  {step.help.localization.map((loc, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-center gap-3 mb-3">
-                        <select
-                          value={loc.locale}
-                          onChange={(e) => {
-                            const newLocalizations = [...step.help.localization];
-                            newLocalizations[index] = { ...loc, locale: e.target.value };
-                            updateStep({
-                              help: { ...step.help, localization: newLocalizations }
-                            });
-                          }}
-                          className="w-32 text-sm border border-gray-300 rounded px-2 py-1"
-                        >
-                          {languages.map(lang => (
-                            <option key={lang.code} value={lang.code}>{lang.name}</option>
-                          ))}
-                        </select>
-                        <input
-                          type="text"
-                          value={loc.title || ''}
-                          onChange={(e) => updateLocalization('help', loc.locale, 'title', e.target.value)}
-                          placeholder="Enter help title"
-                          className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        />
-                        {step.help.localization.length > 1 && (
-                          <button
-                            onClick={() => removeLocalization('help', loc.locale)}
-                            className="text-red-600 hover:text-red-800"
-                          >
-                            <X size={16} />
-                          </button>
-                        )}
-                      </div>
-                      <textarea
-                        rows={3}
-                        value={loc.content || ''}
-                        onChange={(e) => updateLocalization('help', loc.locale, 'content', e.target.value)}
-                        placeholder="Enter help content"
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Overlay & Constraints Tab */}
-          {activeTab === 'overlay' && (
-            <div className="space-y-4">
-              <Input
-                label="Overlay URL"
-                value={step.overlay?.url || ''}
-                onChange={(e) => updateStep({
-                  overlay: {
-                    url: e.target.value,
-                    constraints: step.overlay?.constraints || {
-                      portrait: { position: 0, scaleType: 0, marginStart: true, marginEnd: true },
-                      landscape: { position: 0, scaleType: 0, marginStart: true, marginEnd: true }
-                    }
-                  }
-                })}
-                placeholder="Enter overlay URL"
-              />
-              
-              {step.overlay?.url && (
-                <div className="grid grid-cols-2 gap-6">
-                  {/* Portrait Constraints */}
-                  <div>
-                    <h5 className="text-sm font-medium text-gray-900 mb-3">Portrait Constraints</h5>
-                    <div className="space-y-3">
-                      <Input
-                        label="Position"
-                        type="number"
-                        value={step.overlay?.constraints.portrait.position.toString() || '0'}
-                        onChange={(e) => updateStep({
-                          overlay: {
-                            ...step.overlay!,
-                            constraints: {
-                              ...step.overlay!.constraints,
-                              portrait: {
-                                ...step.overlay!.constraints.portrait,
-                                position: parseInt(e.target.value) || 0
-                              }
-                            }
-                          }
-                        })}
-                      />
-                      <Input
-                        label="Scale Type"
-                        type="number"
-                        value={step.overlay?.constraints.portrait.scaleType.toString() || '0'}
-                        onChange={(e) => updateStep({
-                          overlay: {
-                            ...step.overlay!,
-                            constraints: {
-                              ...step.overlay!.constraints,
-                              portrait: {
-                                ...step.overlay!.constraints.portrait,
-                                scaleType: parseInt(e.target.value) || 0
-                              }
-                            }
-                          }
-                        })}
-                      />
-                      <label className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={step.overlay?.constraints.portrait.marginStart || false}
-                          onChange={(e) => updateStep({
-                            overlay: {
-                              ...step.overlay!,
-                              constraints: {
-                                ...step.overlay!.constraints,
-                                portrait: {
-                                  ...step.overlay!.constraints.portrait,
-                                  marginStart: e.target.checked
-                                }
-                              }
-                            }
-                          })}
-                          className="rounded border-gray-300 text-blue-600 shadow-sm"
-                        />
-                        <span className="ml-2 text-sm text-gray-700">Margin Start</span>
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={step.overlay?.constraints.portrait.marginEnd || false}
-                          onChange={(e) => updateStep({
-                            overlay: {
-                              ...step.overlay!,
-                              constraints: {
-                                ...step.overlay!.constraints,
-                                portrait: {
-                                  ...step.overlay!.constraints.portrait,
-                                  marginEnd: e.target.checked
-                                }
-                              }
-                            }
-                          })}
-                          className="rounded border-gray-300 text-blue-600 shadow-sm"
-                        />
-                        <span className="ml-2 text-sm text-gray-700">Margin End</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* Landscape Constraints */}
-                  <div>
-                    <h5 className="text-sm font-medium text-gray-900 mb-3">Landscape Constraints</h5>
-                    <div className="space-y-3">
-                      <Input
-                        label="Position"
-                        type="number"
-                        value={step.overlay?.constraints.landscape.position.toString() || '0'}
-                        onChange={(e) => updateStep({
-                          overlay: {
-                            ...step.overlay!,
-                            constraints: {
-                              ...step.overlay!.constraints,
-                              landscape: {
-                                ...step.overlay!.constraints.landscape,
-                                position: parseInt(e.target.value) || 0
-                              }
-                            }
-                          }
-                        })}
-                      />
-                      <Input
-                        label="Scale Type"
-                        type="number"
-                        value={step.overlay?.constraints.landscape.scaleType.toString() || '0'}
-                        onChange={(e) => updateStep({
-                          overlay: {
-                            ...step.overlay!,
-                            constraints: {
-                              ...step.overlay!.constraints,
-                              landscape: {
-                                ...step.overlay!.constraints.landscape,
-                                scaleType: parseInt(e.target.value) || 0
-                              }
-                            }
-                          }
-                        })}
-                      />
-                      <label className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={step.overlay?.constraints.landscape.marginStart || false}
-                          onChange={(e) => updateStep({
-                            overlay: {
-                              ...step.overlay!,
-                              constraints: {
-                                ...step.overlay!.constraints,
-                                landscape: {
-                                  ...step.overlay!.constraints.landscape,
-                                  marginStart: e.target.checked
-                                }
-                              }
-                            }
-                          })}
-                          className="rounded border-gray-300 text-blue-600 shadow-sm"
-                        />
-                        <span className="ml-2 text-sm text-gray-700">Margin Start</span>
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={step.overlay?.constraints.landscape.marginEnd || false}
-                          onChange={(e) => updateStep({
-                            overlay: {
-                              ...step.overlay!,
-                              constraints: {
-                                ...step.overlay!.constraints,
-                                landscape: {
-                                  ...step.overlay!.constraints.landscape,
-                                  marginEnd: e.target.checked
-                                }
-                              }
-                            }
-                          })}
-                          className="rounded border-gray-300 text-blue-600 shadow-sm"
-                        />
-                        <span className="ml-2 text-sm text-gray-700">Margin End</span>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Modal Actions */}
-          <div className="flex gap-3 justify-end pt-4 border-t border-gray-200">
-            <Button variant="secondary" onClick={() => {
-              setShowStepModal(false);
-              setStepFormData(null);
-            }}>
-              Cancel
-            </Button>
-            <Button onClick={() => saveStep(step)}>
-              Save Step
-            </Button>
-          </div>
-        </div>
-      </Modal>
-    );
-  };
-
   return (
     <div className="space-y-6">
       {/* Global Settings */}
@@ -2443,7 +2466,16 @@ export default function ShootInspectionConfig({ onSave, onCancel, initialData }:
         </Button>
       </div>
 
-      <StepEditModal />
+      <StepEditModal
+        editingStep={editingStep}
+        stepFormData={stepFormData}
+        setStepFormData={setStepFormData}
+        showStepModal={showStepModal}
+        setShowStepModal={setShowStepModal}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        saveStep={saveStep}
+      />
 
       {/* Template Selector */}
       <TemplateSelector
