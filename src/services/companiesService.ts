@@ -217,7 +217,10 @@ class CompaniesService {
       duplicateCostSettings?: boolean;
       duplicateSortingRules?: boolean;
       duplicateWebhookEvents?: boolean;
-    }
+    },
+    maxRequestAPI?: number,
+    expiration?: string,
+    unlimited?: boolean
   ): Promise<Company | null> {
     if (isMockMode()) {
       await mockDelay(config.mock.delay);
@@ -243,6 +246,9 @@ class CompaniesService {
       senderEmail,
       webhookUrl,
       parentCompanyId,
+      maxRequestAPI,
+      expiration,
+      unlimited,
       ...options
     });
   }

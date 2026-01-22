@@ -41,9 +41,12 @@ export default function CompaniesPage() {
   const duplicateModal = useModalState<Company>();
   const [duplicateForm, setDuplicateForm] = useState({
     companyName: '',
-    senderName: '',
+    senderName: 'Tchek',
     senderEmail: 'noreply@tchek.ai',
     webhookUrl: '',
+    maxRequestAPI: '',
+    expiration: '',
+    unlimited: true,  // Unlimited is checked by default
     parentCompanyId: '',
     duplicateJourneys: true,
     duplicateCostSettings: false,
@@ -53,9 +56,13 @@ export default function CompaniesPage() {
       companyName: '',
       senderName: '',
       senderEmail: '',
-      webhookUrl: ''
+      webhookUrl: '',
+      maxRequestAPI: '',
+      expiration: ''
     }
   });
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [missingFields, setMissingFields] = useState<string[]>([]);
   const [parentCompanySearch, setParentCompanySearch] = useState('');
 
   // Reset to page 1 when search/filters change
@@ -213,9 +220,12 @@ export default function CompaniesPage() {
 
       setDuplicateForm({
         companyName: `${company.name} (Copy)`,
-        senderName,
+        senderName: senderName || 'Tchek',
         senderEmail: 'noreply@tchek.ai',
         webhookUrl,
+        maxRequestAPI: '', // Empty by default - requires confirmation if not filled
+        expiration: '', // Empty by default - requires confirmation if not filled
+        unlimited: true, // Unlimited is checked by default
         parentCompanyId: parentCompanyId || '',
         duplicateJourneys: true,
         duplicateCostSettings: false,
@@ -225,7 +235,9 @@ export default function CompaniesPage() {
           companyName: '',
           senderName: '',
           senderEmail: '',
-          webhookUrl: ''
+          webhookUrl: '',
+          maxRequestAPI: '',
+          expiration: ''
         }
       });
       setParentCompanySearch('');
@@ -267,7 +279,7 @@ export default function CompaniesPage() {
     return !errors.companyName && !errors.senderEmail && !errors.webhookUrl;
   };
 
-  const handleDuplicateFormChange = (field: string, value: string) => {
+  const handleDuplicateFormChange = (field: string, value: string | boolean) => {
     setDuplicateForm(prev => ({
       ...prev,
       [field]: value,
@@ -277,11 +289,36 @@ export default function CompaniesPage() {
       }
     }));
   };
+
   const confirmDuplicate = async () => {
     if (!validateDuplicateForm()) {
       return;
     }
 
+    // Check for missing critical fields
+    const missing: string[] = [];
+
+    // Only check maxRequestAPI if unlimited is NOT checked
+    if (!duplicateForm.unlimited && (!duplicateForm.maxRequestAPI || duplicateForm.maxRequestAPI.trim() === '')) {
+      missing.push('Max Request API');
+    }
+
+    if (!duplicateForm.expiration || duplicateForm.expiration.trim() === '') {
+      missing.push('Expiration');
+    }
+
+    // If there are missing fields, show confirmation modal
+    if (missing.length > 0) {
+      setMissingFields(missing);
+      setShowConfirmationModal(true);
+      return;
+    }
+
+    // Otherwise proceed directly
+    await performDuplication();
+  };
+
+  const performDuplication = async () => {
     if (!duplicateModal.data) return;
 
     try {
@@ -300,16 +337,24 @@ export default function CompaniesPage() {
           duplicateCostSettings: duplicateForm.duplicateCostSettings,
           duplicateSortingRules: duplicateForm.duplicateSortingRules,
           duplicateWebhookEvents: duplicateForm.duplicateWebhookEvents
-        }
+        },
+        // If unlimited is true, do NOT send maxRequestAPI (keep it undefined)
+        duplicateForm.unlimited ? undefined : (duplicateForm.maxRequestAPI ? parseInt(duplicateForm.maxRequestAPI) : undefined),
+        duplicateForm.expiration || undefined,
+        duplicateForm.unlimited
       );
 
       if (duplicatedCompany) {
         duplicateModal.close();
+        setShowConfirmationModal(false);
         setDuplicateForm({
           companyName: '',
-          senderName: '',
+          senderName: 'Tchek',
           senderEmail: 'noreply@tchek.ai',
           webhookUrl: '',
+          maxRequestAPI: '',
+          expiration: '',
+          unlimited: true,  // Reset to default (checked)
           parentCompanyId: '',
           duplicateJourneys: true,
           duplicateCostSettings: false,
@@ -319,7 +364,9 @@ export default function CompaniesPage() {
             companyName: '',
             senderName: '',
             senderEmail: '',
-            webhookUrl: ''
+            webhookUrl: '',
+            maxRequestAPI: '',
+            expiration: ''
           }
         });
         setParentCompanySearch('');
@@ -1092,6 +1139,57 @@ export default function CompaniesPage() {
                     <p className="text-xs text-red-600 mt-1">{duplicateForm.errors.webhookUrl}</p>
                   )}
                 </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Max Request API <span className="text-gray-400 text-xs">(Optional)</span>
+                    </label>
+                    <input
+                      type="number"
+                      value={duplicateForm.maxRequestAPI}
+                      onChange={(e) => handleDuplicateFormChange('maxRequestAPI', e.target.value)}
+                      disabled={duplicateForm.unlimited}
+                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
+                        duplicateForm.errors.maxRequestAPI ? 'border-red-500' : 'border-gray-300'
+                      } ${duplicateForm.unlimited ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''}`}
+                      placeholder="1000"
+                    />
+                    {duplicateForm.errors.maxRequestAPI && (
+                      <p className="text-xs text-red-600 mt-1">{duplicateForm.errors.maxRequestAPI}</p>
+                    )}
+
+                    {/* Unlimited Checkbox */}
+                    <div className="flex items-center mt-2">
+                      <input
+                        type="checkbox"
+                        id="unlimited-checkbox"
+                        checked={duplicateForm.unlimited}
+                        onChange={(e) => handleDuplicateFormChange('unlimited', e.target.checked)}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
+                      />
+                      <label htmlFor="unlimited-checkbox" className="ml-2 text-sm text-gray-700 cursor-pointer">
+                        Unlimited
+                      </label>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Expiration <span className="text-gray-400 text-xs">(Optional)</span>
+                    </label>
+                    <input
+                      type="date"
+                      value={duplicateForm.expiration}
+                      onChange={(e) => handleDuplicateFormChange('expiration', e.target.value)}
+                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
+                        duplicateForm.errors.expiration ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                    />
+                    {duplicateForm.errors.expiration && (
+                      <p className="text-xs text-red-600 mt-1">{duplicateForm.errors.expiration}</p>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {/* Warning Message */}
@@ -1165,11 +1263,15 @@ export default function CompaniesPage() {
             variant="secondary"
             onClick={() => {
               duplicateModal.close();
+              setShowConfirmationModal(false);
               setDuplicateForm({
                 companyName: '',
-                senderName: '',
+                senderName: 'Tchek',
                 senderEmail: 'noreply@tchek.ai',
                 webhookUrl: '',
+                maxRequestAPI: '',
+                expiration: '',
+                unlimited: true,  // Reset to default (checked)
                 parentCompanyId: '',
                 duplicateJourneys: true,
                 duplicateCostSettings: false,
@@ -1179,7 +1281,9 @@ export default function CompaniesPage() {
                   companyName: '',
                   senderName: '',
                   senderEmail: '',
-                  webhookUrl: ''
+                  webhookUrl: '',
+                  maxRequestAPI: '',
+                  expiration: ''
                 }
               });
             }}
@@ -1193,7 +1297,59 @@ export default function CompaniesPage() {
           </Button>
         </div>
       </Modal>
+
+      {/* Confirmation Modal for Missing Fields */}
+      <Modal
+        isOpen={showConfirmationModal}
+        onClose={() => setShowConfirmationModal(false)}
+        title={t('company:modals.confirmation.title', { defaultValue: 'Confirmer la duplication' })}
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-700">
+            {t('company:modals.confirmation.message', { defaultValue: 'Êtes-vous sûr de vouloir dupliquer cette company ?' })}
+          </p>
+          
+          {/* Show missing fields if any */}
+          {missingFields.length > 0 && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+              <p className="text-sm font-medium text-yellow-900 mb-2">
+                {t('company:modals.confirmation.missingFields', { defaultValue: 'Les champs suivants ne sont pas renseignés :' })}
+              </p>
+              <ul className="list-disc list-inside text-sm text-yellow-800 space-y-1">
+                {missingFields.map((field, index) => (
+                  <li key={index}>{field}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Show unlimited message if checked */}
+          {duplicateForm.unlimited && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-sm text-blue-800">
+                <strong>Max Request API :</strong> {t('company:modals.confirmation.unlimitedMessage', { defaultValue: 'Illimité (pas de limite de requêtes)' })}
+              </p>
+            </div>
+          )}
+
+          <div className="flex gap-3 justify-end pt-4 border-t border-gray-200">
+            <Button
+              variant="secondary"
+              onClick={() => setShowConfirmationModal(false)}
+            >
+              {t('company:modals.cancel', { defaultValue: 'Annuler' })}
+            </Button>
+            <Button
+              onClick={async () => {
+                setShowConfirmationModal(false);
+                await performDuplication();
+              }}
+            >
+              {t('company:modals.duplicate.confirmCreate', { defaultValue: 'Confirmer la duplication' })}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
-
