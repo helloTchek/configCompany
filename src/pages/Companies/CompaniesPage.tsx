@@ -204,7 +204,11 @@ export default function CompaniesPage() {
       // Extract report settings and config modules from settingsPtr
       const reportSettings = fullData.settingsPtr?.report;
       const configModules = fullData.settingsPtr?.configModules;
-      const parentCompanyId = fullData.parentCompanyId;
+
+      // Hierarchy logic: Keep parent only if source has parent AND no children
+      const hasParent = !!fullData.parentCompanyId;
+      const hasChildren = fullData.childCompanyIds && fullData.childCompanyIds.length > 0;
+      const parentCompanyId = (hasParent && !hasChildren) ? fullData.parentCompanyId : '';
 
       // Convert objects to JSON strings for textarea display
       const reportSettingsStr = reportSettings ? JSON.stringify(reportSettings, null, 2) : '';
